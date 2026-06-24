@@ -1,0 +1,253 @@
+---
+import Base from '../layouts/Base.astro';
+const code = Astro.url.searchParams.get('producto');
+---
+<Base title="Solicitar cotización | Todo Huincha">
+  <div class="contacto-container">
+    <div class="contacto-grid">
+      <!-- Left column: Info -->
+      <div class="contacto-info">
+        <span class="eyebrow">Contacto y Asesoría</span>
+        <h1>Hablemos de tu proyecto</h1>
+        <p class="intro">Indícanos el producto y tu necesidad. Nuestro equipo comercial te contactará a la brevedad con una propuesta formal y personalizada.</p>
+        
+        <div class="info-list">
+          <div class="info-item">
+            <div class="info-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </div>
+            <div class="info-content">
+              <h3>Dirección Comercial</h3>
+              <p>Longitudinal Sur 4277, Padre Las Casas, Región de la Araucanía.</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </div>
+            <div class="info-content">
+              <h3>Teléfono de Contacto</h3>
+              <p>(45) 240 0000</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <div class="info-content">
+              <h3>Correo Electrónico</h3>
+              <p>info@todohuincha.com</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <div class="info-content">
+              <h3>Horario de Atención</h3>
+              <p>Lunes a Viernes: 8:30 a 18:30 hrs.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: Form -->
+      <div class="contacto-form-wrapper">
+        <form class="contacto-form" action="mailto:info@todohuincha.com" method="post" enctype="text/plain">
+          <div class="form-row">
+            <label>
+              <span>Nombre completo *</span>
+              <input class="input-field" required name="nombre" placeholder="Juan Pérez" />
+            </label>
+            <label>
+              <span>Empresa</span>
+              <input class="input-field" name="empresa" placeholder="Mi Empresa S.A." />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              <span>Correo electrónico *</span>
+              <input class="input-field" required type="email" name="correo" placeholder="juan@correo.com" />
+            </label>
+            <label>
+              <span>Producto o código de referencia</span>
+              <input class="input-field" name="producto" value={code ?? ''} placeholder="Ej. Sierra 24 pulgadas" />
+            </label>
+          </div>
+
+          <label class="full-width">
+            <span>Mensaje / Requerimiento *</span>
+            <textarea class="input-field text-area" required rows="6" name="mensaje" placeholder="Cuéntanos en detalle qué maquinaria o consumibles necesitas cotizar..."></textarea>
+          </label>
+
+          <button class="button submit-btn">
+            <span>Enviar cotización</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 8px; display: inline-block; vertical-align: middle;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .contacto-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: clamp(52px, 7vw, 96px) clamp(20px, 5vw, 40px);
+  }
+
+  .contacto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: clamp(40px, 6vw, 80px);
+    align-items: start;
+  }
+
+  .contacto-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .contacto-info h1 {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    margin: 10px 0 20px;
+    color: var(--charcoal);
+  }
+
+  .contacto-info .intro {
+    font-size: 1.05rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .info-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .info-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--soft);
+    color: var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .info-content h3 {
+    font-size: 0.95rem;
+    font-weight: 750;
+    color: var(--charcoal);
+    margin: 0 0 4px 0;
+  }
+
+  .info-content p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Form Styling */
+  .contacto-form-wrapper {
+    background: #ffffff;
+    border: 1px solid rgba(49, 62, 72, 0.08);
+    border-radius: 16px;
+    padding: clamp(24px, 5vw, 40px);
+    box-shadow: 0 10px 30px rgba(49, 62, 72, 0.03);
+  }
+
+  .contacto-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .contacto-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+
+  .contacto-form label span {
+    color: var(--charcoal);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    background: #ffffff;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    color: var(--ink);
+  }
+
+  .input-field::placeholder {
+    color: #a3a8ad;
+  }
+
+  .input-field:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(251, 77, 8, 0.12);
+  }
+
+  .text-area {
+    resize: vertical;
+  }
+
+  .submit-btn {
+    align-self: flex-start;
+    padding: 14px 28px;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 900px) {
+    .contacto-grid {
+      grid-template-columns: 1fr;
+      gap: 50px;
+    }
+    
+    .contacto-info .intro {
+      margin-bottom: 30px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .submit-btn {
+      align-self: stretch;
+    }
+  }
+</style>

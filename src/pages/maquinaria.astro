@@ -1,0 +1,6 @@
+---
+import Base from '../layouts/Base.astro';
+import DownloadPdf from '../components/DownloadPdf.astro';
+import { machines, machineCategories } from '../data/maquinaria';
+---
+<Base title="Maquinaria | Todo Huincha" description="Catálogo de maquinaria Todo Huincha, disponible por cotización."><section class="wrap"><span class="eyebrow">División maquinaria</span><h1>Equipos para hacer crecer tu proyecto</h1><p class="muted">Nuestro catálogo propio reúne la información técnica disponible y las imágenes entregadas para cada familia de maquinaria. Cotiza directamente con nuestro equipo.</p><div class="category-list">{machineCategories.map((category)=><a href={`#${category.toLowerCase()}`}>{category}</a>)}</div>{machineCategories.map((category)=><section id={category.toLowerCase()} style="margin-top:62px"><h2>{category}</h2><div class="grid">{machines.filter((machine)=>machine.category===category).map((machine)=><article class="card"><img class="product-image" src={machine.image} alt={machine.name} loading="lazy" /><h3>{machine.name}</h3><p class="muted">{machine.summary}</p><a class="button" href={`/maquinaria/${machine.slug}`}>Ver ficha y cotizar</a></article>)}</div></section>)}</section></Base>

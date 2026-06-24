@@ -1,0 +1,465 @@
+---
+import Base from '../layouts/Base.astro';
+import { categories, products } from '../data/catalog';
+import { machines } from '../data/maquinaria';
+const panels = [1, 3, 4, 6];
+const machineCategories = ['Jardín', 'Agrícola', 'Forestal', 'Madera', 'Otros'];
+const machineDescs: Record<string, string> = {
+  Jardín: 'Tractores cortacéspedes y equipos de mantención.',
+  Agrícola: 'Motocultivadores y procesadores de suelo.',
+  Forestal: 'Partidores de leña y trozadoras de alta potencia.',
+  Madera: 'Cepilladoras, canteadoras y sierras de banco.',
+  Otros: 'Motores industriales, generadores y cortadoras.'
+};
+const machineImages: Record<string, string> = {
+  Jardín: '/maquinaria/jardin.webp',
+  Agrícola: '/maquinaria/agricola.webp',
+  Forestal: '/maquinaria/forestal.webp',
+  Madera: '/maquinaria/madera.jpg',
+  Otros: '/maquinaria/otros.jpg'
+};
+---
+<Base title="Todo Huincha | Soluciones de corte y maquinaria">
+  <section class="hero hero-panels">
+    <div class="panel-track" aria-hidden="true">
+      {panels.map((panel) => <div class="panel"><img src={`/hero/panel-${panel}.jpg`} alt="" /></div>)}
+    </div>
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="hero-copy">
+      <span class="eyebrow">Comercializadora Todo Huincha Ltda.</span>
+      <h1>Equipos que hacen avanzar tu proyecto.</h1>
+      <p>Maquinaria, herramientas y soluciones técnicas para madera, industria, agricultura y faenas forestales.</p>
+      <div class="hero-actions">
+        <a class="button" href="/maquinaria">Explorar maquinaria</a>
+        <a class="button alt hero-secondary" href="/catalogo">Explorar catálogo</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <span class="eyebrow">Catálogo por cotización</span>
+    <h2>Encuentra la solución que necesitas</h2>
+    <p class="muted">Disponemos de {products.length} productos organizados en {categories.length} categorías. Selecciona un producto para solicitar cotización con su código de referencia.</p>
+    
+    <!-- All categories in a single grid -->
+    <div class="grid collapsible-grid is-collapsed" id="categories-grid">
+      {categories.map((category, index) => (
+        <a class={`card category-card ${index >= 8 ? 'extra-category-card' : ''}`} href={`/catalogo/${category.slug}`}>
+          <span class="tag">{category.products_count} productos</span>
+          <h3>{category.title}</h3>
+          <span class="muted">
+            <span>Ver categoría</span>
+            <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; transition: transform 0.2s; display: inline-block; vertical-align: middle;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </span>
+        </a>
+      ))}
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display: flex; gap: 14px; margin-top: 24px; flex-wrap: wrap;">
+      <button class="button alt" id="toggle-categories-btn" style="padding: 12px 20px;">
+        <span>Ver más categorías</span>
+        <svg class="chevron-icon" style="width: 14px; height: 14px; margin-left: 8px; transition: transform 0.2s; vertical-align: middle; display: inline-block;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <a class="button" href="/catalogo">Ver catálogo completo</a>
+    </div>
+  </section>
+
+  <section class="wrap" style="padding-top:0">
+    <span class="eyebrow">División maquinaria</span>
+    <h2>Catálogo técnico propio</h2>
+    <p class="muted" style="margin-bottom: 24px;">Construido con las fichas y fotografías entregadas por Todo Huincha. Explora {machines.length} equipos distribuidos por aplicación.</p>
+    
+    <!-- Machinery Categories Carousel -->
+    <div class="carousel-container" style="margin-bottom: 24px; position: relative;">
+      <button class="carousel-btn prev" id="machinery-prev-btn" aria-label="Anterior">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      
+      <div class="carousel-track" id="machinery-track">
+        {machineCategories.map((category) => {
+          const count = machines.filter((m) => m.category === category).length;
+          const bgImg = machineImages[category];
+          return (
+            <a class="card machinery-card" href={`/maquinaria#${category.toLowerCase()}`}>
+              <div class="machinery-card-bg" style={`background-image: url('${bgImg}');`}></div>
+              <div class="machinery-card-overlay"></div>
+              <div class="machinery-card-content">
+                <span class="tag">{count} equipos</span>
+                <h3>{category}</h3>
+                <p class="desc">{machineDescs[category]}</p>
+                <span class="muted">
+                  <span>Explorar categoría</span>
+                  <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; transition: transform 0.2s; display: inline-block; vertical-align: middle;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+      
+      <button class="carousel-btn next" id="machinery-next-btn" aria-label="Siguiente">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+
+    <a class="button" href="/maquinaria">Ver toda la maquinaria</a>
+  </section>
+</Base>
+
+<style>
+  /* Minimalist modern cards styling override */
+  .category-card {
+    background: #ffffff;
+    border: 1px solid rgba(49, 62, 72, 0.08);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 154px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 6px rgba(49, 62, 72, 0.02);
+  }
+  
+  .category-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--orange);
+    box-shadow: 0 12px 28px rgba(49, 62, 72, 0.07);
+    background: #ffffff;
+  }
+  
+  .category-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--charcoal);
+    margin: 6px 0 12px 0;
+    line-height: 1.35;
+  }
+  
+  .category-card .tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: auto;
+    display: inline-block;
+  }
+  
+  .category-card .muted {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 12px;
+    transition: color 0.2s;
+  }
+  
+  .category-card:hover .muted {
+    color: var(--orange);
+  }
+  
+  .category-card:hover .arrow-icon {
+    transform: translateX(4px);
+    color: var(--orange);
+  }
+
+  /* Machinery Card with Background Image */
+  .machinery-card {
+    position: relative;
+    overflow: hidden;
+    background: #222b32;
+    border: 1px solid rgba(49, 62, 72, 0.1);
+    border-radius: 12px;
+    padding: 0;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 6px rgba(49, 62, 72, 0.02);
+  }
+  
+  .machinery-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--orange);
+    box-shadow: 0 12px 28px rgba(49, 62, 72, 0.15);
+  }
+  
+  .machinery-card-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.5;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    z-index: 1;
+  }
+  
+  .machinery-card:hover .machinery-card-bg {
+    transform: scale(1.08);
+    opacity: 0.7;
+  }
+  
+  .machinery-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(34, 43, 50, 0.1) 0%, rgba(34, 43, 50, 0.55) 100%);
+    z-index: 2;
+  }
+  
+  .machinery-card-content {
+    position: relative;
+    z-index: 3;
+    padding: 24px;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-grow: 1;
+  }
+  
+  .machinery-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 6px 0 8px 0;
+    line-height: 1.3;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  }
+  
+  .machinery-card .tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #ffb18f;
+    background: rgba(34, 43, 50, 0.4);
+    border: 1px solid rgba(251, 77, 8, 0.4);
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    margin-bottom: auto;
+    display: inline-block;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  
+  .machinery-card .desc {
+    font-size: 0.82rem;
+    color: #ffffff;
+    line-height: 1.45;
+    margin: 0 0 16px 0;
+    flex-grow: 1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+  
+  .machinery-card .muted {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 8px;
+    transition: color 0.2s;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+  
+  .machinery-card:hover .muted {
+    color: var(--orange);
+    text-shadow: none;
+  }
+  
+  .machinery-card:hover .arrow-icon {
+    transform: translateX(4px);
+    color: var(--orange);
+  }
+
+  /* Grid collapsible logic */
+  .collapsible-grid.is-collapsed .extra-category-card {
+    display: none !important;
+  }
+
+  /* Carousel styles */
+  .carousel-container {
+    position: relative;
+    width: 100%;
+  }
+
+  .carousel-track {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
+    padding: 8px 4px;
+    margin: 0 -4px;
+  }
+  
+  .carousel-track::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+  
+  .carousel-track .machinery-card {
+    flex: 0 0 calc(25% - 15px);
+    min-width: 260px;
+  }
+  
+  @media (max-width: 1024px) {
+    .carousel-track .machinery-card {
+      flex: 0 0 calc(33.333% - 14px);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .carousel-track .machinery-card {
+      flex: 0 0 calc(50% - 10px);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .carousel-track .machinery-card {
+      flex: 0 0 100%;
+    }
+  }
+  
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid rgba(49, 62, 72, 0.08);
+    box-shadow: 0 4px 14px rgba(49, 62, 72, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--charcoal);
+  }
+  
+  .carousel-btn:hover {
+    background: var(--soft);
+    color: var(--orange);
+    border-color: rgba(251, 77, 8, 0.3);
+    box-shadow: 0 6px 20px rgba(251, 77, 8, 0.15);
+  }
+  
+  .carousel-btn.prev {
+    left: -21px;
+  }
+  
+  .carousel-btn.next {
+    right: -21px;
+  }
+  
+  .carousel-btn.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%) scale(0.8);
+  }
+</style>
+
+<script>
+// Hero sliding panels hover effect
+const hero = document.querySelector<HTMLElement>('.hero-panels');
+const panels = [...document.querySelectorAll<HTMLElement>('.panel')];
+let frame = 0;
+hero?.addEventListener('pointermove', (event) => {
+  const delta = event.clientX / window.innerWidth - 0.5;
+  const hoveredPanel = (event.target as HTMLElement).closest('.panel');
+  cancelAnimationFrame(frame);
+  frame = requestAnimationFrame(() => panels.forEach((panel, index) => {
+    panel.classList.toggle('is-active', panel === hoveredPanel);
+    const image = panel.querySelector('img');
+    if (image) {
+      image.style.transform = `skewX(10deg) translateX(${delta * ((index - 1.5) * 15)}px) scale(1.14)`;
+    }
+  }));
+});
+hero?.addEventListener('pointerleave', () => {
+  cancelAnimationFrame(frame);
+  frame = requestAnimationFrame(() => panels.forEach((panel) => {
+    panel.classList.remove('is-active');
+    const image = panel.querySelector('img');
+    if (image) {
+      image.style.transform = '';
+    }
+  }));
+});
+
+// Collapsible categories toggle logic
+const toggleBtn = document.getElementById('toggle-categories-btn');
+const grid = document.getElementById('categories-grid');
+if (toggleBtn && grid) {
+  const textSpan = toggleBtn.querySelector('span') as HTMLSpanElement;
+  const chevron = toggleBtn.querySelector('.chevron-icon') as HTMLElement;
+  toggleBtn.addEventListener('click', () => {
+    const isCollapsed = grid.classList.contains('is-collapsed');
+    if (isCollapsed) {
+      grid.classList.remove('is-collapsed');
+      textSpan.textContent = 'Ver menos categorías';
+      chevron.style.transform = 'rotate(180deg)';
+    } else {
+      grid.classList.add('is-collapsed');
+      textSpan.textContent = 'Ver más categorías';
+      chevron.style.transform = '';
+    }
+  });
+}
+
+// Carousel scroll logic
+const track = document.getElementById('machinery-track');
+const prevBtn = document.getElementById('machinery-prev-btn');
+const nextBtn = document.getElementById('machinery-next-btn');
+
+if (track && prevBtn && nextBtn) {
+  const updateButtons = () => {
+    const scrollLeft = track.scrollLeft;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    
+    if (scrollLeft <= 5) {
+      prevBtn.classList.add('is-hidden');
+    } else {
+      prevBtn.classList.remove('is-hidden');
+    }
+    
+    if (scrollLeft >= maxScroll - 5) {
+      nextBtn.classList.add('is-hidden');
+    } else {
+      nextBtn.classList.remove('is-hidden');
+    }
+  };
+
+  const getScrollAmount = () => {
+    const card = track.querySelector('.machinery-card');
+    if (card) {
+      return (card as HTMLElement).offsetWidth + 20;
+    }
+    return 300;
+  };
+
+  prevBtn.addEventListener('click', () => {
+    track.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
+  });
+
+  nextBtn.addEventListener('click', () => {
+    track.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
+  });
+
+  track.addEventListener('scroll', updateButtons);
+  window.addEventListener('resize', updateButtons);
+  
+  // Run initially
+  setTimeout(updateButtons, 150);
+}
+</script>

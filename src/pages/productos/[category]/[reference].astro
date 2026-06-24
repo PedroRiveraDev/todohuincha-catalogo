@@ -1,0 +1,28 @@
+---
+import Base from '../../../layouts/Base.astro';
+import DownloadPdf from '../../../components/DownloadPdf.astro';
+import { products } from '../../../data/catalog';
+export function getStaticPaths(){return products.map((product)=>({params:{category:product.category.slug,reference:product.internal_reference},props:{product}}));}
+const { product } = Astro.props;
+const message = encodeURIComponent(`Hola, quiero cotizar el producto ${product.name} (código ${product.internal_reference}).`);
+---
+<Base title={`${product.name} | Todo Huincha`}>
+  <section class="wrap detail">
+    <div>
+      <a class="muted back-link" href={`/catalogo/${product.category.slug}`}>← {product.category.title}</a>
+      <p class="eyebrow" style="margin-top:18px">Producto por cotización</p>
+      <h1 class="product-title">{product.name}</h1>
+      <p class="product-code">Código interno: {product.internal_reference}</p>
+      <p>Solicita una cotización para recibir disponibilidad, especificaciones completas, plazo y condiciones comerciales.</p>
+      <div class="product-actions">
+        <a class="button" href={`https://wa.me/?text=${message}`} target="_blank" rel="noreferrer">Solicitar cotización por WhatsApp</a>
+      </div>
+    </div>
+    <aside class="card">
+      <span class="tag">Ficha de producto</span>
+      <h3>{product.category.title}</h3>
+      <p class="muted">La ficha descargable contiene la información disponible para identificar este producto y cotizarlo.</p>
+      <DownloadPdf title={product.name} subtitle={`Código: ${product.internal_reference} · Categoría: ${product.category.title}`} rows={[`Producto: ${product.name}`,`Código: ${product.internal_reference}`,`Categoría: ${product.category.title}`,'Solicite disponibilidad, especificaciones técnicas y cotización a Comercializadora Todo Huincha Ltda.','info@todohuincha.com · (45) 240 0000']} />
+    </aside>
+  </section>
+</Base>
