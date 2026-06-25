@@ -1,0 +1,58 @@
+{
+  "schema_version": "2.0.0",
+  "catalog": {},
+  "catalog_assets": {},
+  "catalog_generation": {},
+  "asset_strategy": {},
+  "dictionary_version": {},
+  "dictionaries": {
+    "category_dictionary": {}
+  },
+  "families": [],
+  "items": [
+    {
+      "id": "broken-1",
+      "sku": 12345,
+      "name": "Broken Item",
+      "display_name": "Broken Item",
+      "slug": "broken-item",
+      "family_key": null,
+      "family_id": null,
+      "variant_prefix": null,
+      "entity_class": "product",
+      "category_code": "MAQUINAS",
+      "category_label": "Maquinas",
+      "category_group": "maquinaria",
+      "item_type": "simple_product",
+      "item_subtype_code": null,
+      "technical_profile_level": "basic",
+      "pricing": {
+        "sale_amount": null,
+        "currency": "CLP",
+        "formatted": null,
+        "is_price_available": false
+      },
+      "status": {
+        "is_active": true,
+        "is_price_zero": true,
+        "is_catalog_visible": true
+      },
+      "source": {
+        "catalog_file": "broken.json",
+        "sheet_name": null,
+        "sheet_slug": null
+      },
+      "search": {
+        "normalized_name": "broken item",
+        "tokens": [],
+        "ai_semantic_context": ""
+      },
+      "specifications": {},
+      "assets": {
+        "main_image": null,
+        "gallery": []
+      }
+    }
+  ],
+  "service_catalog": []
+}

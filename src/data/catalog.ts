@@ -1,19 +1,42 @@
-import source from './catalogo_productos.json';
+// src/data/catalog.ts
+// Re-export shim for the v2 catalog. NO mapping logic lives here — the
+// legacy projection is computed inside src/lib/catalog.ts (adapter) and
+// this file just re-exports it under the names existing pages import.
+//
+// Refs:
+//   openspec/changes/catalog-v2-ui-migration-slice-1/design.md (section 3)
 
-export type Product = { internal_reference: string; name: string; sale_price: number };
-export type Category = { slug: string; title: string; products_count: number; products: Product[] };
-const rawCategories = source.categories as Category[];
-export const categories = rawCategories.map((category) => {
-  const seen = new Set<string>();
-  const uniqueProducts = category.products.filter((product) => {
-    const key = product.internal_reference;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-  return { ...category, products: uniqueProducts, products_count: uniqueProducts.length };
-});
-export const catalog = { ...source, total_products: categories.reduce((sum, category) => sum + category.products_count, 0), categories };
-export const products = categories.flatMap((category) => category.products.map((product) => ({ ...product, category })));
-export const getCategory = (slug: string) => categories.find((category) => category.slug === slug);
-export const getProduct = (categorySlug: string, reference: string) => products.find((product) => product.category.slug === categorySlug && product.internal_reference === reference);
+import { adapter } from '../lib/catalog';
+
+export { adapter };
+
+export const {
+  items,
+  families,
+  categories,
+  serviceCategories,
+  duplicates,
+  legacyView,
+} = adapter;
+
+export const legacyCatalog = legacyView;
+export const legacyCategories = legacyView.categories;
+export const legacyProducts = legacyView.products;
+export const products = legacyProducts;
+
+export const catalog = {
+  items,
+  families,
+  categories,
+  serviceCategories,
+  total_products: items.length,
+  total_categories: categories.length,
+};
+
+export const getCategory = (slug: string) =>
+  categories.find((c) => c.slug === slug);
+
+export const getProduct = (categorySlug: string, reference: string) =>
+  legacyProducts.find(
+    (p) => p.category.slug === categorySlug && p.internal_reference === reference
+  );
