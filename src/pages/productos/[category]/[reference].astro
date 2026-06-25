@@ -1,34 +1,18 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import DownloadPdf from '../../../components/DownloadPdf.astro';
-import { items, getCategory, type CatalogItem } from '../../../data/catalog';
-
-export function getStaticPaths() {
-  return items
-    .filter((item) => item.status.is_active && item.status.is_catalog_visible)
-    .map((item) => {
-      const category = getCategory(item.category_code);
-      return {
-        params: { category: category?.slug ?? item.category_code, reference: item.sku },
-        props: { item, categorySlug: category?.slug ?? item.category_code },
-      };
-    });
-}
-
-const { item, categorySlug } = Astro.props;
-const message = encodeURIComponent(`Hola, quiero cotizar el producto ${item.display_name} (código ${item.sku}).`);
-const typeLabel =
-  item.item_type === 'machinery' ? 'Maquinaria' :
-  item.item_type === 'service' ? 'Servicio' :
-  item.item_type === 'spare_part' ? 'Repuesto' : 'Producto';
+import { products } from '../../../data/catalog';
+export function getStaticPaths(){return products.map((product)=>({params:{category:product.category.slug,reference:product.internal_reference},props:{product}}));}
+const { product } = Astro.props;
+const message = encodeURIComponent(`Hola, quiero cotizar el producto ${product.name} (código ${product.internal_reference}).`);
 ---
-<Base title={`${item.display_name} | Todo Huincha`}>
+<Base title={`${product.name} | Todo Huincha`}>
   <section class="wrap detail">
     <div>
-      <a class="muted back-link" href={`/catalogo/${categorySlug}`}>← {item.category_label}</a>
-      <p class="eyebrow" style="margin-top:18px">{typeLabel} por cotización</p>
-      <h1 class="product-title">{item.display_name}</h1>
-      <p class="product-code">Código interno: {item.sku}</p>
+      <a class="muted back-link" href={`/catalogo/${product.category.slug}`}>← {product.category.title}</a>
+      <p class="eyebrow" style="margin-top:18px">Producto por cotización</p>
+      <h1 class="product-title">{product.name}</h1>
+      <p class="product-code">Código interno: {product.internal_reference}</p>
       <p>Solicita una cotización para recibir disponibilidad, especificaciones completas, plazo y condiciones comerciales.</p>
       <div class="product-actions">
         <a class="button" href={`https://wa.me/?text=${message}`} target="_blank" rel="noreferrer">Solicitar cotización por WhatsApp</a>
@@ -36,19 +20,9 @@ const typeLabel =
     </div>
     <aside class="card">
       <span class="tag">Ficha de producto</span>
-      <h3>{item.category_label}</h3>
+      <h3>{product.category.title}</h3>
       <p class="muted">La ficha descargable contiene la información disponible para identificar este producto y cotizarlo.</p>
-      <DownloadPdf
-        title={item.display_name}
-        subtitle={`Código: ${item.sku} · Categoría: ${item.category_label}`}
-        rows={[
-          `Producto: ${item.display_name}`,
-          `Código: ${item.sku}`,
-          `Categoría: ${item.category_label}`,
-          'Solicite disponibilidad, especificaciones técnicas y cotización a Comercializadora Todo Huincha Ltda.',
-          'info@todohuincha.com · (45) 240 0000'
-        ]}
-      />
+      <DownloadPdf title={product.name} subtitle={`Código: ${product.internal_reference} · Categoría: ${product.category.title}`} rows={[`Producto: ${product.name}`,`Código: ${product.internal_reference}`,`Categoría: ${product.category.title}`,'Solicite disponibilidad, especificaciones técnicas y cotización a Comercializadora Todo Huincha Ltda.','info@todohuincha.com · (45) 240 0000']} />
     </aside>
   </section>
 </Base>
