@@ -1,0 +1,118 @@
+---
+// src/components/CategorySidebar.astro
+// Grouped 8-group category sidebar. Sticky on desktop, off-canvas dialog
+// drawer on mobile (<768px). Slice 2 of catalog-v2-ui-migration.
+//
+// Refs:
+//   openspec/changes/catalog-v2-ui-migration-slice-2/design.md (section 4)
+
+import type { CategorySummary } from '../lib/catalog.ts';
+import { groupCategoriesByGroup } from '../lib/categories.ts';
+
+interface Props {
+  categories: CategorySummary[];
+  activeSlug: string | null;
+  totalProducts: number;
+}
+
+const { categories, activeSlug = null, totalProducts } = Astro.props;
+
+const groups = groupCategoriesByGroup(categories);
+
+const GROUP_LABELS: Record<string, string> = {
+  sierras: 'Sierras',
+  consumibles: 'Consumibles',
+  cuchillos: 'Cuchillos',
+  herramientas: 'Herramientas',
+  materiales: 'Materiales',
+  servicios: 'Servicios',
+  maquinaria: 'Maquinaria',
+  instrumentos: 'Instrumentos',
+};
+---
+<aside class="cat-sidebar" id="cat-sidebar" role="navigation" aria-label="Categorías">
+  <div class="cat-sidebar-header">
+    <span>Categorías</span>
+    <span class="cat-total-badge">{totalProducts}</span>
+  </div>
+  <ul class="cat-sidebar-list">
+    <li>
+      <button
+        class={`cat-sidebar-item${activeSlug === null ? ' is-active' : ''}`}
+        data-slug="__all__"
+        id="cat-btn-all"
+        type="button"
+      >
+        <span class="cat-sidebar-name">Todos los productos</span>
+        <span class="cat-sidebar-count">{totalProducts}</span>
+      </button>
+    </li>
+    {[...groups.entries()].map(([groupKey, cats]) => {
+      const groupTotal = cats.reduce((sum, c) => sum + c.products_count, 0);
+      return (
+        <li class="cat-sidebar-group" data-group={groupKey}>
+          <header class="cat-sidebar-group-header">
+            <span class="cat-sidebar-group-title">{GROUP_LABELS[groupKey] ?? groupKey}</span>
+            <span class="cat-sidebar-group-count">{groupTotal}</span>
+          </header>
+          <ul class="cat-sidebar-group-list">
+            {cats.map((cat) => (
+              <li>
+                <button
+                  class={`cat-sidebar-item${activeSlug === cat.slug ? ' is-active' : ''}`}
+                  data-slug={cat.slug}
+                  data-group={groupKey}
+                  id={`cat-btn-${cat.slug}`}
+                  type="button"
+                >
+                  <span class="cat-sidebar-name">{cat.label}</span>
+                  <span class="cat-sidebar-count">{cat.products_count}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </li>
+      );
+    })}
+  </ul>
+</aside>
+
+<style is:global>
+  /* Group headers and grouped section layout.
+     The .cat-sidebar / .cat-sidebar-item / .cat-sidebar-name / etc.
+     classes are owned by src/layouts/Base.astro and reused here verbatim. */
+  .cat-sidebar-group {
+    list-style: none;
+  }
+  .cat-sidebar-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px 6px;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted, #6c6b65);
+    border-top: 1px solid var(--line, #eadfd8);
+    background: var(--canvas, #fffaf7);
+  }
+  .cat-sidebar-group:first-child .cat-sidebar-group-header {
+    border-top: none;
+  }
+  .cat-sidebar-group-title {
+    color: var(--charcoal, #313E48);
+  }
+  .cat-sidebar-group-count {
+    font-size: 0.68rem;
+    color: var(--muted, #6c6b65);
+    background: var(--soft, #fff0e9);
+    padding: 1px 8px;
+    border-radius: 99px;
+  }
+  .cat-sidebar-group-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 4px;
+  }
+</style>

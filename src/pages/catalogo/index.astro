@@ -1,54 +1,112 @@
 ---
+// src/pages/catalogo/index.astro
+// Catalog landing page. Slice 2 of catalog-v2-ui-migration: consumes
+// src/lib/catalog.ts directly (bypasses the legacy shim), renders the
+// grouped 8-group sidebar, per-row ItemTypeChip, context-aware WhatsApp
+// CTA, search filter, PDF button, and JSON-LD ItemList schema.
+//
+// Refs:
+//   openspec/changes/catalog-v2-ui-migration-slice-2/proposal.md
+//   openspec/changes/catalog-v2-ui-migration-slice-2/design.md (section 8)
+
 import Base from '../../layouts/Base.astro';
-import { categories, products } from '../../data/catalog';
+import { adapter } from '../../lib/catalog.ts';
+import {
+  groupCategoriesByGroup,
+  sortItemsByDisplayName,
+} from '../../lib/categories.ts';
+import CategorySidebar from '../../components/CategorySidebar.astro';
+import ItemTypeChip from '../../components/ItemTypeChip.astro';
+import WhatsAppCta from '../../components/WhatsAppCta.astro';
+import PdfDownloadButton from '../../components/PdfDownloadButton.astro';
+
+const totalProducts = adapter.items.length;
+const totalCategories = adapter.categories.length;
+const totalServices = adapter.serviceCategories.length;
+const sortedItems = sortItemsByDisplayName(adapter.items);
+const groups = groupCategoriesByGroup(adapter.categories);
+
+const rowsForPdf = sortedItems.map((it) => {
+  const cat = adapter.getCategory(it.category_code);
+  return `${it.sku} | ${it.display_name} | ${cat?.label ?? ''}`;
+});
+
+const GROUP_LABELS: Record<string, string> = {
+  sierras: 'Sierras',
+  consumibles: 'Consumibles',
+  cuchillos: 'Cuchillos',
+  herramientas: 'Herramientas',
+  materiales: 'Materiales',
+  servicios: 'Servicios',
+  maquinaria: 'Maquinaria',
+  instrumentos: 'Instrumentos',
+};
+
+function formatPrice(p: {
+  is_price_available: boolean;
+  formatted: string | null;
+}): string {
+  if (!p.is_price_available) return 'A cotizar';
+  return p.formatted ?? 'Consultar';
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Todos los productos',
+  numberOfItems: sortedItems.length,
+  itemListElement: sortedItems.map((item, idx) => {
+    const cat = adapter.getCategory(item.category_code);
+    return {
+      '@type': 'ListItem',
+      position: idx + 1,
+      name: item.display_name,
+      url: `https://todohuincha.cl/productos/${cat?.slug ?? ''}/${encodeURIComponent(item.sku)}`,
+    };
+  }),
+};
 ---
-<Base title="Catálogo | Todo Huincha" description="Catálogo completo de productos Todo Huincha, disponible por cotización.">
+<Base
+  title="Catálogo | Todo Huincha"
+  description="Catálogo completo de productos Todo Huincha, disponible por cotización."
+>
   <div class="catalog-hero-dark">
     <div class="catalog-hero-inner wrap">
       <div class="hero-left">
         <span class="eyebrow">Catálogo</span>
         <h1 id="cat-label">Todos los productos</h1>
-        <p class="hero-subtitle"><span id="cat-count">{products.length}</span> productos disponibles</p>
+        <p class="hero-subtitle">
+          <span id="cat-count">{totalProducts}</span> productos · {totalCategories} categorías · {totalServices} servicios técnicos
+        </p>
       </div>
       <div class="hero-right">
         <div class="search-wrapper">
-          <input id="cat-search" class="catalog-search-dark" type="search" placeholder="Buscar por producto o código…" aria-label="Buscar productos" autocomplete="off" />
+          <input
+            id="cat-search"
+            class="catalog-search-dark"
+            type="search"
+            placeholder="Buscar por producto o código…"
+            aria-label="Buscar productos"
+            autocomplete="off"
+          />
           <svg class="search-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </div>
-        <button class="pdf-btn-dark" id="cat-pdf-btn" data-title="Catálogo Todo Huincha" data-subtitle={`${products.length} productos en ${categories.length} categorías`} data-rows={JSON.stringify(products.map(p => `${p.internal_reference} | ${p.name} | ${p.category.title}`))}>
-          <svg class="download-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Descargar PDF
-        </button>
+        <PdfDownloadButton
+          title="Catálogo Todo Huincha"
+          subtitle={`${totalProducts} productos en ${totalCategories} categorías`}
+          rows={rowsForPdf}
+        />
       </div>
     </div>
   </div>
 
   <div class="catalog-layout wrap">
-    <!-- Sidebar de categorías -->
-    <aside class="cat-sidebar" id="cat-sidebar">
-      <div class="cat-sidebar-header">
-        <span>Categorías</span>
-        <span class="cat-total-badge">{products.length}</span>
-      </div>
-      <ul class="cat-sidebar-list">
-        <li>
-          <button class="cat-sidebar-item is-active" data-slug="__all__" id="cat-btn-all">
-            <span class="cat-sidebar-name">Todos los productos</span>
-            <span class="cat-sidebar-count">{products.length}</span>
-          </button>
-        </li>
-        {categories.map((cat) => (
-          <li>
-            <button class="cat-sidebar-item" data-slug={cat.slug} id={`cat-btn-${cat.slug}`}>
-              <span class="cat-sidebar-name">{cat.title}</span>
-              <span class="cat-sidebar-count">{cat.products_count}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </aside>
+    <CategorySidebar
+      categories={adapter.categories}
+      activeSlug={null}
+      totalProducts={totalProducts}
+    />
 
-    <!-- Área de productos -->
     <div class="catalog-content">
       <div class="cat-table-header">
         <span>PRODUCTO</span>
@@ -58,20 +116,46 @@ import { categories, products } from '../../data/catalog';
       </div>
 
       <div class="catalog-list" id="cat-list">
-        {products.map((product) => (
-          <div
-            class="cat-row"
-            data-slug={product.category.slug}
-            data-search={`${product.name} ${product.internal_reference} ${product.category.title}`.toLowerCase()}
-          >
-            <span class="cat-row-name">{product.name}</span>
-            <span class="cat-row-tag">{product.category.title}</span>
-            <span class="cat-row-code">Cód. {product.internal_reference}</span>
-            <a class="button cat-row-btn" href={`/productos/${product.category.slug}/${encodeURIComponent(product.internal_reference)}`}>
-              Ver y cotizar
-            </a>
-          </div>
-        ))}
+        {sortedItems.map((item) => {
+          const cat = adapter.getCategory(item.category_code);
+          const catSlug = cat?.slug ?? '';
+          const searchKey = [
+            item.display_name,
+            item.sku,
+            cat?.label ?? '',
+            item.search?.tokens?.join(' ') ?? '',
+          ]
+            .join(' ')
+            .toLowerCase();
+          const groupKey = cat?.group ?? '';
+          return (
+            <div
+              class={`cat-row cat-row--${item.item_type}`}
+              data-slug={catSlug}
+              data-group={groupKey}
+              data-search={searchKey}
+              data-type={item.item_type}
+            >
+              <span class="cat-row-name">
+                <ItemTypeChip itemType={item.item_type} itemId={item.sku} />
+                <span class="cat-row-name-text">{item.display_name}</span>
+                <span class="cat-row-price">{formatPrice(item.pricing)}</span>
+              </span>
+              <span class="cat-row-tag">{cat?.label ?? '—'}</span>
+              <span class="cat-row-code">Cód. {item.sku}</span>
+              <span class="cat-row-actions">
+                <a class="button cat-row-btn" href={`/productos/${catSlug}/${encodeURIComponent(item.sku)}`}>
+                  Ver
+                </a>
+                <WhatsAppCta
+                  context="sales"
+                  productName={item.display_name}
+                  sku={item.sku}
+                />
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <p class="catalog-empty" id="cat-empty" style="display:none">
@@ -79,369 +163,201 @@ import { categories, products } from '../../data/catalog';
       </p>
     </div>
   </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <!-- Per-group WhatsApp CTAs at the end of each section. Rendered as a
+       plain section list so JS-side search/filter applies the same
+       visibility rules as the items above. Kept outside .cat-list to
+       avoid polluting item rows. -->
+  <section class="catalog-group-ctas wrap" aria-label="Cotizar por sección">
+    {[...groups.entries()].map(([groupKey]) => (
+      <div class="catalog-group-cta" data-group={groupKey}>
+        <h2>{GROUP_LABELS[groupKey] ?? groupKey}</h2>
+        <WhatsAppCta
+          context={groupKey as 'sales' | 'repuestos' | 'machinery' | 'general'}
+        />
+      </div>
+    ))}
+    <div class="catalog-group-cta">
+      <h2>Cotización general</h2>
+      <WhatsAppCta context="general" />
+    </div>
+  </section>
 </Base>
 
+<style is:global>
+  /* Inner column inside .cat-row-name: chip + text + price stacked flex. */
+  .cat-row-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .cat-row-name-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink, #292925);
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
+  }
+  .cat-row-price {
+    font-size: 0.78rem;
+    color: var(--muted, #6c6b65);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cat-row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Per-section CTA strip at end of catalog */
+  .catalog-group-ctas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .catalog-group-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: var(--radius, 14px);
+    background: var(--surface, #fff);
+  }
+  .catalog-group-cta h2 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--charcoal, #313E48);
+  }
+</style>
+
 <script>
-import { jsPDF } from 'jspdf';
+  // Vanilla JS filter: sidebar (by category) + search (debounced 100ms).
+  // PDF data attrs are updated to match the visible rows, so the
+  // PdfDownloadButton component always exports the current filtered set.
+  let activeSlug = '__all__';
+  let searchTerm = '';
+  let debounceTimer: number | undefined;
 
-// ── Estado ───────────────────────────────────────────────
-let activeSlug = '__all__';
-let searchTerm = '';
-
-// ── Elementos ────────────────────────────────────────────
-const rows = [...document.querySelectorAll<HTMLElement>('.cat-row')];
-const buttons = [...document.querySelectorAll<HTMLButtonElement>('.cat-sidebar-item')];
-const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
-const countEl = document.querySelector<HTMLElement>('#cat-count');
-const labelEl = document.querySelector<HTMLElement>('#cat-label');
-const emptyEl = document.querySelector<HTMLElement>('#cat-empty');
-const pdfBtn = document.querySelector<HTMLButtonElement>('#cat-pdf-btn');
-
-// ── Render ───────────────────────────────────────────────
-function render() {
-  let visible = 0;
-  rows.forEach((row) => {
-    const slugMatch = activeSlug === '__all__' || row.dataset.slug === activeSlug;
-    const searchMatch = !searchTerm || (row.dataset.search ?? '').includes(searchTerm);
-    const show = slugMatch && searchMatch;
-    row.classList.toggle('is-hidden', !show);
-    if (show) visible++;
-  });
-
-  if (countEl) countEl.textContent = String(visible);
-  if (emptyEl) emptyEl.style.display = visible > 0 ? 'none' : 'block';
-
-  // Synchronize PDF data with current visible/filtered list
-  const activeBtn = buttons.find((b) => b.dataset.slug === activeSlug);
-  updatePdf(activeSlug, activeBtn);
-}
-
-// ── Activar categoría ────────────────────────────────────
-function activateCategory(slug: string) {
-  activeSlug = slug;
-  buttons.forEach((btn) => btn.classList.toggle('is-active', btn.dataset.slug === slug));
-  const activeBtn = buttons.find((b) => b.dataset.slug === slug);
-  if (labelEl && activeBtn) {
-    labelEl.textContent = activeBtn.querySelector('.cat-sidebar-name')?.textContent ?? '';
+  function getVisibleRows(): HTMLElement[] {
+    return [
+      ...document.querySelectorAll<HTMLElement>('.cat-row:not(.is-hidden)'),
+    ];
   }
-  // Limpiar búsqueda al cambiar categoría
+
+  function render() {
+    const rows = document.querySelectorAll<HTMLElement>('.cat-row');
+    let visible = 0;
+    rows.forEach((row) => {
+      const slugMatch =
+        activeSlug === '__all__' || row.dataset.slug === activeSlug;
+      const searchMatch =
+        !searchTerm || (row.dataset.search ?? '').includes(searchTerm);
+      const show = slugMatch && searchMatch;
+      row.classList.toggle('is-hidden', !show);
+      if (show) visible++;
+    });
+    const countEl = document.querySelector<HTMLElement>('#cat-count');
+    const emptyEl = document.querySelector<HTMLElement>('#cat-empty');
+    if (countEl) countEl.textContent = String(visible);
+    if (emptyEl) emptyEl.style.display = visible > 0 ? 'none' : 'block';
+    updatePdfData();
+  }
+
+  function activateCategory(slug: string) {
+    activeSlug = slug;
+    const buttons = document.querySelectorAll<HTMLButtonElement>(
+      '.cat-sidebar-item'
+    );
+    buttons.forEach((btn) =>
+      btn.classList.toggle('is-active', btn.dataset.slug === slug)
+    );
+    const labelEl = document.querySelector<HTMLElement>('#cat-label');
+    const activeBtn = document.querySelector<HTMLButtonElement>(
+      `[data-slug="${slug}"]`
+    );
+    if (labelEl && activeBtn) {
+      const name =
+        activeBtn.querySelector('.cat-sidebar-name')?.textContent ?? '';
+      labelEl.textContent = slug === '__all__' ? 'Todos los productos' : name;
+    }
+    const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
+    if (searchInput) {
+      searchInput.value = '';
+      searchTerm = '';
+    }
+    render();
+  }
+
+  function updatePdfData() {
+    const pdfBtn = document.querySelector<HTMLButtonElement>('#cat-pdf-btn');
+    if (!pdfBtn) return;
+    const visibleRows = getVisibleRows();
+    const pdfRows = visibleRows.map((r) => {
+      const code = r.querySelector('.cat-row-code')?.textContent ?? '';
+      const name =
+        r.querySelector('.cat-row-name-text')?.textContent ?? '';
+      const category = r.querySelector('.cat-row-tag')?.textContent ?? '';
+      return `${code} | ${name} | ${category}`;
+    });
+    const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
+    const searchActive = !!(
+      searchInput && searchInput.value.trim().length > 0
+    );
+    if (activeSlug === '__all__') {
+      pdfBtn.dataset.title = 'Catálogo Todo Huincha';
+      if (searchActive) {
+        pdfBtn.dataset.subtitle = `${visibleRows.length} productos encontrados para la búsqueda`;
+      } else {
+        const catCount =
+          document.querySelectorAll('.cat-sidebar-item').length - 1;
+        pdfBtn.dataset.subtitle = `${visibleRows.length} productos en ${catCount} categorías`;
+      }
+    } else {
+      const activeBtn = document.querySelector<HTMLButtonElement>(
+        `[data-slug="${activeSlug}"]`
+      );
+      const catName =
+        activeBtn?.querySelector('.cat-sidebar-name')?.textContent ??
+        activeSlug;
+      pdfBtn.dataset.title = `Todo Huincha — ${catName}`;
+      if (searchActive) {
+        pdfBtn.dataset.subtitle = `${visibleRows.length} productos filtrados en esta categoría`;
+      } else {
+        pdfBtn.dataset.subtitle = `${visibleRows.length} productos en esta categoría`;
+      }
+    }
+    pdfBtn.dataset.rows = JSON.stringify(pdfRows);
+  }
+
+  document
+    .querySelectorAll<HTMLButtonElement>('.cat-sidebar-item')
+    .forEach((btn) => {
+      btn.addEventListener('click', () =>
+        activateCategory(btn.dataset.slug ?? '__all__')
+      );
+    });
+
+  const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
   if (searchInput) {
-    searchInput.value = '';
-    searchTerm = '';
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => {
+        searchTerm = searchInput.value.toLowerCase().trim();
+        render();
+      }, 100);
+    });
   }
-  render(); // render now calls updatePdf automatically
-}
 
-// ── PDF dinámico ─────────────────────────────────────────
-function updatePdf(slug: string, btn: HTMLButtonElement | undefined) {
-  if (!pdfBtn) return;
-  const visibleRows = rows.filter((r) => !r.classList.contains('is-hidden'));
-  const pdfRows = visibleRows.map((r) => {
-    const code = r.querySelector('.cat-row-code')?.textContent ?? '';
-    const name = r.querySelector('.cat-row-name')?.textContent ?? '';
-    const category = r.querySelector('.cat-row-tag')?.textContent ?? '';
-    return `${code} | ${name} | ${category}`;
-  });
-
-  const searchActive = searchInput && searchInput.value.trim().length > 0;
-  if (slug === '__all__') {
-    pdfBtn.dataset.title = 'Catálogo Todo Huincha';
-    if (searchActive) {
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos encontrados para la búsqueda`;
-    } else {
-      const catCount = buttons.length - 1;
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos en ${catCount} categorías`;
-    }
-  } else {
-    const catName = btn?.querySelector('.cat-sidebar-name')?.textContent ?? slug;
-    pdfBtn.dataset.title = `Todo Huincha — ${catName}`;
-    if (searchActive) {
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos filtrados en esta categoría`;
-    } else {
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos en esta categoría`;
-    }
-  }
-  pdfBtn.dataset.rows = JSON.stringify(pdfRows);
-}
-
-// ── Eventos sidebar ──────────────────────────────────────
-buttons.forEach((btn) => {
-  btn.addEventListener('click', () => activateCategory(btn.dataset.slug ?? '__all__'));
-});
-
-// ── Eventos búsqueda ─────────────────────────────────────
-searchInput?.addEventListener('input', () => {
-  searchTerm = searchInput.value.toLowerCase().trim();
   render();
-});
-
-// ── PDF click ────────────────────────────────────────────
-pdfBtn?.addEventListener('click', async () => {
-  const title = pdfBtn.dataset.title ?? 'Todo Huincha';
-  const subtitle = pdfBtn.dataset.subtitle ?? '';
-  const pdfRows: string[] = JSON.parse(pdfBtn.dataset.rows ?? '[]');
-  
-  const orange = [251, 77, 8];
-  const slate = [49, 62, 72];
-  const muted = [108, 107, 101];
-  const borderCol = [234, 223, 216];
-  const bgHeader = [244, 246, 248];
-  const bgRowAlt = [250, 251, 252];
-  
-  // Helper to load logo from DOM or fetch it
-  const getLogoBase64 = (): Promise<string | null> => {
-    return new Promise((resolve) => {
-      const logoImg = document.querySelector<HTMLImageElement>('.brand img');
-      if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = logoImg.naturalWidth;
-          canvas.height = logoImg.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(logoImg, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-            return;
-          }
-        } catch (e) {
-          console.warn('Failed to extract logo from DOM image, trying fetch...', e);
-        }
-      }
-      
-      const img = new Image();
-      img.src = '/logo-todohuincha.svg';
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || 324;
-          canvas.height = img.naturalHeight || 92;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-          } else {
-            resolve(null);
-          }
-        } catch (e) {
-          resolve(null);
-        }
-      };
-      img.onerror = () => resolve(null);
-    });
-  };
-
-  const logoBase64 = await getLogoBase64();
-  
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-  
-  let pageNum = 1;
-  
-  const drawPageDecorations = (currentPg: number) => {
-    // Thin top orange bar
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(0, 0, 210, 3.5, 'F');
-    
-    // Draw Logo on the left
-    if (logoBase64) {
-      pdf.addImage(logoBase64, 'PNG', 15, 8, 36, 10.3);
-    } else {
-      // Vector fallback logo
-      pdf.setDrawColor(orange[0], orange[1], orange[2]);
-      pdf.setLineWidth(0.5);
-      pdf.circle(20, 13.5, 4);
-      pdf.circle(20, 13.5, 1.2);
-      for (let angle = 0; angle < 360; angle += 30) {
-        const rad = (angle * Math.PI) / 180;
-        pdf.line(20 + 4 * Math.cos(rad), 13.5 + 4 * Math.sin(rad), 20 + 5.2 * Math.cos(rad + 0.1), 13.5 + 5.2 * Math.sin(rad + 0.1));
-      }
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      pdf.text('TODO', 27, 13.5);
-      pdf.setTextColor(orange[0], orange[1], orange[2]);
-      pdf.text('HUINCHA', 41, 13.5);
-    }
-    
-    // Right-aligned header texts
-    pdf.setTextColor(slate[0], slate[1], slate[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('CATÁLOGO DE PRODUCTOS', 195, 12.5, { align: 'right' });
-    
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7.5);
-    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 195, 16.5, { align: 'right' });
-    
-    // Thin separator line
-    pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-    pdf.setLineWidth(0.25);
-    pdf.line(15, 22, 195, 22);
-    
-    // Footer line and contact info
-    pdf.line(15, 276, 195, 276);
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFontSize(7.5);
-    pdf.text('Comercializadora Todo Huincha Ltda. · Longitudinal Sur 4277, Padre Las Casas · info@todohuincha.com · (45) 240 0000', 105, 281.5, { align: 'center' });
-    pdf.text(`Página ${currentPg}`, 195, 281.5, { align: 'right' });
-  };
-  
-  drawPageDecorations(pageNum);
-  
-  let y = 30;
-  
-  // Title
-  pdf.setTextColor(slate[0], slate[1], slate[2]);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(13);
-  pdf.text(title.toUpperCase(), 15, y);
-  y += 5.5;
-  
-  // Subtitle
-  if (subtitle) {
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8.5);
-    pdf.text(subtitle, 15, y);
-    y += 9;
-  } else {
-    y += 3;
-  }
-  
-  const drawTableHeader = (posY: number) => {
-    pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
-    pdf.rect(15, posY, 180, 8, 'F');
-    
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(15, posY, 1.5, 8, 'F');
-    
-    pdf.setTextColor(slate[0], slate[1], slate[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CÓDIGO', 18, posY + 5.5);
-    pdf.text('PRODUCTO', 50, posY + 5.5);
-  };
-  
-  drawTableHeader(y);
-  y += 8;
-  
-  // Group the visible products by category
-  const categoriesMap = new Map<string, { code: string, name: string }[]>();
-  
-  pdfRows.forEach((row) => {
-    // row format: "code | name | category"
-    const parts = row.split(' | ');
-    const code = parts[0] ? parts[0].replace('Cód. ', '').trim() : '';
-    const name = parts[1] ? parts[1].trim() : row;
-    const category = parts[2] ? parts[2].trim() : 'General';
-    
-    if (!categoriesMap.has(category)) {
-      categoriesMap.set(category, []);
-    }
-    categoriesMap.get(category)!.push({ code, name });
-  });
-
-  let isAlt = false;
-  pdf.setFontSize(8.5);
-  
-  categoriesMap.forEach((productsList, categoryName) => {
-    // Check if we need a page break for the category header (need at least 20mm)
-    if (y + 18 > 268) {
-      pdf.addPage();
-      pageNum++;
-      drawPageDecorations(pageNum);
-      y = 26;
-      drawTableHeader(y);
-      y += 8;
-      isAlt = false;
-    }
-    
-    // Draw Category Section Header Row
-    pdf.setFillColor(253, 246, 242); // very light soft orange background
-    pdf.rect(15, y, 180, 8, 'F');
-    
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(15, y, 1.5, 8, 'F');
-    
-    pdf.setTextColor(orange[0], orange[1], orange[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8.5);
-    pdf.text(categoryName.toUpperCase(), 19, y + 5.5);
-    
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7.5);
-    pdf.text(`${productsList.length} productos`, 191, y + 5.5, { align: 'right' });
-    
-    pdf.setDrawColor(orange[0], orange[1], orange[2]);
-    pdf.setLineWidth(0.2);
-    pdf.line(15, y + 8, 195, y + 8);
-    
-    y += 8;
-    isAlt = false; // Reset alternation for a new category
-    
-    // Draw products under this category
-    productsList.forEach((prod) => {
-      const nameLines = pdf.splitTextToSize(prod.name, 140);
-      const rowHeight = Math.max(7.5, nameLines.length * 4.5 + 3);
-      
-      // Page break check
-      if (y + rowHeight > 268) {
-        pdf.addPage();
-        pageNum++;
-        drawPageDecorations(pageNum);
-        y = 26;
-        drawTableHeader(y);
-        y += 8;
-        isAlt = false;
-        
-        // Redraw category header on new page so user knows category is continuing
-        pdf.setFillColor(253, 246, 242);
-        pdf.rect(15, y, 180, 6, 'F');
-        pdf.setFillColor(orange[0], orange[1], orange[2]);
-        pdf.rect(15, y, 1.5, 6, 'F');
-        pdf.setTextColor(orange[0], orange[1], orange[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(8);
-        pdf.text(`${categoryName.toUpperCase()} (continuación)`, 19, y + 4.2);
-        pdf.line(15, y + 6, 195, y + 6);
-        y += 6;
-      }
-      
-      if (isAlt) {
-        pdf.setFillColor(bgRowAlt[0], bgRowAlt[1], bgRowAlt[2]);
-        pdf.rect(15, y, 180, rowHeight, 'F');
-      }
-      
-      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-      pdf.setLineWidth(0.15);
-      pdf.line(15, y + rowHeight, 195, y + rowHeight);
-      
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(prod.code, 18, y + 4.8);
-      
-      pdf.setTextColor(30, 30, 30);
-      pdf.setFont('helvetica', 'normal');
-      let lineY = y + 4.8;
-      nameLines.forEach((line: string) => {
-        pdf.text(line, 50, lineY);
-        lineY += 4.5;
-      });
-      
-      y += rowHeight;
-      isAlt = !isAlt;
-    });
-    
-    // Add small space between categories
-    y += 3;
-  });
-  
-  pdf.save(`${title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.pdf`);
-});
 </script>

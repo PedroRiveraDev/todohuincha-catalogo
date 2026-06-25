@@ -1,0 +1,61 @@
+---
+// src/components/ItemTypeChip.astro
+// Colored chip per `item_type`. Slice 2 of catalog-v2-ui-migration.
+//
+// Refs:
+//   openspec/changes/catalog-v2-ui-migration-slice-2/design.md (section 5)
+
+interface Props {
+  itemType: 'simple_product' | 'spare_part' | 'machinery' | 'service';
+  itemId?: string;
+}
+
+const { itemType = 'simple_product', itemId } = Astro.props;
+
+const TYPE_LABELS: Record<string, string> = {
+  simple_product: 'Producto',
+  spare_part: 'Repuesto',
+  machinery: 'Maquinaria',
+  service: 'Servicio',
+};
+
+const label = TYPE_LABELS[itemType] ?? 'Producto';
+---
+<span
+  class={`cat-row-type type-${itemType}`}
+  aria-label={`Tipo: ${label}`}
+  data-item-id={itemId}
+>{label}</span>
+
+<style>
+  .cat-row-type {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  /* Fallback hex values mirror Base.astro CSS vars so the chip renders
+     correctly even when scoped styles cannot read global :root tokens. */
+  .type-simple_product {
+    background: var(--soft, #fff0e9);
+    color: var(--charcoal, #313E48);
+  }
+  .type-spare_part {
+    background: var(--muted, #6c6b65);
+    color: #fff;
+  }
+  .type-machinery {
+    background: #1f3a8a;
+    color: #fff;
+  }
+  .type-service {
+    background: var(--orange, #FB4D08);
+    color: #fff;
+  }
+</style>
