@@ -291,3 +291,24 @@ export const adapter = Object.freeze({
   countByType,
   countByGroup,
 });
+
+// ---------------------------------------------------------------------------
+// resolveImageSrc (catalog-machinery-assets-embed)
+// ---------------------------------------------------------------------------
+// Pure read helper for the v2 catalog adapter. Prefers base64 over URL for
+// items whose `assets.main_image` has been inlined by
+// scripts/embed-extended-assets.mjs; falls through to the asset URL when
+// base64 is absent or empty; returns "" when neither is present.
+// No IO. No mutations. Safe to call at build time.
+//
+// Refs:
+//   openspec/changes/catalog-machinery-assets-embed/spec.md (Requirement: helper resolveImageSrc)
+//   openspec/changes/catalog-machinery-assets-embed/design.md (section 3.2)
+
+export function resolveImageSrc(item: CatalogItem): string {
+  type AssetEmbed = { url?: string | null; data_base64?: string | null };
+  const asset = item.assets?.main_image as AssetEmbed | null | undefined;
+  const b64 = asset?.data_base64;
+  if (b64 && b64.length > 0) return `data:image/png;base64,${b64}`;
+  return asset?.url ?? "";
+}

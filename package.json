@@ -6,7 +6,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --import tsx --test \"tests/**/*.test.mjs\""
+    "test": "node --import tsx --test \"tests/**/*.test.mjs\"",
+    "embed-assets": "node scripts/embed-extended-assets.mjs",
+    "embed-assets:dry-run": "node scripts/embed-extended-assets.mjs --dry-run --verbose"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
