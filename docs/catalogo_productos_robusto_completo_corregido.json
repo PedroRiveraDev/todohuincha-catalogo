@@ -52586,18 +52586,18 @@
           "asset_id": "item-2202I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2202I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2202I.png",
+          "storage_key": "catalog/products/2202I/images/main.png",
+          "file_name": "2202I.png",
           "alt_text": "Imagen principal de BANCO SIERRA 10\" CABINET TABLE SAW W0708-10",
           "caption": "BANCO SIERRA 10\" CABINET TABLE SAW W0708-10",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -52720,18 +52720,18 @@
           "asset_id": "item-2203I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2203I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2203I.png",
+          "storage_key": "catalog/products/2203I/images/main.png",
+          "file_name": "2203I.png",
           "alt_text": "Imagen principal de BANCO SIERRA 12\" CABINET TABLE SAW - W0708-12",
           "caption": "BANCO SIERRA 12\" CABINET TABLE SAW - W0708-12",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -53133,18 +53133,18 @@
           "asset_id": "item-2198I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2198I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2198I.png",
+          "storage_key": "catalog/products/2198I/images/main.png",
+          "file_name": "2198I.png",
           "alt_text": "Imagen principal de CANTEADORA 12\" WOOD JOINTER W0101P",
           "caption": "CANTEADORA 12\" WOOD JOINTER W0101P",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -53264,18 +53264,18 @@
           "asset_id": "item-2221I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2221I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2221I.png",
+          "storage_key": "catalog/products/2221I/images/main.png",
+          "file_name": "2221I.png",
           "alt_text": "Imagen principal de CANTEADORA 6\" DELUXE JOINTER - W0109D",
           "caption": "CANTEADORA 6\" DELUXE JOINTER - W0109D",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -53398,18 +53398,18 @@
           "asset_id": "item-2222I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2222I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2222I.png",
+          "storage_key": "catalog/products/2222I/images/main.png",
+          "file_name": "2222I.png",
           "alt_text": "Imagen principal de CEPILLADORA 16x8\" WOOD PLANER - W0204",
           "caption": "CEPILLADORA 16x8\" WOOD PLANER - W0204",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -53691,18 +53691,18 @@
           "asset_id": "item-2199I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2199I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2199I.png",
+          "storage_key": "catalog/products/2199I/images/main.png",
+          "file_name": "2199I.png",
           "alt_text": "Imagen principal de CEPILLADORA 20\" PRODUCTION PLANER W0201",
           "caption": "CEPILLADORA 20\" PRODUCTION PLANER W0201",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -54059,18 +54059,18 @@
           "asset_id": "item-2208I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2208I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2208I.png",
+          "storage_key": "catalog/products/2208I/images/main.png",
+          "file_name": "2208I.png",
           "alt_text": "Imagen principal de CEPILLADORA DOBLE SIDE WOOD PLANER W0202",
           "caption": "CEPILLADORA DOBLE SIDE WOOD PLANER W0202",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -54620,18 +54620,18 @@
           "asset_id": "item-2205I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2205I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2205I.png",
+          "storage_key": "catalog/products/2205I/images/main.png",
+          "file_name": "2205I.png",
           "alt_text": "Imagen principal de LIJADORA DE BANDA OSCILANTE W0501",
           "caption": "LIJADORA DE BANDA OSCILANTE W0501",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -54754,18 +54754,18 @@
           "asset_id": "item-2223I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2223I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2223I.png",
+          "storage_key": "catalog/products/2223I/images/main.png",
+          "file_name": "2223I.png",
           "alt_text": "Imagen principal de LIJADORA DE BANCO 20-40\" DRUM SANDER - W0604",
           "caption": "LIJADORA DE BANCO 20-40\" DRUM SANDER - W0604",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -54890,18 +54890,18 @@
           "asset_id": "item-2206I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2206I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2206I.png",
+          "storage_key": "catalog/products/2206I/images/main.png",
+          "file_name": "2206I.png",
           "alt_text": "Imagen principal de LIJADORA DE BANCO 26\" VARIABLE SPEED DUAL DRUM SANDER - W0602",
           "caption": "LIJADORA DE BANCO 26\" VARIABLE SPEED DUAL DRUM SANDER - W0602",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -55026,18 +55026,18 @@
           "asset_id": "item-2204I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2204I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2204I.png",
+          "storage_key": "catalog/products/2204I/images/main.png",
+          "file_name": "2204I.png",
           "alt_text": "Imagen principal de LIJADORA DE DISCO Y BANDA 6\"x 9\" DISC / BELT FINISHING SANDER - W0506",
           "caption": "LIJADORA DE DISCO Y BANDA 6\"x 9\" DISC / BELT FINISHING SANDER - W0506",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -55243,18 +55243,18 @@
           "asset_id": "item-2197I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2197I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2197I.png",
+          "storage_key": "catalog/products/2197I/images/main.png",
+          "file_name": "2197I.png",
           "alt_text": "Imagen principal de AFILADORA DE SIERRAS HUINCHAS CBN TH100",
           "caption": "AFILADORA DE SIERRAS HUINCHAS CBN TH100",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -55506,18 +55506,18 @@
           "asset_id": "item-2194I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2194I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2194I.png",
+          "storage_key": "catalog/products/2194I/images/main.png",
+          "file_name": "2194I.png",
           "alt_text": "Imagen principal de MAQUINA AFILADORA DE CUCHILLOS MF2510B - 1000",
           "caption": "MAQUINA AFILADORA DE CUCHILLOS MF2510B - 1000",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -56220,18 +56220,18 @@
           "asset_id": "item-2207I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2207I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2207I.png",
+          "storage_key": "catalog/products/2207I/images/main.png",
+          "file_name": "2207I.png",
           "alt_text": "Imagen principal de SIERRA HUINCHA 15” WOODWORKING BANDSAW W0802",
           "caption": "SIERRA HUINCHA 15” WOODWORKING BANDSAW W0802",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -56860,18 +56860,18 @@
           "asset_id": "item-2200I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2200I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2200I.png",
+          "storage_key": "catalog/products/2200I/images/main.png",
+          "file_name": "2200I.png",
           "alt_text": "Imagen principal de TUPI 1,5 HP SHAPER W. SLIDING TABLE W0404",
           "caption": "TUPI 1,5 HP SHAPER W. SLIDING TABLE W0404",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -57221,18 +57221,18 @@
           "asset_id": "item-2201I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2201I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2201I.png",
+          "storage_key": "catalog/products/2201I/images/main.png",
+          "file_name": "2201I.png",
           "alt_text": "Imagen principal de TUPI 3 HP PRODUCTION SHAPER W0401FX",
           "caption": "TUPI 3 HP PRODUCTION SHAPER W0401FX",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -67648,18 +67648,18 @@
           "asset_id": "item-2281I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2281I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2281I.png",
+          "storage_key": "catalog/products/2281I/images/main.png",
+          "file_name": "2281I.png",
           "alt_text": "Imagen principal de TENSIONADOR DE SIERRAS HUINCHAS MR146",
           "caption": "TENSIONADOR DE SIERRAS HUINCHAS MR146",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -67864,18 +67864,18 @@
           "asset_id": "item-2283I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2283I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2283I.png",
+          "storage_key": "catalog/products/2283I/images/main.png",
+          "file_name": "2283I.png",
           "alt_text": "Imagen principal de AFILADOR DE CUCHILLOS UNIVERSAL MF2720",
           "caption": "AFILADOR DE CUCHILLOS UNIVERSAL MF2720",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -68021,18 +68021,18 @@
           "asset_id": "item-852-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/852/images/main.webp",
-          "file_name": null,
+          "url": "/products/852.png",
+          "storage_key": "catalog/products/852/images/main.png",
+          "file_name": "852.png",
           "alt_text": "Imagen principal de MOTOR LIFAN BEN MOD AQ-2V78F-2D 24HP",
           "caption": "MOTOR LIFAN BEN MOD AQ-2V78F-2D 24HP",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
@@ -68260,18 +68260,18 @@
           "asset_id": "item-2280I-main-image",
           "asset_type": "image",
           "asset_role": "main_image",
-          "url": null,
-          "storage_key": "catalog/products/2280I/images/main.webp",
-          "file_name": null,
+          "url": "/products/2280I.png",
+          "storage_key": "catalog/products/2280I/images/main.png",
+          "file_name": "2280I.png",
           "alt_text": "Imagen principal de PERFILADORA MF223C",
           "caption": "PERFILADORA MF223C",
           "sort_order": 1,
           "is_primary": true,
-          "source_status": "pending_upload",
+          "source_status": "uploaded",
           "metadata": {
             "pdf_usage": "primary_product_visual",
             "recommended_min_width_px": 1200,
-            "recommended_format": "webp"
+            "recommended_format": "png"
           }
         },
         "gallery": [
