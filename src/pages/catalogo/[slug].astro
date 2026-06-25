@@ -1,31 +1,44 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { categories } from '../../data/catalog';
-export function getStaticPaths(){ return categories.map((category)=>({params:{slug:category.slug},props:{category}})); }
-const { category } = Astro.props;
+import { categories, itemsByCategory, type CatalogItem } from '../../data/catalog';
+export function getStaticPaths() {
+  return categories.map((category) => ({
+    params: { slug: category.slug },
+    props: { category, products: itemsByCategory(category.code) },
+  }));
+}
+const { category, products } = Astro.props;
 ---
-<Base title={`${category.title} | Todo Huincha`}>
+<Base title={`${category.label} | Todo Huincha`}>
   <section class="wrap cat-page">
     <div class="cat-page-header">
       <a class="muted back-link" href="/catalogo">← Volver al catálogo</a>
       <div class="cat-page-meta">
         <span class="eyebrow">Categoría</span>
-        <h1 class="cat-page-title">{category.title}</h1>
+        <h1 class="cat-page-title">{category.label}</h1>
         <p class="muted">{category.products_count} productos disponibles por cotización.</p>
       </div>
       <div class="cat-page-actions">
-        <button class="button alt download-cat-slug-pdf" id="cat-slug-pdf-btn" data-title={`Todo Huincha — ${category.title}`} data-subtitle={`${category.products_count} productos en esta categoría`} data-rows={JSON.stringify(category.products.map((p) => `${p.internal_reference} | ${p.name} | ${category.title}`))}>
+        <button class="button alt download-cat-slug-pdf" id="cat-slug-pdf-btn" data-title={`Todo Huincha — ${category.label}`} data-subtitle={`${category.products_count} productos en esta categoría`} data-rows={JSON.stringify(products.map((p: CatalogItem) => `${p.sku} | ${p.display_name} | ${category.label} | ${p.pricing.formatted ?? 'A cotizar'}`))}>
           Descargar PDF
         </button>
       </div>
     </div>
 
     <div class="catalog-list">
-      {category.products.map((product) => (
-        <div class="cat-row">
-          <span class="cat-row-name">{product.name}</span>
-          <span class="cat-row-code">Cód. {product.internal_reference}</span>
-          <a class="button cat-row-btn" href={`/productos/${category.slug}/${encodeURIComponent(product.internal_reference)}`}>
+      {products.map((product: CatalogItem) => (
+        <div class={`cat-row cat-row--${product.item_type}`}>
+          <span class={`cat-row-type type-${product.item_type}`}>
+            {product.item_type === 'machinery' ? 'Maquinaria' :
+             product.item_type === 'service' ? 'Servicio' :
+             product.item_type === 'spare_part' ? 'Repuesto' : 'Producto'}
+          </span>
+          <span class="cat-row-name">{product.display_name}</span>
+          <span class="cat-row-code">Cód. {product.sku}</span>
+          <span class={`cat-row-price ${product.pricing.is_price_available ? '' : 'cat-row-price--quote'}`}>
+            {product.pricing.is_price_available ? (product.pricing.formatted ?? 'Consultar') : 'A cotizar'}
+          </span>
+          <a class="button cat-row-btn" href={`/productos/${category.slug}/${encodeURIComponent(product.sku)}`}>
             Ver y cotizar
           </a>
         </div>

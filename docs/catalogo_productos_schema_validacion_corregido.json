@@ -1,0 +1,1184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://todohuincha.com/schemas/catalogo-productos.schema.json",
+  "title": "Catálogo Industrial Todo Huincha — Schema de Validación",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "catalog",
+    "catalog_assets",
+    "dictionary_version",
+    "dictionaries",
+    "families",
+    "items",
+    "catalog_generation"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "catalog": {
+      "type": "object",
+      "required": [
+        "catalog_id",
+        "catalog_name",
+        "default_currency",
+        "generated_at",
+        "totals"
+      ],
+      "properties": {
+        "catalog_id": {
+          "type": "string"
+        },
+        "catalog_name": {
+          "type": "string"
+        },
+        "catalog_slug": {
+          "type": "string"
+        },
+        "default_currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "source_file": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string"
+        },
+        "totals": {
+          "type": "object",
+          "required": [
+            "categories",
+            "products",
+            "families",
+            "zero_price_products",
+            "item_types"
+          ],
+          "properties": {
+            "categories": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "products": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "families": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "zero_price_products": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item_types": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "technical_sheets": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "dictionary_version": {
+      "$ref": "#/$defs/dictionaryVersion"
+    },
+    "dictionaries": {
+      "type": "object",
+      "required": [
+        "category_dictionary",
+        "attribute_dictionary",
+        "item_type_dictionary"
+      ],
+      "properties": {
+        "category_dictionary": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/categoryDefinition"
+          }
+        },
+        "attribute_dictionary": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/attributeDefinition"
+          }
+        },
+        "item_type_dictionary": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/itemTypeDefinition"
+          }
+        },
+        "subtype_dictionary": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/subtypeDefinition"
+          }
+        }
+      }
+    },
+    "families": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/productFamily"
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/catalogItem"
+      }
+    },
+    "service_catalog": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/serviceCatalogItem"
+      }
+    },
+    "catalog_assets": {
+      "type": "object",
+      "required": [
+        "logo",
+        "cover_image",
+        "placeholder_image"
+      ],
+      "properties": {
+        "logo": {
+          "$ref": "#/$defs/asset"
+        },
+        "cover_image": {
+          "$ref": "#/$defs/asset"
+        },
+        "pdf_background": {
+          "$ref": "#/$defs/asset"
+        },
+        "placeholder_image": {
+          "$ref": "#/$defs/asset"
+        }
+      },
+      "additionalProperties": true
+    },
+    "catalog_generation": {
+      "type": "object",
+      "required": [
+        "output_types"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "output_types": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "dictionaryVersion": {
+      "type": "object",
+      "required": [
+        "version",
+        "hash_sha256"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "hash_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "categoryDefinition": {
+      "type": "object",
+      "required": [
+        "label",
+        "slug",
+        "group",
+        "entity_class_default",
+        "products_count"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "entity_class_default": {
+          "type": "string"
+        },
+        "products_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "attributeDefinition": {
+      "type": "object",
+      "required": [
+        "label",
+        "type",
+        "is_filterable",
+        "description"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "is_filterable": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "ui_component": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        }
+      }
+    },
+    "itemTypeDefinition": {
+      "type": "object",
+      "required": [
+        "label",
+        "description",
+        "requires_physical_stock",
+        "allows_technical_sheet",
+        "allows_compatibility",
+        "allows_service_capabilities"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "requires_physical_stock": {
+          "type": "boolean"
+        },
+        "allows_technical_sheet": {
+          "type": "boolean"
+        },
+        "allows_compatibility": {
+          "type": "boolean"
+        },
+        "allows_service_capabilities": {
+          "type": "boolean"
+        }
+      }
+    },
+    "subtypeDefinition": {
+      "type": "object",
+      "required": [
+        "label",
+        "item_type",
+        "is_active"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "item_type": {
+          "type": "string",
+          "enum": [
+            "simple_product",
+            "spare_part",
+            "machinery",
+            "service"
+          ]
+        },
+        "entity_class": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object"
+        }
+      }
+    },
+    "money": {
+      "type": "object",
+      "required": [
+        "sale_amount",
+        "currency",
+        "formatted",
+        "is_price_available"
+      ],
+      "properties": {
+        "sale_amount": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "formatted": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "is_price_available": {
+          "type": "boolean"
+        },
+        "price_observations": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "public_price_from_technical_sheet": {
+          "type": "object"
+        },
+        "has_source_price_difference": {
+          "type": "boolean"
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "is_active",
+        "is_price_zero",
+        "is_catalog_visible"
+      ],
+      "properties": {
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_price_zero": {
+          "type": "boolean"
+        },
+        "is_catalog_visible": {
+          "type": "boolean"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "catalog_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sheet_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sheet_slug": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "search": {
+      "type": "object",
+      "required": [
+        "normalized_name",
+        "tokens",
+        "ai_semantic_context"
+      ],
+      "properties": {
+        "normalized_name": {
+          "type": "string"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ai_semantic_context": {
+          "type": "string"
+        }
+      }
+    },
+    "productFamily": {
+      "type": "object",
+      "required": [
+        "id",
+        "family_key",
+        "display_name",
+        "category_code",
+        "variant_count",
+        "variant_skus"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "family_key": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "category_code": {
+          "type": "string"
+        },
+        "category_label": {
+          "type": "string"
+        },
+        "entity_class": {
+          "type": "string"
+        },
+        "variant_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "variant_skus": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "price_min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "price_max": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "assets": {
+          "$ref": "#/$defs/familyAssets"
+        }
+      }
+    },
+    "catalogItem": {
+      "type": "object",
+      "required": [
+        "id",
+        "sku",
+        "name",
+        "display_name",
+        "slug",
+        "entity_class",
+        "category_code",
+        "pricing",
+        "status",
+        "source",
+        "search",
+        "specifications",
+        "item_type",
+        "technical_profile_level",
+        "assets"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "family_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "variant_prefix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entity_class": {
+          "type": "string"
+        },
+        "category_code": {
+          "type": "string"
+        },
+        "category_label": {
+          "type": "string"
+        },
+        "category_group": {
+          "type": "string"
+        },
+        "item_type": {
+          "type": "string",
+          "enum": [
+            "simple_product",
+            "spare_part",
+            "machinery",
+            "service"
+          ]
+        },
+        "item_subtype_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "technical_profile_level": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "standard",
+            "extended"
+          ]
+        },
+        "pricing": {
+          "$ref": "#/$defs/money"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "search": {
+          "$ref": "#/$defs/search"
+        },
+        "specifications": {
+          "type": "object"
+        },
+        "machinery_profile": {
+          "$ref": "#/$defs/machineryProfile"
+        },
+        "spare_part_profile": {
+          "$ref": "#/$defs/sparePartProfile"
+        },
+        "service_profile": {
+          "$ref": "#/$defs/serviceProfile"
+        },
+        "assets": {
+          "$ref": "#/$defs/itemAssets"
+        },
+        "generated_outputs": {
+          "type": "object",
+          "properties": {
+            "catalog_card_pdf": {
+              "$ref": "#/$defs/generatedOutput"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "item_type": {
+                "const": "machinery"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "machinery_profile"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "item_type": {
+                "const": "spare_part"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "spare_part_profile"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "item_type": {
+                "const": "service"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "service_profile"
+            ]
+          }
+        }
+      ]
+    },
+    "machineryProfile": {
+      "type": "object",
+      "required": [
+        "model",
+        "features",
+        "specification_groups"
+      ],
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "brand": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manufacturer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "short_description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "long_description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "use_case": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recommended_for": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "specification_groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/specificationGroup"
+          }
+        },
+        "raw_specification_lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "price_observations": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "specificationGroup": {
+      "type": "object",
+      "required": [
+        "group_code",
+        "label",
+        "values"
+      ],
+      "properties": {
+        "group_code": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/specificationValue"
+          }
+        }
+      }
+    },
+    "specificationValue": {
+      "type": "object",
+      "required": [
+        "label"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value_number": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "raw": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value_json": {
+          "type": "object"
+        }
+      }
+    },
+    "sparePartProfile": {
+      "type": "object",
+      "properties": {
+        "part_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "brand": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manufacturer_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "compatibilities": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "serviceProfile": {
+      "type": "object",
+      "required": [
+        "service_code",
+        "service_name",
+        "pricing_mode",
+        "capabilities"
+      ],
+      "properties": {
+        "service_code": {
+          "type": "string"
+        },
+        "service_name": {
+          "type": "string"
+        },
+        "service_group": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pricing_mode": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "range",
+            "quoted",
+            "by_measure",
+            "by_hour"
+          ]
+        },
+        "requires_diagnosis": {
+          "type": "boolean"
+        },
+        "is_schedulable": {
+          "type": "boolean"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/serviceCapability"
+          }
+        }
+      }
+    },
+    "serviceCatalogItem": {
+      "type": "object",
+      "required": [
+        "service_code",
+        "service_name",
+        "item_type",
+        "pricing_mode",
+        "capabilities"
+      ],
+      "properties": {
+        "service_code": {
+          "type": "string"
+        },
+        "service_name": {
+          "type": "string"
+        },
+        "item_type": {
+          "const": "service"
+        },
+        "item_subtype_code": {
+          "type": "string"
+        },
+        "service_group": {
+          "type": "string"
+        },
+        "pricing_mode": {
+          "type": "string"
+        },
+        "requires_diagnosis": {
+          "type": "boolean"
+        },
+        "is_schedulable": {
+          "type": "boolean"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/serviceCapability"
+          }
+        }
+      }
+    },
+    "serviceCapability": {
+      "type": "object",
+      "required": [
+        "capability_code",
+        "label"
+      ],
+      "properties": {
+        "capability_code": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "min_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "applies_to": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "required": [
+        "asset_id",
+        "asset_type",
+        "asset_role",
+        "sort_order",
+        "is_primary",
+        "source_status"
+      ],
+      "properties": {
+        "asset_id": {
+          "type": "string"
+        },
+        "asset_type": {
+          "type": "string",
+          "enum": [
+            "image",
+            "logo",
+            "banner",
+            "background",
+            "placeholder",
+            "other"
+          ]
+        },
+        "asset_role": {
+          "type": "string",
+          "enum": [
+            "main_image",
+            "gallery_image",
+            "catalog_cover",
+            "category_banner",
+            "brand_logo",
+            "pdf_background",
+            "placeholder",
+            "decorative"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "storage_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "alt_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "caption": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sort_order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "is_primary": {
+          "type": "boolean"
+        },
+        "source_status": {
+          "type": "string",
+          "enum": [
+            "pending_upload",
+            "uploaded",
+            "external_url",
+            "missing"
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "itemAssets": {
+      "type": "object",
+      "required": [
+        "main_image",
+        "gallery",
+        "pdf_image_fallback_order"
+      ],
+      "properties": {
+        "main_image": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/asset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gallery": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          }
+        },
+        "suggested_storage_folder": {
+          "type": "string"
+        },
+        "pdf_image_fallback_order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "familyAssets": {
+      "type": "object",
+      "required": [
+        "main_image",
+        "gallery"
+      ],
+      "properties": {
+        "main_image": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/asset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gallery": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          }
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          }
+        },
+        "suggested_main_image_storage_key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "generatedOutput": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "template_key",
+        "output_storage_key",
+        "status",
+        "source"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "template_key": {
+          "type": "string"
+        },
+        "output_storage_key": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_generated",
+            "generated",
+            "failed"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "const": "generated_from_json_data"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "description": "Valida el JSON usado para generar catálogo PDF, fichas técnicas PDF, API y frontend. Los PDFs finales se generan desde los datos; no son documentos asociados al producto."
+}
