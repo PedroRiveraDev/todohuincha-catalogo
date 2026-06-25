@@ -108,3 +108,24 @@ Decision needed before apply: No
 Chained PRs recommended: No
 Chain strategy: single-pr
 400-line budget risk: Low
+
+## 12. Final Status
+
+Closed on 2026-06-25 after `sdd-verify` returned `pass-with-warnings` and the docs-drift follow-up landed.
+
+| Field | Value |
+|-------|-------|
+| Apply commit | `c849821` (`feat(catalog-ui): migrate catalog landing to v2 data model (slice 2)`) |
+| Drift-fix commit | `64c67c6` (`chore(openspec): close docs drift after sdd-verify slice-2`) |
+| Tests | 32/32 passing (18 slice 1 + 14 slice 2) |
+| Type-check | `npx astro check` -> 0 errors, 0 warnings, 6 hints (1 new cosmetic, 5 pre-existing) |
+| Build | 740 pages: 21 cat + 681 product + 2 API JSON + 1 catalog landing |
+| Source-only diff (apply commit) | +813 lines vs 800 budget (+13 lines, 1.6% over) |
+| Source-only diff (slice 1 + 2 combined) | ~1335 source lines net |
+| Frozen adapter | `src/lib/catalog.ts`, `src/data/catalog.ts`, `src/components/DownloadPdf.astro` unchanged |
+| File hygiene | no BOM, no emoji, no section symbol, no `Co-Authored-By` |
+| Status | success (pass-with-warnings resolved into docs-only drift fix) |
+
+Drift-fix `64c67c6` corrected the "impeccable side-stripe exception" docs drift across `proposal.md`, `spec.md`, `design.md`, `tasks.md` (the prior claim that an existing `.cat-sidebar-item.is-active { border-left: 3px solid var(--orange) }` rule was preserved was moot -- the rule never existed in `Base.astro`) and reset `.env.example` to empty placeholders after the apply agent committed a real Chilean mobile number into the example file. No functional code changes in the drift commit.
+
+For full acceptance matrix and deviation catalog, see `archive.md`.
