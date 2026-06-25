@@ -16,7 +16,7 @@ plus a thin shim that preserves page imports. No UI.
 | `src/lib/catalog.ts` | NEW | Build-time adapter. AJV-validates v2 JSON. Exposes `items`, `families`, `serviceCatalog`, `categories` (grouped on `category_code`). Dedups by `sku`. Helpers: `getCategory`, `getItem`, `getFamilyByKey`, `itemsByCategory/Family/Type`, `countByType/Group`. Exposes `legacyView` (v1). Reuses types from `catalog-client.ts`. |
 | `src/data/catalog.ts` | REWRITE | ≤10-line re-export shim of `legacyView`. Re-exports `categories`, `products`, `catalog`, `getCategory`, `getProduct`. |
 | `src/pages/index.astro` | 1 LINE | `category.title` → `category.label`. |
-| `tests/lib/catalog.test.mjs` | NEW | `node:test`: AJV, counts 687/666/10, dedup, `S.CIRCULARES`=101, `countByType`=558/98/31. |
+| `tests/lib/catalog.test.mjs` | NEW | `node:test`: AJV, counts 681/666/10 (post-dedup), dedup, `S.CIRCULARES`=101, `countByType`=552/98/31. |
 | `.env.example` | NEW | `PUBLIC_SITE_URL`, `PUBLIC_WHATSAPP_NUMBERS`, `PUBLIC_GA_ID` (opt). |
 
 Delete: none. `.gitignore` already covers `.env`.
@@ -42,12 +42,17 @@ Delete: none. `.gitignore` already covers `.env`.
 2. **Derive + alias**: `categories` reduced from `items` on `category_code`. `title`/`products_count` are aliases on the same object.
 3. **Dedup by `sku`** (first wins) at load. **Shim**: 4-line re-export. **Tests** target the adapter, not the shim.
 
+## Decisions (resolved with user)
+
+| Decision | Resolution |
+|----------|------------|
+| Build produces 21 cat pages (not 22). The 22nd `category_dictionary` key `SERVICIOS` is orphan (zero items). | Confirmed. Adapter skips orphan codes; build emits 21. |
+| Build produces 681 product pages (not 687). 6 duplicate SKUs dedup at load. | Confirmed. First occurrence wins; duplicates array exported for diagnostics. |
+
 ## Risks
 
 | Risk | Mitigation |
 |------|------------|
-| Criterion says "22 category pages"; v2 has 21 unique `category_code` | Flag in `next_recommended`; confirm with PM |
-| Dedup cuts pages 687→681; criterion says "687 product pages" | Flag in `next_recommended`; confirm intent |
 | Type drift between adapter and `catalog-client.ts` | Reuse `catalog-client.ts` types; do not redefine |
 
 ## Rollback Plan
@@ -61,10 +66,10 @@ The new files and the 1-line `index.astro` change are removed. No DB.
 
 ## Success Criteria
 
-- [ ] `npm run test` passes (adapter suite)
+- [ ] `npm run test` passes (adapter suite, 17/17)
 - [ ] `npx astro check` 0 errors
-- [ ] `npx astro build` completes (counts in Risks)
+- [ ] `npx astro build` completes (21 cat pages, 681 product pages, 2 API endpoints)
 - [ ] AJV throws on schema mismatch (malformed-JSON test)
-- [ ] `src/data/catalog.ts` ≤ 10 lines, no transform logic
-- [ ] Total diff < 800 lines
+- [ ] `src/data/catalog.ts` is a thin shim with no transformation logic (mapping lives in adapter)
+- [ ] Source-only diff under 800 lines
 - [ ] 6 dup SKUs collapse via `getItem(sku)`

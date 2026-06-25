@@ -95,6 +95,18 @@ test('adapter.legacyView: category.title aliases category.label (backward compat
   assert.equal(first.title, first.label);
 });
 
+test('adapter.categories: items inside each entry are alphabetically sorted by display_name', () => {
+  for (const cat of adapter.categories) {
+    const names = cat.items.map((it) => it.display_name);
+    const sorted = [...names].sort((a, b) => a.localeCompare(b, 'es'));
+    assert.deepEqual(
+      names,
+      sorted,
+      `category ${cat.code} items must be sorted by display_name`
+    );
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Negative path: AJV schema mismatch throws
 // ---------------------------------------------------------------------------

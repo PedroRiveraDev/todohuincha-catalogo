@@ -75,9 +75,9 @@ The system MUST document the public env contract in `.env.example` at the repo r
 
 ### Requirement: catalog-adapter: tests (TDD)
 
-The system MUST include tests at `tests/lib/catalog.test.mjs` using `node:test` and `node:assert/strict`. The suite MUST assert: (1) `items.length === 681`; (2) `duplicates === ['1790I','216I','212I','217I','474I','1993I']`; (3) `categories.length === 21`; (4) `serviceCategories.length === 10`; (5) `families.length === 666`; (6) `getItem('LA1071').sku === 'LA1071'`; (7) `getItem('NOTFOUND') === undefined`; (8) `itemsByCategory('MAQUINAS').length === 31`; (9) `itemsByType('machinery').length === 31`; (10) `itemsByType('spare_part').length === 98`; (11) `itemsByType('simple_product').length === 552`; (12) `countByType().machinery === 31`; (13) `getCategory('MAQUINAS').code === 'MAQUINAS'`; (14) `getCategory('SERVICIOS') === undefined`; (15) `getCategoryBySlug('maquinas').code === 'MAQUINAS'`; (16) items inside each `categories` entry are alphabetically sorted by `display_name`.
+The system MUST include tests at `tests/lib/catalog.test.mjs` using `node:test` and `node:assert/strict`. The suite MUST assert: (1) `items.length === 681`; (2) `duplicates === ['1790I','216I','212I','217I','474I','1993I']`; (3) `categories.length === 21`; (4) `serviceCategories.length === 10`; (5) `families.length === 666`; (6) `getItem('LA1071').sku === 'LA1071'`; (7) `getItem('NOTFOUND') === undefined`; (8) `itemsByCategory('MAQUINAS').length === 31`; (9) `itemsByType('machinery').length === 31`; (10) `itemsByType('spare_part').length === 98`; (11) `itemsByType('simple_product').length === 552`; (12) `countByType().machinery === 31`; (13) `getCategory('MAQUINAS').code === 'MAQUINAS'`; (14) `getCategory('SERVICIOS') === undefined`; (15) `getCategoryBySlug('maquinas').code === 'MAQUINAS'`; (16) each `legacyCategory.title` aliases its `label` (backward compatibility); (17) items inside each `categories` entry are alphabetically sorted by `display_name`. Plus (18) a negative test that loads a malformed JSON fixture and asserts the AJV validation throws with a message matching `Catalog schema mismatch:`.
 
 #### Scenario: test suite passes
 
 - WHEN `node --test tests/lib/catalog.test.mjs` runs
-- THEN all 16 assertions pass
+- THEN all 18 assertions pass
