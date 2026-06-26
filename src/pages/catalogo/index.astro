@@ -79,22 +79,24 @@ const jsonLd = {
         </p>
       </div>
       <div class="hero-right">
-        <div class="search-wrapper">
-          <input
-            id="cat-search"
-            class="catalog-search-dark"
-            type="search"
-            placeholder="Buscar por producto o código…"
-            aria-label="Buscar productos"
-            autocomplete="off"
+        <div id="hero-actions-bar" class="hero-actions-bar">
+          <div class="search-wrapper">
+            <input
+              id="cat-search"
+              class="catalog-search-dark"
+              type="search"
+              placeholder="Buscar por producto o código…"
+              aria-label="Buscar productos"
+              autocomplete="off"
+            />
+            <svg class="search-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          <PdfDownloadButton
+            title="Catálogo Todo Huincha"
+            subtitle={`${totalProducts} productos en ${totalCategories} categorías`}
+            rows={rowsForPdf}
           />
-          <svg class="search-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </div>
-        <PdfDownloadButton
-          title="Catálogo Todo Huincha"
-          subtitle={`${totalProducts} productos en ${totalCategories} categorías`}
-          rows={rowsForPdf}
-        />
       </div>
     </div>
   </div>
@@ -406,4 +408,80 @@ const jsonLd = {
   }
 
   render();
+
+  // -------------------------------------------------------------------
+  // Magic-bar: the #hero-actions-bar (search input + PDF button) starts
+  // inside the catalog hero. On scroll past the hero, the SAME element
+  // moves into the sticky header slot (#header-actions-slot) via FLIP
+  // animation. On scroll back, it returns to the hero. Always one DOM
+  // node, never duplicated.
+  // -------------------------------------------------------------------
+  const heroActions = document.getElementById('hero-actions-bar');
+  const heroActionsHost = heroActions?.parentElement as HTMLElement | null;
+  const headerActionsSlot = document.getElementById(
+    'header-actions-slot'
+  ) as HTMLElement | null;
+
+  if (heroActions && heroActionsHost && headerActionsSlot) {
+    let isFloating = false;
+    let isAnimating = false;
+    const HEADER_HEIGHT = 80;
+    const ANIM_MS = 380;
+    const TRIGGER_OFFSET = 24; // start moving slightly before the hero exits
+
+    function flipMove(targetParent: HTMLElement): void {
+      const startRect = heroActions!.getBoundingClientRect();
+      targetParent.appendChild(heroActions!);
+      // Mark the parent so the slot CSS scopes apply.
+      heroActions!.classList.add('hero-actions-floating');
+      const endRect = heroActions!.getBoundingClientRect();
+      const dx = startRect.left - endRect.left;
+      const dy = startRect.top - endRect.top;
+
+      heroActions!.style.transition = 'none';
+      heroActions!.style.transform = `translate(${dx}px, ${dy}px)`;
+
+      // Force reflow so the browser registers the pre-transform state.
+      void heroActions!.getBoundingClientRect();
+
+      heroActions!.style.transition = `transform ${ANIM_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+      heroActions!.style.transform = '';
+
+      const onEnd = () => {
+        heroActions!.removeEventListener('transitionend', onEnd);
+        heroActions!.style.transition = '';
+        isAnimating = false;
+      };
+      heroActions!.addEventListener('transitionend', onEnd);
+    }
+
+    function maybeFloat(): void {
+      if (isAnimating) return;
+      const rect = heroActions!.getBoundingClientRect();
+      const shouldFloat = rect.bottom < HEADER_HEIGHT + TRIGGER_OFFSET;
+
+      if (shouldFloat && !isFloating) {
+        isFloating = true;
+        isAnimating = true;
+        flipMove(headerActionsSlot!);
+      } else if (!shouldFloat && isFloating) {
+        isFloating = false;
+        isAnimating = true;
+        flipMove(heroActionsHost!);
+      }
+    }
+
+    let scrollRaf: number | undefined;
+    function onScroll(): void {
+      if (scrollRaf !== undefined) return;
+      scrollRaf = window.requestAnimationFrame(() => {
+        scrollRaf = undefined;
+        maybeFloat();
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    maybeFloat();
+  }
 </script>
