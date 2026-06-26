@@ -12,10 +12,11 @@ import { groupCategoriesByGroup } from '../lib/categories.ts';
 interface Props {
   categories: CategorySummary[];
   activeSlug: string | null;
+  activeGroup?: string | null;
   totalProducts: number;
 }
 
-const { categories, activeSlug = null, totalProducts } = Astro.props;
+const { categories, activeSlug = null, activeGroup = null, totalProducts } = Astro.props;
 
 const groups = groupCategoriesByGroup(categories);
 
@@ -51,10 +52,14 @@ const GROUP_LABELS: Record<string, string> = {
       const groupTotal = cats.reduce((sum, c) => sum + c.products_count, 0);
       return (
         <li class="cat-sidebar-group" data-group={groupKey}>
-          <header class="cat-sidebar-group-header">
+          <button
+            class={`cat-sidebar-group-header${activeGroup === groupKey ? ' is-active' : ''}`}
+            data-group={groupKey}
+            type="button"
+          >
             <span class="cat-sidebar-group-title">{GROUP_LABELS[groupKey] ?? groupKey}</span>
             <span class="cat-sidebar-group-count">{groupTotal}</span>
-          </header>
+          </button>
           <ul class="cat-sidebar-group-list">
             {cats.map((cat) => (
               <li>
@@ -96,12 +101,30 @@ const GROUP_LABELS: Record<string, string> = {
     color: var(--muted, #6c6b65);
     border-top: 1px solid var(--line, #eadfd8);
     background: var(--canvas, #fffaf7);
+    width: 100%;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font: inherit;
+    text-align: left;
+  }
+  .cat-sidebar-group-header:hover {
+    background: var(--soft, #fff0e9);
+    color: var(--orange, #FB4D08);
+  }
+  .cat-sidebar-group-header.is-active {
+    background: var(--soft, #fff0e9);
+    color: var(--orange, #FB4D08);
+    border-left: 3px solid var(--orange, #FB4D08);
+    padding-left: 13px;
   }
   .cat-sidebar-group:first-child .cat-sidebar-group-header {
     border-top: none;
   }
   .cat-sidebar-group-title {
-    color: var(--charcoal, #313E48);
+    color: inherit;
   }
   .cat-sidebar-group-count {
     font-size: 0.68rem;
@@ -109,6 +132,10 @@ const GROUP_LABELS: Record<string, string> = {
     background: var(--soft, #fff0e9);
     padding: 1px 8px;
     border-radius: 99px;
+  }
+  .cat-sidebar-group-header.is-active .cat-sidebar-group-count {
+    background: rgba(251, 77, 8, 0.08);
+    color: var(--orange, #FB4D08);
   }
   .cat-sidebar-group-list {
     list-style: none;

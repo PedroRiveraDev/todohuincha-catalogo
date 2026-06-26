@@ -246,6 +246,7 @@ const jsonLd = {
   // PDF data attrs are updated to match the visible rows, so the
   // PdfDownloadButton component always exports the current filtered set.
   let activeSlug = '__all__';
+  let activeGroup: string | null = null;
   let searchTerm = '';
   let debounceTimer: number | undefined;
 
@@ -261,9 +262,11 @@ const jsonLd = {
     rows.forEach((row) => {
       const slugMatch =
         activeSlug === '__all__' || row.dataset.slug === activeSlug;
+      const groupMatch =
+        activeGroup === null || row.dataset.group === activeGroup;
       const searchMatch =
         !searchTerm || (row.dataset.search ?? '').includes(searchTerm);
-      const show = slugMatch && searchMatch;
+      const show = slugMatch && groupMatch && searchMatch;
       row.classList.toggle('is-hidden', !show);
       if (show) visible++;
     });
@@ -276,15 +279,11 @@ const jsonLd = {
 
   function activateCategory(slug: string) {
     activeSlug = slug;
-    const buttons = document.querySelectorAll<HTMLButtonElement>(
-      '.cat-sidebar-item'
-    );
-    buttons.forEach((btn) =>
-      btn.classList.toggle('is-active', btn.dataset.slug === slug)
-    );
+    activeGroup = null;
+    syncButtonStates();
     const labelEl = document.querySelector<HTMLElement>('#cat-label');
     const activeBtn = document.querySelector<HTMLButtonElement>(
-      `[data-slug="${slug}"]`
+      `.cat-sidebar-item[data-slug="${slug}"]`
     );
     if (labelEl && activeBtn) {
       const name =
@@ -297,6 +296,38 @@ const jsonLd = {
       searchTerm = '';
     }
     render();
+  }
+
+  function activateGroup(groupKey: string) {
+    activeGroup = groupKey;
+    activeSlug = '__all__';
+    syncButtonStates();
+    const labelEl = document.querySelector<HTMLElement>('#cat-label');
+    const groupBtn = document.querySelector<HTMLButtonElement>(
+      `.cat-sidebar-group-header[data-group="${groupKey}"]`
+    );
+    if (labelEl && groupBtn) {
+      const name =
+        groupBtn.querySelector('.cat-sidebar-group-title')?.textContent ?? '';
+      labelEl.textContent = name;
+    }
+    const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
+    if (searchInput) {
+      searchInput.value = '';
+      searchTerm = '';
+    }
+    render();
+  }
+
+  function syncButtonStates() {
+    const items = document.querySelectorAll<HTMLButtonElement>('.cat-sidebar-item');
+    items.forEach((btn) =>
+      btn.classList.toggle('is-active', btn.dataset.slug === activeSlug)
+    );
+    const groups = document.querySelectorAll<HTMLButtonElement>('.cat-sidebar-group-header');
+    groups.forEach((btn) =>
+      btn.classList.toggle('is-active', btn.dataset.group === activeGroup)
+    );
   }
 
   function updatePdfData() {
@@ -346,6 +377,15 @@ const jsonLd = {
       btn.addEventListener('click', () =>
         activateCategory(btn.dataset.slug ?? '__all__')
       );
+    });
+
+  document
+    .querySelectorAll<HTMLButtonElement>('.cat-sidebar-group-header')
+    .forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const g = btn.dataset.group ?? '';
+        if (g) activateGroup(g);
+      });
     });
 
   const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
