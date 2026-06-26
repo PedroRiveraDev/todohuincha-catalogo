@@ -102,3 +102,18 @@ Decision needed before apply: No
 Chained PRs recommended: No
 Chain strategy: size-exception
 400-line budget risk: Low
+
+## Final Status
+
+- **Implementation commit**: `f93d96a` (`feat(product-detail): migrate /productos/[category]/[reference] to v2 adapter with JSON-LD Product schema`)
+- **Fix commit**: `37addd5` (`fix(product-detail): remove duplicated <Base> in /productos/[reference] page`) - resolved the FAILed verify-report C1 finding (duplicated `<Base>` element invalidating all 681 pages)
+- **Branch**: `feat/catalog-robust-v2-base`
+- **Verify verdict**: PASS (0 critical, 0 warning, 3 non-blocking suggestions)
+- **Verify report**: `openspec/changes/catalog-v2-ui-migration-slice-4/verify-report.md`
+- **Archive date**: 2026-06-25
+- **Test count**: 57/57 (52 slice 1+2+3 + 5 slice 4)
+- **Build**: 740 pages, 681 product subdirectories, completed in 14.08s
+- **AJV Product schema validation**: 681/681 PASS across all product pages
+- **DOM integrity**: 0 pages with >1 `<html>`/`<title>`/canonical; 681 pages with `og:type=product`
+- **User-reported WhatsApp bug**: FIXED - 0 bare `wa.me/?text=` links; 694 real `wa.me/56974997212...` links across 681 pages
+- **All 20 tasks completed**: T1-T20 marked [x] in sections 1-11
