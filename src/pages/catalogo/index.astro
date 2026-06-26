@@ -465,6 +465,21 @@ const jsonLd = {
       const dx = startRect.left - endRect.left;
       const dy = startRect.top - endRect.top;
 
+      // Edge case: if the bar's old position is way above the viewport
+      // (e.g. user scrolled fast past the hero), running the FLIP
+      // animation would visually start from a negative-Y transform and
+      // the bar would be invisible for the entire 380ms. In that case
+      // we skip the animation and just snap to the new position.
+      const START_OFFSCREEN_THRESHOLD = -120;
+      if (startRect.top < START_OFFSCREEN_THRESHOLD) {
+        heroActions!.style.transition = 'none';
+        heroActions!.style.transform = '';
+        setTimeout(() => {
+          isAnimating = false;
+        }, 0);
+        return;
+      }
+
       heroActions!.style.transition = 'none';
       heroActions!.style.transform = `translate(${dx}px, ${dy}px)`;
 
@@ -492,7 +507,13 @@ const jsonLd = {
       const heroEl = document.querySelector<HTMLElement>('.catalog-hero-dark');
       if (!heroEl) return;
       const heroRect = heroEl.getBoundingClientRect();
-      const shouldFloat = heroRect.bottom < HEADER_HEIGHT + TRIGGER_OFFSET;
+      // Hysteresis: different thresholds for going-floating vs
+      // returning-to-hero. Without this, fast scrolls near the boundary
+      // cause the bar to flap between hero and header in consecutive
+      // animation frames.
+      const UNFLOAT_THRESHOLD = HEADER_HEIGHT + TRIGGER_OFFSET + 48;
+      const threshold = isFloating ? UNFLOAT_THRESHOLD : HEADER_HEIGHT + TRIGGER_OFFSET;
+      const shouldFloat = heroRect.bottom < threshold;
 
       if (shouldFloat && !isFloating) {
         isFloating = true;
