@@ -19,6 +19,7 @@ import {
 } from '../../../lib/product-detail-meta.ts';
 import WhatsAppCta from '../../../components/WhatsAppCta.astro';
 import ItemTypeChip from '../../../components/ItemTypeChip.astro';
+import ProductPdfDownloadButton from '../../../components/ProductPdfDownloadButton.astro';
 import {
   buildWhatsAppUrl,
   parseWhatsAppNumbers,
@@ -146,6 +147,17 @@ const SPEC_LABELS: Record<(typeof SPEC_KEYS)[number], string> = {
 
           <div class="prod-detail-final-cta">
             <WhatsAppCta productName={item.display_name} sku={item.sku} context={whatsappContext} />
+            <ProductPdfDownloadButton
+              sku={item.sku}
+              displayName={item.display_name}
+              categoryLabel={item.category_label}
+              shortDescription={shortDescription}
+              specMap={specMap}
+              specGroups={[]}
+              features={[]}
+              brand={(item.machinery_profile?.brand as string | null) ?? null}
+              model={(item.machinery_profile?.model as string | null) ?? null}
+            />
           </div>
         </div>
       )}
@@ -179,6 +191,17 @@ const SPEC_LABELS: Record<(typeof SPEC_KEYS)[number], string> = {
 
           <div class="prod-detail-actions">
             <WhatsAppCta productName={item.display_name} sku={item.sku} context={whatsappContext} />
+            <ProductPdfDownloadButton
+              sku={item.sku}
+              displayName={item.display_name}
+              categoryLabel={item.category_label}
+              shortDescription={shortDescription}
+              specMap={specMap}
+              specGroups={specGroups}
+              features={(item.machinery_profile?.features as string[] | undefined) ?? []}
+              brand={(item.machinery_profile?.brand as string | null) ?? null}
+              model={(item.machinery_profile?.model as string | null) ?? null}
+            />
             {datasheetUrl && (
               <a class="cta-secondary" href={datasheetUrl}
                  target="_blank" rel="noreferrer noopener">

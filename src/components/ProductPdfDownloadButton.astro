@@ -1,0 +1,330 @@
+---
+// src/components/ProductPdfDownloadButton.astro
+// Per-product PDF generator. Used on /productos/[category]/[reference]
+// to generate a one-page datasheet for a single item.
+//
+// Generates a file named like "ficha-LA1071-recalque-30.pdf" so the
+// filename is recognisable in the user's Downloads folder (no more
+// generic "recalque-30-vaciado-recalque-igualado-rect-front" copy).
+
+interface SpecGroup {
+  group_code?: string;
+  label?: string;
+  values?: Array<{
+    label?: string;
+    value_text?: string;
+    raw?: string;
+  }>;
+}
+
+interface Props {
+  sku: string;
+  displayName: string;
+  categoryLabel: string;
+  shortDescription?: string;
+  specMap?: Record<string, unknown>;
+  specGroups?: SpecGroup[];
+  features?: string[];
+  brand?: string | null;
+  model?: string | null;
+}
+
+const {
+  sku,
+  displayName,
+  categoryLabel,
+  shortDescription = '',
+  specMap = {},
+  specGroups = [],
+  features = [],
+  brand = null,
+  model = null,
+} = Astro.props;
+
+// Sanitised filename stem: ficha-<sku-lowercased>-<slugified-name>.pdf
+const slugify = (s: string): string =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-+|-+$)/g, '')
+    .slice(0, 50);
+
+const filename = `ficha-${sku.toLowerCase()}-${slugify(displayName)}.pdf`;
+const title = `Ficha de Producto — ${categoryLabel}`;
+const subtitle = `${displayName} · Cód. ${sku}`;
+
+// Build a single-row representation for the PDF table
+const rows: string[] = [];
+if (brand) rows.push(`Cód. ${sku} | ${displayName} | ${brand}`);
+else rows.push(`Cód. ${sku} | ${displayName} | ${categoryLabel}`);
+
+const flatSpecs = Object.entries(specMap)
+  .filter(([, v]) => v !== null && v !== undefined && v !== '')
+  .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`);
+---
+
+<button
+  class="pdf-btn-dark"
+  type="button"
+  id="prod-pdf-btn"
+  data-title={title}
+  data-subtitle={subtitle}
+  data-rows={JSON.stringify(rows)}
+  data-sku={sku}
+  data-display-name={displayName}
+  data-category={categoryLabel}
+  data-short-description={shortDescription || ''}
+  data-flat-specs={JSON.stringify(flatSpecs)}
+  data-spec-groups={JSON.stringify(specGroups)}
+  data-features={JSON.stringify(features)}
+  data-brand={brand || ''}
+  data-model={model || ''}
+  data-filename={filename}
+>
+  <svg
+    class="download-icon-svg"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+    <polyline points="7 10 12 15 17 10"></polyline>
+    <line x1="12" y1="15" x2="12" y2="3"></line>
+  </svg>
+  Descargar PDF
+</button>
+
+<script>
+  import { jsPDF } from 'jspdf';
+
+  const btn = document.getElementById('prod-pdf-btn') as HTMLButtonElement | null;
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const filename = btn.dataset.filename ?? 'ficha.pdf';
+      const title = btn.dataset.title ?? 'Ficha de Producto';
+      const subtitle = btn.dataset.subtitle ?? '';
+      const sku = btn.dataset.sku ?? '';
+      const displayName = btn.dataset.displayName ?? '';
+      const category = btn.dataset.category ?? '';
+      const shortDescription = btn.dataset.shortDescription ?? '';
+      const brand = btn.dataset.brand ?? '';
+      const model = btn.dataset.model ?? '';
+      const flatSpecs: string[] = JSON.parse(btn.dataset.flatSpecs ?? '[]');
+      const specGroups: Array<{
+        label?: string;
+        group_code?: string;
+        values?: Array<{ label?: string; value_text?: string }>;
+      }> = JSON.parse(btn.dataset.specGroups ?? '[]');
+      const features: string[] = JSON.parse(btn.dataset.features ?? '[]');
+
+      const orange = [251, 77, 8];
+      const slate = [49, 62, 72];
+      const muted = [108, 107, 101];
+      const borderCol = [234, 223, 216];
+      const bgHeader = [244, 246, 248];
+
+      // Try to load the brand logo from the DOM (same trick as the
+      // catalog button so the visual identity matches).
+      const getLogoBase64 = (): Promise<string | null> =>
+        new Promise((resolve) => {
+          const logoImg = document.querySelector<HTMLImageElement>('.brand img');
+          if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = logoImg.naturalWidth;
+              canvas.height = logoImg.naturalHeight;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(logoImg, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+                return;
+              }
+            } catch (e) {
+              // fall through
+            }
+          }
+          const img = new Image();
+          img.src = '/logo-todohuincha.svg';
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth || 324;
+              canvas.height = img.naturalHeight || 92;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+              } else {
+                resolve(null);
+              }
+            } catch (e) {
+              resolve(null);
+            }
+          };
+          img.onerror = () => resolve(null);
+        });
+
+      const logoBase64 = await getLogoBase64();
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      // Header band
+      pdf.setFillColor(orange[0], orange[1], orange[2]);
+      pdf.rect(0, 0, 210, 3.5, 'F');
+
+      if (logoBase64) {
+        pdf.addImage(logoBase64, 'PNG', 15, 8, 36, 10.3);
+      } else {
+        pdf.setTextColor(slate[0], slate[1], slate[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        pdf.text('TODO HUINCHA', 15, 14);
+      }
+
+      pdf.setTextColor(slate[0], slate[1], slate[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text('FICHA DE PRODUCTO', 195, 12.5, { align: 'right' });
+      pdf.setTextColor(muted[0], muted[1], muted[2]);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7.5);
+      pdf.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 195, 16.5, { align: 'right' });
+
+      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
+      pdf.setLineWidth(0.25);
+      pdf.line(15, 22, 195, 22);
+
+      // Title block
+      let y = 32;
+      pdf.setTextColor(orange[0], orange[1], orange[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.text(category.toUpperCase(), 15, y);
+      y += 6;
+
+      pdf.setTextColor(slate[0], slate[1], slate[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      const titleLines = pdf.splitTextToSize(displayName, 175);
+      pdf.text(titleLines, 15, y);
+      y += titleLines.length * 7;
+
+      if (shortDescription) {
+        pdf.setTextColor(muted[0], muted[1], muted[2]);
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(10);
+        const descLines = pdf.splitTextToSize(shortDescription, 175);
+        pdf.text(descLines, 15, y);
+        y += descLines.length * 5;
+      }
+      y += 4;
+
+      // SKU + Brand box
+      pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
+      pdf.rect(15, y, 180, 12, 'F');
+      pdf.setFillColor(orange[0], orange[1], orange[2]);
+      pdf.rect(15, y, 1.5, 12, 'F');
+      pdf.setTextColor(slate[0], slate[1], slate[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text('CODIGO', 19, y + 5);
+      pdf.text('MARCA', 75, y + 5);
+      pdf.text('MODELO', 130, y + 5);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(sku, 19, y + 9);
+      pdf.text(brand || 'N/A', 75, y + 9);
+      pdf.text(model || 'N/A', 130, y + 9);
+      y += 16;
+
+      // Features (machinery)
+      if (features.length > 0) {
+        pdf.setTextColor(orange[0], orange[1], orange[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(11);
+        pdf.text('CARACTERISTICAS', 15, y);
+        y += 5;
+        pdf.setTextColor(50, 50, 50);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        features.slice(0, 5).forEach((feat) => {
+          const lines = pdf.splitTextToSize('• ' + feat, 175);
+          if (y + lines.length * 4.5 > 268) return;
+          pdf.text(lines, 18, y);
+          y += lines.length * 4.5 + 1;
+        });
+        y += 4;
+      }
+
+      // Specification groups (machinery)
+      if (specGroups.length > 0) {
+        pdf.setTextColor(orange[0], orange[1], orange[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(11);
+        pdf.text('ESPECIFICACIONES TECNICAS', 15, y);
+        y += 5;
+        specGroups.forEach((g) => {
+          if (y + 12 > 268) return;
+          pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
+          pdf.rect(15, y, 180, 6, 'F');
+          pdf.setFillColor(orange[0], orange[1], orange[2]);
+          pdf.rect(15, y, 1.5, 6, 'F');
+          pdf.setTextColor(slate[0], slate[1], slate[2]);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(9);
+          pdf.text((g.label ?? g.group_code ?? 'Grupo').toUpperCase(), 19, y + 4.2);
+          y += 6;
+          (g.values ?? []).forEach((v) => {
+            if (y + 5 > 268) return;
+            pdf.setTextColor(50, 50, 50);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(8.5);
+            pdf.text(`${v.label ?? ''}: ${v.value_text ?? ''}`, 19, y + 3.5);
+            y += 5;
+          });
+        });
+        y += 4;
+      }
+
+      // Flat specs (simple_product)
+      if (flatSpecs.length > 0 && specGroups.length === 0) {
+        pdf.setTextColor(orange[0], orange[1], orange[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(11);
+        pdf.text('ESPECIFICACIONES', 15, y);
+        y += 5;
+        flatSpecs.slice(0, 10).forEach((spec) => {
+          if (y + 5 > 268) return;
+          pdf.setTextColor(50, 50, 50);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.text(spec, 19, y + 3.5);
+          y += 5;
+        });
+        y += 4;
+      }
+
+      // Footer
+      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
+      pdf.setLineWidth(0.25);
+      pdf.line(15, 276, 195, 276);
+      pdf.setTextColor(muted[0], muted[1], muted[2]);
+      pdf.setFontSize(7.5);
+      pdf.text(
+        'Comercializadora Todo Huincha Ltda. · Longitudinal Sur 4277, Padre Las Casas · info@todohuincha.com · (45) 240 0000',
+        105,
+        281.5,
+        { align: 'center' }
+      );
+      pdf.text('www.todohuincha.cl', 195, 281.5, { align: 'right' });
+
+      pdf.save(filename);
+    });
+  }
+</script>

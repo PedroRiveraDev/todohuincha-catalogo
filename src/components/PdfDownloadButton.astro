@@ -283,7 +283,9 @@ const { title, subtitle, rows } = Astro.props;
         y += 3;
       });
 
-      pdf.save(`${title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.pdf`);
+      const dateSlug = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const filenameStem = `${title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}-${dateSlug}`;
+      pdf.save(`${filenameStem}.pdf`);
     });
   }
 </script>
