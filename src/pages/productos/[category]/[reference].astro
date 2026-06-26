@@ -1,28 +1,390 @@
 ---
+// src/pages/productos/[category]/[reference].astro -- Slice 4 rewrite.
+// Migrates the 28-line shim-driven page to the v2 adapter. Renders
+// one of three type-aware layouts (simple_product, spare_part,
+// machinery) plus a defensive service redirect, emits JSON-LD
+// Product + BreadcrumbList in <head>, and fixes the user-reported
+// bare `wa.me/?text=` link on every one of the 681 pages.
+//
+// Refs:
+//   openspec/changes/catalog-v2-ui-migration-slice-4/proposal.md
+//   openspec/changes/catalog-v2-ui-migration-slice-4/spec.md
+//   openspec/changes/catalog-v2-ui-migration-slice-4/design.md
+
 import Base from '../../../layouts/Base.astro';
-import DownloadPdf from '../../../components/DownloadPdf.astro';
-import { products } from '../../../data/catalog';
-export function getStaticPaths(){return products.map((product)=>({params:{category:product.category.slug,reference:product.internal_reference},props:{product}}));}
-const { product } = Astro.props;
-const message = encodeURIComponent(`Hola, quiero cotizar el producto ${product.name} (código ${product.internal_reference}).`);
+import { adapter, resolveImageSrc } from '../../../lib/catalog.ts';
+import {
+  getProductMeta,
+  buildProductJsonLd,
+} from '../../../lib/product-detail-meta.ts';
+import WhatsAppCta from '../../../components/WhatsAppCta.astro';
+import ItemTypeChip from '../../../components/ItemTypeChip.astro';
+import {
+  buildWhatsAppUrl,
+  parseWhatsAppNumbers,
+} from '../../../lib/whatsapp.ts';
+
+export function getStaticPaths() {
+  return adapter.items.map((item) => ({
+    params: { category: item.category_code.toLowerCase(), reference: item.sku },
+    props: { item },
+  }));
+}
+
+const { item } = Astro.props;
+// Defensive: services are not in the 681 unique products.
+if (item.item_type === 'service') return Astro.redirect('/catalogo');
+
+const imageSrc = resolveImageSrc(item);
+const meta = getProductMeta(item, imageSrc);
+const jsonLd = buildProductJsonLd(item, imageSrc, meta);
+
+const whatsappContext =
+  item.item_type === 'spare_part' ? 'repuestos'
+  : item.item_type === 'machinery' ? 'machinery'
+  : 'sales';
+
+const envNumbers = parseWhatsAppNumbers(import.meta.env.PUBLIC_WHATSAPP_NUMBERS);
+const datasheetNumber =
+  envNumbers.machinery ?? envNumbers.sales ?? Object.values(envNumbers)[0];
+const datasheetUrl =
+  item.machinery_profile?.source_pdf && datasheetNumber
+    ? buildWhatsAppUrl(
+        datasheetNumber,
+        `Hola, solicito la ficha tecnica de ${item.display_name} (codigo ${item.sku}).`,
+      )
+    : null;
+
+const compatibilities = Array.isArray(item.spare_part_profile?.compatibilities)
+  ? item.spare_part_profile.compatibilities
+  : [];
+const specGroups = Array.isArray(item.machinery_profile?.specification_groups)
+  ? item.machinery_profile.specification_groups
+  : [];
+const shortDescription =
+  (item.machinery_profile?.short_description as string | null | undefined) ?? item.display_name;
+const specMap = (item.specifications ?? {}) as Record<string, unknown>;
+
+const SPEC_KEYS = ['brand', 'materials', 'measurements_raw', 'quoted_inches'] as const;
+const SPEC_LABELS: Record<(typeof SPEC_KEYS)[number], string> = {
+  brand: 'Marca',
+  materials: 'Materiales',
+  measurements_raw: 'Medidas',
+  quoted_inches: 'Pulgadas',
+};
 ---
-<Base title={`${product.name} | Todo Huincha`}>
-  <section class="wrap detail">
-    <div>
-      <a class="muted back-link" href={`/catalogo/${product.category.slug}`}>← {product.category.title}</a>
-      <p class="eyebrow" style="margin-top:18px">Producto por cotización</p>
-      <h1 class="product-title">{product.name}</h1>
-      <p class="product-code">Código interno: {product.internal_reference}</p>
-      <p>Solicita una cotización para recibir disponibilidad, especificaciones completas, plazo y condiciones comerciales.</p>
-      <div class="product-actions">
-        <a class="button" href={`https://wa.me/?text=${message}`} target="_blank" rel="noreferrer">Solicitar cotización por WhatsApp</a>
+<meta property="og:type" content="product" data-product-detail-og="true" />
+<Base
+  title={meta.title}
+  description={meta.description}
+  canonicalPath={meta.canonicalPath}
+  ogImage={meta.ogImage}
+>
+<Base
+  title={meta.title}
+  description={meta.description}
+  canonicalPath={meta.canonicalPath}
+  ogImage={meta.ogImage}
+>
+  <section class="prod-detail">
+    <div class="prod-detail-inner wrap">
+      <a class="prod-back-link" href={`/catalogo/${item.category_code.toLowerCase()}`}>
+        Volver a {item.category_label}
+      </a>
+
+      <div class="prod-detail-header">
+        <div class="prod-detail-meta">
+          <span class="eyebrow">
+            <ItemTypeChip itemType={item.item_type} itemId={item.sku} />
+            {item.category_label}
+          </span>
+          <h1 class="prod-detail-title">{item.display_name}</h1>
+          <p class="prod-detail-subtitle">Codigo {item.sku} · {shortDescription}</p>
+        </div>
+
+        <figure class="product-image">
+          {imageSrc ? (
+            <img src={imageSrc} alt={item.display_name}
+                 loading="lazy" decoding="async" width="800" height="800" />
+          ) : (
+            <div class="product-image-placeholder" aria-label={item.display_name}>
+              <span>{item.display_name}</span>
+            </div>
+          )}
+        </figure>
       </div>
+
+      {(item.item_type === 'simple_product' || item.item_type === 'spare_part') && (
+        <div class="prod-detail-body">
+          <section class="prod-section prod-specs-sparse">
+            <h2 class="prod-section-title">Especificaciones</h2>
+            <dl class="prod-sparse-list">
+              {SPEC_KEYS.map((k) => {
+                const v = specMap[k];
+                const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0);
+                if (empty) return null;
+                return (
+                  <div class="prod-sparse-row" style="--row-index: 0;">
+                    <dt>{SPEC_LABELS[k]}</dt>
+                    <dd>{Array.isArray(v) ? v.join(', ') : String(v)}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </section>
+
+          {item.item_type === 'spare_part' && compatibilities.length > 0 && (
+            <section class="prod-section prod-compat">
+              <h2 class="prod-section-title">Compatibilidad</h2>
+              <ul class="prod-compat-list">
+                {compatibilities.map((c) => <li class="prod-compat-item">{c}</li>)}
+              </ul>
+            </section>
+          )}
+
+          <div class="prod-detail-final-cta">
+            <WhatsAppCta productName={item.display_name} sku={item.sku} context={whatsappContext} />
+          </div>
+        </div>
+      )}
+
+      {item.item_type === 'machinery' && (
+        <div class="prod-detail-body">
+          {specGroups.length > 0 && (
+            <section class="prod-section prod-specs-full">
+              <h2 class="prod-section-title">Ficha tecnica</h2>
+              {specGroups.map((group, gi) => (
+                <div class="prod-spec-group" style={`--group-index: ${Math.min(gi, 5)};`}>
+                  <h3 class="prod-spec-group-label">{group.label}</h3>
+                  <dl class="prod-spec-group-list">
+                    {(group.values ?? []).map((v: { label?: unknown; value_text?: unknown; value_number?: unknown; unit?: unknown }) => {
+                      const text =
+                        (typeof v.value_text === 'string' && v.value_text.length > 0 ? v.value_text : null) ??
+                        (typeof v.value_number === 'number' ? `${v.value_number}${typeof v.unit === 'string' && v.unit.length > 0 ? ` ${v.unit}` : ''}` : null);
+                      if (text == null || text === '') return null;
+                      return (
+                        <div class="prod-spec-row">
+                          <dt>{String(v.label ?? '')}</dt>
+                          <dd>{text}</dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </div>
+              ))}
+            </section>
+          )}
+
+          <div class="prod-detail-actions">
+            <WhatsAppCta productName={item.display_name} sku={item.sku} context={whatsappContext} />
+            {datasheetUrl && (
+              <a class="cta-secondary" href={datasheetUrl}
+                 target="_blank" rel="noreferrer noopener">
+                Solicitar ficha tecnica por WhatsApp
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
-    <aside class="card">
-      <span class="tag">Ficha de producto</span>
-      <h3>{product.category.title}</h3>
-      <p class="muted">La ficha descargable contiene la información disponible para identificar este producto y cotizarlo.</p>
-      <DownloadPdf title={product.name} subtitle={`Código: ${product.internal_reference} · Categoría: ${product.category.title}`} rows={[`Producto: ${product.name}`,`Código: ${product.internal_reference}`,`Categoría: ${product.category.title}`,'Solicite disponibilidad, especificaciones técnicas y cotización a Comercializadora Todo Huincha Ltda.','info@todohuincha.com · (45) 240 0000']} />
-    </aside>
   </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 </Base>
+
+<style>
+  .prod-detail { background: var(--canvas, #fffaf7); }
+  .prod-detail-inner { display: grid; gap: 32px; }
+  .prod-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted, #6c6b65);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 150ms ease;
+    width: max-content;
+  }
+  .prod-back-link:hover { color: var(--orange, #FB4D08); }
+  .prod-detail-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 48px;
+    align-items: start;
+    padding-top: clamp(48px, 6vw, 96px);
+  }
+  .prod-detail-meta { display: grid; gap: 14px; }
+  .prod-detail-title {
+    font-size: clamp(2.2rem, 4.6vw, 3.6rem);
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .prod-detail-subtitle {
+    color: var(--muted, #6c6b65);
+    font-size: 1rem;
+    margin: 0;
+    max-width: 56ch;
+  }
+  .product-image {
+    margin: 0;
+    border-radius: var(--radius, 14px);
+    overflow: hidden;
+    background: var(--surface, #fff);
+    box-shadow: 0 24px 60px rgba(49, 62, 72, 0.12);
+    aspect-ratio: 1 / 1;
+  }
+  .product-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .product-image:hover img { transform: scale(1.02); }
+  .product-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    background: var(--soft, #fff0e9);
+    color: var(--muted, #6c6b65);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .prod-detail-body { display: grid; gap: 48px; padding-top: 32px; }
+  .prod-section-title {
+    font-size: clamp(1.3rem, 2vw, 1.6rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+
+  /* Sparse specs (simple_product + spare_part) */
+  .prod-specs-sparse .prod-sparse-list,
+  .prod-specs-full .prod-spec-group-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+  }
+  .prod-specs-sparse .prod-sparse-row,
+  .prod-specs-full .prod-spec-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 0.45fr) 1fr;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: 10px;
+  }
+  .prod-specs-sparse .prod-sparse-row dt,
+  .prod-specs-full .prod-spec-row dt {
+    font-size: 0.85rem;
+    color: var(--muted, #6c6b65);
+    font-weight: 600;
+  }
+  .prod-specs-sparse .prod-sparse-row dd,
+  .prod-specs-full .prod-spec-row dd {
+    font-size: 0.95rem;
+    color: var(--ink, #292925);
+    margin: 0;
+    font-weight: 500;
+  }
+
+  /* Compatibility */
+  .prod-compat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .prod-compat-item {
+    padding: 10px 16px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: var(--ink, #292925);
+  }
+
+  /* Machinery spec groups */
+  .prod-spec-group { margin-top: 24px; }
+  .prod-spec-group-label {
+    font-size: 1.02rem;
+    letter-spacing: -0.015em;
+    color: var(--charcoal, #313E48);
+    margin: 0 0 12px;
+    text-transform: none;
+    font-weight: 700;
+  }
+
+  /* CTAs */
+  .prod-detail-final-cta,
+  .prod-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    padding-top: 16px;
+  }
+  .cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--charcoal, #313E48);
+    border: 1px solid var(--line, #eadfd8);
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-decoration: none;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                background 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cta-secondary:hover {
+    background: var(--surface, #fff);
+    box-shadow: 0 8px 22px rgba(49, 62, 72, 0.12);
+    transform: translateY(-1px);
+  }
+  .cta-secondary:active { transform: scale(0.97); }
+
+  /* Stagger entry on spec rows */
+  .prod-specs-sparse .prod-sparse-row,
+  .prod-specs-full .prod-spec-row {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: rowEnter 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(var(--row-index, 0) * 40ms);
+  }
+  @keyframes rowEnter { to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 860px) {
+    .prod-detail-header {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .product-image img { transition: none; }
+    .product-image:hover img { transform: none; }
+    .prod-specs-sparse .prod-sparse-row,
+    .prod-specs-full .prod-spec-row {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+    .cta-secondary { transition: none; }
+    .cta-secondary:hover { transform: none; }
+    .cta-secondary:active { transform: none; }
+  }
+</style>
