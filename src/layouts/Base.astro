@@ -1,5 +1,16 @@
 ---
-const { title = 'Todo Huincha', description = 'Soluciones de corte, maquinaria y servicio técnico especializado.' } = Astro.props;
+// src/layouts/Base.astro -- slice 3 patch (backward compatible).
+// New optional props canonicalPath and ogImage light up slice 2 landing
+// and slice 3 detail. ogLocale is always es_CL. Defaults preserve slice 1+2.
+const {
+  title = 'Todo Huincha',
+  description = 'Soluciones de corte, maquinaria y servicio tecnico especializado.',
+  canonicalPath = '',
+  ogImage = '/logo-todohuincha.svg',
+} = Astro.props;
+const SITE = import.meta.env.PUBLIC_SITE_URL ?? '';
+const ogLocale = 'es_CL';
+const abs = (u: string) => (u.startsWith('http') ? u : `${SITE}${u}`);
 const pathname = Astro.url.pathname;
 ---
 <!doctype html>
@@ -7,6 +18,22 @@ const pathname = Astro.url.pathname;
   <head>
     <meta charset="UTF-8" /><meta name="viewport" content="width=device-width" /><link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content={description} /><title>{title}</title>
+
+    {canonicalPath && <link rel="canonical" href={abs(canonicalPath)} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={abs(ogImage)} />
+    <meta property="og:url" content={`${SITE}${pathname}`} />
+    <meta property="og:locale" content={ogLocale} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={abs(ogImage)} />
+
+    <!-- per-page JSON-LD injected by the consumer page; see slice 3 design section 5 -->
   </head>
   <body>
     <header class="site-header">

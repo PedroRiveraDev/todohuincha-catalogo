@@ -1,0 +1,300 @@
+---
+// src/components/CategoryPdfDownloadButton.astro
+// Per-category jsPDF generator. Distinct from PdfDownloadButton.astro:
+// single-section flat layout (one category per PDF), no internal
+// category grouping. Same brand-mark fallback chain (DOM -> SVG ->
+// vector) duplicated and documented as known duplication.
+//
+// Slice 3 of catalog-v2-ui-migration.
+// Refs:
+//   openspec/changes/catalog-v2-ui-migration-slice-3/design.md (section 4)
+
+interface Props {
+  /** PDF title (e.g. "Todo Huincha - Sierras"). Uppercased by jsPDF. */
+  title: string;
+  /** PDF subtitle (e.g. "8 productos en esta categoria"). */
+  subtitle: string;
+  /** Per-item rows: "<sku> | <display_name> | <category.label>". */
+  rows: string[];
+}
+
+const { title, subtitle, rows } = Astro.props;
+const rowLabel = rows.length === 1 ? 'producto' : 'productos';
+---
+
+<div class="cat-pdf-block">
+  <div class="cat-pdf-block-meta">
+    <span class="cat-pdf-block-eyebrow">Descargar ficha</span>
+    <span class="cat-pdf-block-count">{rows.length} {rowLabel}</span>
+  </div>
+  <button
+    type="button"
+    class="cat-pdf-block-btn"
+    data-title={title}
+    data-subtitle={subtitle}
+    data-rows={JSON.stringify(rows)}
+    aria-label={`Descargar PDF con ${rows.length} productos`}
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    Descargar PDF
+  </button>
+</div>
+
+<script>
+  import { jsPDF } from 'jspdf';
+
+  const btn = document.querySelector<HTMLButtonElement>('.cat-pdf-block-btn');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const title = btn.dataset.title ?? 'Todo Huincha';
+      const subtitle = btn.dataset.subtitle ?? '';
+      const pdfRows: string[] = JSON.parse(btn.dataset.rows ?? '[]');
+
+      // Brand-mark fallback chain (DOM -> SVG -> vector). Duplicated
+      // verbatim from PdfDownloadButton.astro (slice 2). Future slice may
+      // extract src/lib/pdf-brand.ts; out of scope for slice 3.
+      const getLogoBase64 = (): Promise<string | null> => {
+        return new Promise((resolve) => {
+          const logoImg = document.querySelector<HTMLImageElement>('.brand img');
+          if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = logoImg.naturalWidth;
+              canvas.height = logoImg.naturalHeight;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(logoImg, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+                return;
+              }
+            } catch (e) {
+              console.warn('Failed to extract logo from DOM image, trying fetch...', e);
+            }
+          }
+
+          const img = new Image();
+          img.src = '/logo-todohuincha.svg';
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth || 324;
+              canvas.height = img.naturalHeight || 92;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+              } else {
+                resolve(null);
+              }
+            } catch (e) {
+              resolve(null);
+            }
+          };
+          img.onerror = () => resolve(null);
+        });
+      };
+
+      const orange = [251, 77, 8];
+      const slate = [49, 62, 72];
+      const muted = [108, 107, 101];
+      const borderCol = [234, 223, 216];
+      const bgHeader = [244, 246, 248];
+      const bgRowAlt = [250, 251, 252];
+
+      const logoBase64 = await getLogoBase64();
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      let pageNum = 1;
+
+      const drawPageDecorations = (currentPg: number) => {
+        pdf.setFillColor(orange[0], orange[1], orange[2]);
+        pdf.rect(0, 0, 210, 3.5, 'F');
+
+        if (logoBase64) {
+          pdf.addImage(logoBase64, 'PNG', 15, 8, 36, 10.3);
+        } else {
+          pdf.setDrawColor(orange[0], orange[1], orange[2]);
+          pdf.setLineWidth(0.5);
+          pdf.circle(20, 13.5, 4);
+          pdf.circle(20, 13.5, 1.2);
+          for (let angle = 0; angle < 360; angle += 30) {
+            const rad = (angle * Math.PI) / 180;
+            pdf.line(20 + 4 * Math.cos(rad), 13.5 + 4 * Math.sin(rad), 20 + 5.2 * Math.cos(rad + 0.1), 13.5 + 5.2 * Math.sin(rad + 0.1));
+          }
+          pdf.setTextColor(slate[0], slate[1], slate[2]);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(14);
+          pdf.text('TODO', 27, 13.5);
+          pdf.setTextColor(orange[0], orange[1], orange[2]);
+          pdf.text('HUINCHA', 41, 13.5);
+        }
+
+        pdf.setTextColor(slate[0], slate[1], slate[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9);
+        pdf.text('CATALOGO DE PRODUCTOS', 195, 12.5, { align: 'right' });
+
+        pdf.setTextColor(muted[0], muted[1], muted[2]);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        pdf.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 195, 16.5, { align: 'right' });
+
+        pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
+        pdf.setLineWidth(0.25);
+        pdf.line(15, 22, 195, 22);
+        pdf.line(15, 276, 195, 276);
+        pdf.setTextColor(muted[0], muted[1], muted[2]);
+        pdf.setFontSize(7.5);
+        pdf.text('Comercializadora Todo Huincha Ltda. - Longitudinal Sur 4277, Padre Las Casas - info@todohuincha.com - (45) 240 0000', 105, 281.5, { align: 'center' });
+        pdf.text(`Pagina ${currentPg}`, 195, 281.5, { align: 'right' });
+      };
+
+      const drawTableHeader = (posY: number) => {
+        pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
+        pdf.rect(15, posY, 180, 8, 'F');
+        pdf.setFillColor(orange[0], orange[1], orange[2]);
+        pdf.rect(15, posY, 1.5, 8, 'F');
+        pdf.setTextColor(slate[0], slate[1], slate[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8);
+        pdf.text('CODIGO', 18, posY + 5.5);
+        pdf.text('PRODUCTO', 50, posY + 5.5);
+      };
+
+      drawPageDecorations(pageNum);
+
+      let y = 30;
+      pdf.setTextColor(slate[0], slate[1], slate[2]).setFont('helvetica', 'bold').setFontSize(13);
+      pdf.text(title.toUpperCase(), 15, y);
+      y += 5.5;
+
+      if (subtitle) {
+        pdf.setTextColor(muted[0], muted[1], muted[2]).setFont('helvetica', 'normal').setFontSize(8.5);
+        pdf.text(subtitle, 15, y);
+        y += 9;
+      } else {
+        y += 3;
+      }
+
+      drawTableHeader(y);
+      y += 8;
+
+      // SLICE-3 DELTA: flat single-section row loop (no categoriesMap).
+      let isAlt = false;
+      pdf.setFontSize(8.5);
+      for (const row of pdfRows) {
+        const parts = row.split(' | ');
+        const codeRaw = parts[0] ?? '';
+        const name = (parts[1] ?? row).trim();
+        const code = codeRaw.replace(/^C[oó]d\.\s*/i, '').trim();
+
+        const nameLines = pdf.splitTextToSize(name, 140);
+        const rowHeight = Math.max(7.5, nameLines.length * 4.5 + 3);
+
+        if (y + rowHeight > 268) {
+          pdf.addPage();
+          pageNum++;
+          drawPageDecorations(pageNum);
+          y = 26;
+          drawTableHeader(y);
+          y += 8;
+          isAlt = false;
+        }
+
+        if (isAlt) {
+          pdf.setFillColor(bgRowAlt[0], bgRowAlt[1], bgRowAlt[2]).rect(15, y, 180, rowHeight, 'F');
+        }
+        pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]).setLineWidth(0.15)
+          .line(15, y + rowHeight, 195, y + rowHeight);
+
+        pdf.setTextColor(slate[0], slate[1], slate[2]).setFont('helvetica', 'bold').text(code, 18, y + 4.8);
+        pdf.setTextColor(30, 30, 30).setFont('helvetica', 'normal');
+        for (const [i, line] of nameLines.entries()) {
+          pdf.text(line, 50, y + 4.8 + i * 4.5);
+        }
+
+        y += rowHeight;
+        isAlt = !isAlt;
+      }
+
+      const slug = title.toLowerCase().normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
+      pdf.save(`${slug}.pdf`);
+    });
+  }
+</script>
+
+<style>
+  .cat-pdf-block {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--soft, #fff0e9);
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(45, 25, 13, 0.04);
+  }
+  .cat-pdf-block-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .cat-pdf-block-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted, #6c6b65);
+  }
+  .cat-pdf-block-count {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--charcoal, #313e48);
+  }
+  .cat-pdf-block-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--orange, #fb4d08);
+    color: #fff;
+    border: 1px solid var(--orange, #fb4d08);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                background 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cat-pdf-block-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  .cat-pdf-block-btn:hover {
+    background: var(--orange-deep, #c93a04);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(251, 77, 8, 0.32);
+  }
+  .cat-pdf-block-btn:active {
+    transform: scale(0.97);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cat-pdf-block-btn {
+      transition: none;
+    }
+    .cat-pdf-block-btn:hover,
+    .cat-pdf-block-btn:active {
+      transform: none;
+    }
+  }
+</style>

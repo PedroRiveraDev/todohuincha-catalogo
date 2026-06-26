@@ -1,306 +1,291 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { categories } from '../../data/catalog';
-export function getStaticPaths(){ return categories.map((category)=>({params:{slug:category.slug},props:{category}})); }
-const { category } = Astro.props;
----
-<Base title={`${category.title} | Todo Huincha`}>
-  <section class="wrap cat-page">
-    <div class="cat-page-header">
-      <a class="muted back-link" href="/catalogo">← Volver al catálogo</a>
-      <div class="cat-page-meta">
-        <span class="eyebrow">Categoría</span>
-        <h1 class="cat-page-title">{category.title}</h1>
-        <p class="muted">{category.products_count} productos disponibles por cotización.</p>
-      </div>
-      <div class="cat-page-actions">
-        <button class="button alt download-cat-slug-pdf" id="cat-slug-pdf-btn" data-title={`Todo Huincha — ${category.title}`} data-subtitle={`${category.products_count} productos en esta categoría`} data-rows={JSON.stringify(category.products.map((p) => `${p.internal_reference} | ${p.name} | ${category.title}`))}>
-          Descargar PDF
-        </button>
-      </div>
-    </div>
+// src/pages/catalogo/[slug].astro  -- Slice 3 rewrite
+// Refs: openspec/changes/catalog-v2-ui-migration-slice-3/design.md
 
-    <div class="catalog-list">
-      {category.products.map((product) => (
-        <div class="cat-row">
-          <span class="cat-row-name">{product.name}</span>
-          <span class="cat-row-code">Cód. {product.internal_reference}</span>
-          <a class="button cat-row-btn" href={`/productos/${category.slug}/${encodeURIComponent(product.internal_reference)}`}>
-            Ver y cotizar
-          </a>
+import Base from '../../layouts/Base.astro';
+import { adapter } from '../../lib/catalog.ts';
+import { getCategoryMeta } from '../../lib/category-meta.ts';
+import CategorySidebar from '../../components/CategorySidebar.astro';
+import ItemTypeChip from '../../components/ItemTypeChip.astro';
+import WhatsAppCta from '../../components/WhatsAppCta.astro';
+import CategoryPdfDownloadButton from '../../components/CategoryPdfDownloadButton.astro';
+
+export function getStaticPaths() {
+  return adapter.categories.map((category) => ({
+    params: { slug: category.slug },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+const meta = getCategoryMeta(category.slug);
+const items = category.items;
+const totalItems = items.length;
+const SITE = import.meta.env.PUBLIC_SITE_URL ?? '';
+
+// JSON-LD: CollectionPage + nested ItemList + BreadcrumbList (see design.md section 5).
+const collectionPageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: meta.title,
+  description: meta.description,
+  url: `${SITE}${meta.canonicalPath}`,
+  inLanguage: 'es-CL',
+  isPartOf: { '@type': 'WebSite', name: 'Todo Huincha', url: SITE },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: items.length,
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.display_name,
+      url: `${SITE}/productos/${category.slug}/${encodeURIComponent(item.sku)}`,
+    })),
+  },
+  breadcrumb: {
+    '@type': 'BreadcrumbList',
+    itemListElement: meta.breadcrumb.map((b, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: b.name,
+      item: b.url.startsWith('http') ? b.url : `${SITE}${b.url}`,
+    })),
+  },
+};
+
+const pdfRows = items.map((it) => `${it.sku} | ${it.display_name} | ${category.label}`);
+const pdfTitle = `Todo Huincha - ${category.label}`;
+const pdfSubtitle = `${totalItems} productos en esta categoria`;
+---
+<Base title={meta.title} description={meta.description}
+      canonicalPath={meta.canonicalPath} ogImage={meta.ogImage}>
+  <section class="cat-detail">
+    <div class="cat-detail-inner wrap">
+      <a class="cat-back-link" href="/catalogo">Volver al catalogo</a>
+
+      <div class="cat-detail-header">
+        <div class="cat-detail-meta">
+          <span class="eyebrow">Categoria</span>
+          <h1 class="cat-detail-title">{category.label}</h1>
+          <p class="cat-detail-subtitle">
+            {totalItems} productos disponibles por cotizacion en {category.group}.
+          </p>
         </div>
-      ))}
+        <div class="cat-detail-actions">
+          <CategoryPdfDownloadButton title={pdfTitle}
+                                     subtitle={pdfSubtitle} rows={pdfRows} />
+        </div>
+      </div>
+
+      <div class="cat-detail-layout">
+        <CategorySidebar categories={adapter.categories}
+                         activeSlug={category.slug}
+                         totalProducts={adapter.items.length} />
+        <main class="cat-detail-main">
+          {totalItems === 0 ? (
+            <p class="cat-empty">No hay productos disponibles en esta categoria.</p>
+          ) : (
+            <ul class="cat-row-list" id="cat-row-list">
+              {items.map((item, idx) => (
+                <li class="cat-row" data-type={item.item_type}
+                    style={`--row-index:${Math.min(idx, 10)};`}>
+                  <span class="cat-row-name">{item.display_name}</span>
+                  <ItemTypeChip itemType={item.item_type} itemId={item.sku} />
+                  <span class="cat-row-code">Cod. {item.sku}</span>
+                  <a class="button cat-row-btn"
+                     href={`/productos/${category.slug}/${encodeURIComponent(item.sku)}`}>
+                    Ver y cotizar
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </main>
+      </div>
+
+      <div class="cat-detail-final-cta">
+        <WhatsAppCta context="general" />
+      </div>
     </div>
   </section>
+
+  <script type="application/ld+json"
+          set:html={JSON.stringify(collectionPageSchema)} />
 </Base>
 
-<script>
-import { jsPDF } from 'jspdf';
-document.querySelectorAll<HTMLButtonElement>('.download-cat-slug-pdf').forEach((button) => button.addEventListener('click', async () => {
-  const title = button.dataset.title ?? 'Todo Huincha';
-  const subtitle = button.dataset.subtitle ?? '';
-  const pdfRows: string[] = JSON.parse(button.dataset.rows ?? '[]');
-  
-  const orange = [251, 77, 8];
-  const slate = [49, 62, 72];
-  const muted = [108, 107, 101];
-  const borderCol = [234, 223, 216];
-  const bgHeader = [244, 246, 248];
-  const bgRowAlt = [250, 251, 252];
-  
-  // Helper to load logo
-  const getLogoBase64 = (): Promise<string | null> => {
-    return new Promise((resolve) => {
-      const logoImg = document.querySelector<HTMLImageElement>('.brand img');
-      if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = logoImg.naturalWidth;
-          canvas.height = logoImg.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(logoImg, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-            return;
-          }
-        } catch (e) {
-          console.warn('Failed to extract logo from DOM image, trying fetch...', e);
-        }
-      }
-      
-      const img = new Image();
-      img.src = '/logo-todohuincha.svg';
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || 324;
-          canvas.height = img.naturalHeight || 92;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-          } else {
-            resolve(null);
-          }
-        } catch (e) {
-          resolve(null);
-        }
-      };
-      img.onerror = () => resolve(null);
-    });
-  };
-
-  const logoBase64 = await getLogoBase64();
-  
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-  
-  let pageNum = 1;
-  
-  const drawPageDecorations = (currentPg: number) => {
-    // Thin top orange bar
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(0, 0, 210, 3.5, 'F');
-    
-    // Draw Logo
-    if (logoBase64) {
-      pdf.addImage(logoBase64, 'PNG', 15, 8, 36, 10.3);
-    } else {
-      // Vector fallback logo
-      pdf.setDrawColor(orange[0], orange[1], orange[2]);
-      pdf.setLineWidth(0.5);
-      pdf.circle(20, 13.5, 4);
-      pdf.circle(20, 13.5, 1.2);
-      for (let angle = 0; angle < 360; angle += 30) {
-        const rad = (angle * Math.PI) / 180;
-        pdf.line(20 + 4 * Math.cos(rad), 13.5 + 4 * Math.sin(rad), 20 + 5.2 * Math.cos(rad + 0.1), 13.5 + 5.2 * Math.sin(rad + 0.1));
-      }
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      pdf.text('TODO', 27, 13.5);
-      pdf.setTextColor(orange[0], orange[1], orange[2]);
-      pdf.text('HUINCHA', 41, 13.5);
-    }
-    
-    // Right-aligned header texts
-    pdf.setTextColor(slate[0], slate[1], slate[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('CATÁLOGO DE PRODUCTOS', 195, 12.5, { align: 'right' });
-    
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7.5);
-    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 195, 16.5, { align: 'right' });
-    
-    // Thin separator line
-    pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-    pdf.setLineWidth(0.25);
-    pdf.line(15, 22, 195, 22);
-    
-    // Footer line and contact info
-    pdf.line(15, 276, 195, 276);
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFontSize(7.5);
-    pdf.text('Comercializadora Todo Huincha Ltda. · Longitudinal Sur 4277, Padre Las Casas · info@todohuincha.com · (45) 240 0000', 105, 281.5, { align: 'center' });
-    pdf.text(`Página ${currentPg}`, 195, 281.5, { align: 'right' });
-  };
-  
-  drawPageDecorations(pageNum);
-  
-  let y = 30;
-  
-  // Title
-  pdf.setTextColor(slate[0], slate[1], slate[2]);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(13);
-  pdf.text(title.toUpperCase(), 15, y);
-  y += 5.5;
-  
-  // Subtitle
-  if (subtitle) {
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8.5);
-    pdf.text(subtitle, 15, y);
-    y += 9;
-  } else {
-    y += 3;
+<style is:global>
+  .cat-detail {
+    background: var(--canvas, #fffaf7);
   }
-  
-  const drawTableHeader = (posY: number) => {
-    pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
-    pdf.rect(15, posY, 180, 8, 'F');
-    
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(15, posY, 1.5, 8, 'F');
-    
-    pdf.setTextColor(slate[0], slate[1], slate[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CÓDIGO', 18, posY + 5.5);
-    pdf.text('PRODUCTO', 50, posY + 5.5);
-  };
-  
-  drawTableHeader(y);
-  y += 8;
-  
-  // Group products by category
-  const categoriesMap = new Map<string, { code: string, name: string }[]>();
-  
-  pdfRows.forEach((row) => {
-    const parts = row.split(' | ');
-    const code = parts[0] ? parts[0].replace('Cód. ', '').trim() : '';
-    const name = parts[1] ? parts[1].trim() : row;
-    const category = parts[2] ? parts[2].trim() : 'General';
-    
-    if (!categoriesMap.has(category)) {
-      categoriesMap.set(category, []);
-    }
-    categoriesMap.get(category)!.push({ code, name });
-  });
+  .cat-detail-inner {
+    padding-top: clamp(48px, 6vw, 96px);
+    padding-bottom: clamp(64px, 8vw, 120px);
+  }
+  .cat-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted, #6c6b65);
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    transition: color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cat-back-link:hover {
+    color: var(--orange, #fb4d08);
+  }
+  .cat-back-link:focus-visible {
+    outline: 2px solid var(--orange, #fb4d08);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
 
-  let isAlt = false;
-  pdf.setFontSize(8.5);
-  
-  categoriesMap.forEach((productsList, categoryName) => {
-    // Page break check
-    if (y + 18 > 268) {
-      pdf.addPage();
-      pageNum++;
-      drawPageDecorations(pageNum);
-      y = 26;
-      drawTableHeader(y);
-      y += 8;
-      isAlt = false;
+  .cat-detail-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 32px;
+    align-items: end;
+    margin-bottom: 48px;
+  }
+  .cat-detail-meta {
+    display: grid;
+    gap: 12px;
+  }
+  .cat-detail-title {
+    font-size: clamp(2.4rem, 5vw, 4.6rem);
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    color: var(--ink, #292925);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .cat-detail-subtitle {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--muted, #6c6b65);
+    max-width: 60ch;
+  }
+  .cat-detail-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  .cat-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .cat-detail-layout {
+      grid-template-columns: 1fr;
+      gap: 32px;
     }
-    
-    // Draw Category Header Row
-    pdf.setFillColor(253, 246, 242); // very light soft orange background
-    pdf.rect(15, y, 180, 8, 'F');
-    
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(15, y, 1.5, 8, 'F');
-    
-    pdf.setTextColor(orange[0], orange[1], orange[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8.5);
-    pdf.text(categoryName.toUpperCase(), 19, y + 5.5);
-    
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7.5);
-    pdf.text(`${productsList.length} productos`, 191, y + 5.5, { align: 'right' });
-    
-    pdf.setDrawColor(orange[0], orange[1], orange[2]);
-    pdf.setLineWidth(0.2);
-    pdf.line(15, y + 8, 195, y + 8);
-    
-    y += 8;
-    isAlt = false; // Reset alternation for a new category
-    
-    // Draw products under this category
-    productsList.forEach((prod) => {
-      const nameLines = pdf.splitTextToSize(prod.name, 140);
-      const rowHeight = Math.max(7.5, nameLines.length * 4.5 + 3);
-      
-      // Page break check
-      if (y + rowHeight > 268) {
-        pdf.addPage();
-        pageNum++;
-        drawPageDecorations(pageNum);
-        y = 26;
-        drawTableHeader(y);
-        y += 8;
-        isAlt = false;
-        
-        // Redraw category header on new page so user knows category is continuing
-        pdf.setFillColor(253, 246, 242);
-        pdf.rect(15, y, 180, 6, 'F');
-        pdf.setFillColor(orange[0], orange[1], orange[2]);
-        pdf.rect(15, y, 1.5, 6, 'F');
-        pdf.setTextColor(orange[0], orange[1], orange[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(8);
-        pdf.text(`${categoryName.toUpperCase()} (continuación)`, 19, y + 4.2);
-        pdf.line(15, y + 6, 195, y + 6);
-        y += 6;
-      }
-      
-      if (isAlt) {
-        pdf.setFillColor(bgRowAlt[0], bgRowAlt[1], bgRowAlt[2]);
-        pdf.rect(15, y, 180, rowHeight, 'F');
-      }
-      
-      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-      pdf.setLineWidth(0.15);
-      pdf.line(15, y + rowHeight, 195, y + rowHeight);
-      
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(prod.code, 18, y + 4.8);
-      
-      pdf.setTextColor(30, 30, 30);
-      pdf.setFont('helvetica', 'normal');
-      let lineY = y + 4.8;
-      nameLines.forEach((line: string) => {
-        pdf.text(line, 50, lineY);
-        lineY += 4.5;
-      });
-      
-      y += rowHeight;
-      isAlt = !isAlt;
-    });
-    
-    // Add small space between categories
-    y += 3;
-  });
-  
-  pdf.save(`${title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.pdf`);
-}));
-</script>
+    .cat-detail-header {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+  }
+
+  .cat-detail-main {
+    min-width: 0;
+  }
+
+  .cat-row-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .cat-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: 14px;
+    transition: background 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    /* Stagger entry animation (cap at index 10 -> 600ms max delay). */
+    opacity: 0;
+    transform: translateY(8px);
+    animation: rowEnter 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(var(--row-index, 0) * 60ms);
+  }
+  .cat-row:hover {
+    background: var(--soft, #fff0e9);
+    box-shadow: 0 8px 24px rgba(45, 25, 13, 0.06);
+  }
+  .cat-row:focus-within {
+    outline: 2px solid var(--orange, #fb4d08);
+    outline-offset: 2px;
+  }
+  .cat-row-name {
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: var(--ink, #292925);
+    min-width: 0;
+  }
+  .cat-row-code {
+    font-size: 0.82rem;
+    color: var(--muted, #6c6b65);
+    font-variant-numeric: tabular-nums;
+  }
+  .cat-row-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 640px) {
+    .cat-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 16px;
+    }
+    .cat-row-btn {
+      justify-self: start;
+    }
+  }
+
+  @keyframes rowEnter {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cat-row {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+    .cat-back-link,
+    .cat-row {
+      transition: none;
+    }
+    .cat-row:hover {
+      transform: none;
+    }
+  }
+
+  .cat-empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted, #6c6b65);
+    background: var(--surface, #fff);
+    border: 1px dashed var(--line, #eadfd8);
+    border-radius: 14px;
+  }
+
+  .cat-detail-final-cta {
+    margin-top: 64px;
+    padding-top: 48px;
+    border-top: 1px solid var(--line, #eadfd8);
+    display: flex;
+    justify-content: center;
+  }
+</style>
