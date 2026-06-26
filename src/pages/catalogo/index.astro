@@ -391,10 +391,37 @@ const jsonLd = {
     .querySelectorAll<HTMLButtonElement>('.cat-sidebar-group-header')
     .forEach((btn) => {
       btn.addEventListener('click', () => {
-        const g = btn.dataset.group ?? '';
-        if (g) activateGroup(g);
+        const groupLi = btn.closest<HTMLElement>('.cat-sidebar-group');
+        if (!groupLi) return;
+        const isCollapsed = groupLi.classList.toggle('is-collapsed');
+        btn.setAttribute('aria-expanded', String(!isCollapsed));
+        try {
+          const stored = JSON.parse(
+            localStorage.getItem('cat:sidebar:collapsed') ?? '{}'
+          ) as Record<string, boolean>;
+          stored[groupLi.dataset.group ?? ''] = isCollapsed;
+          localStorage.setItem('cat:sidebar:collapsed', JSON.stringify(stored));
+        } catch {}
       });
     });
+
+  // Restore collapsed state from localStorage on load.
+  try {
+    const stored = JSON.parse(
+      localStorage.getItem('cat:sidebar:collapsed') ?? '{}'
+    ) as Record<string, boolean>;
+    for (const [groupKey, collapsed] of Object.entries(stored)) {
+      if (!collapsed) continue;
+      const groupLi = document.querySelector<HTMLElement>(
+        `.cat-sidebar-group[data-group="${groupKey}"]`
+      );
+      if (groupLi) {
+        groupLi.classList.add('is-collapsed');
+        const btn = groupLi.querySelector<HTMLButtonElement>('.cat-sidebar-group-header');
+        btn?.setAttribute('aria-expanded', 'false');
+      }
+    }
+  } catch {}
 
   const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
   if (searchInput) {

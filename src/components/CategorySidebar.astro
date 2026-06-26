@@ -53,12 +53,25 @@ const GROUP_LABELS: Record<string, string> = {
       return (
         <li class="cat-sidebar-group" data-group={groupKey}>
           <button
-            class={`cat-sidebar-group-header${activeGroup === groupKey ? ' is-active' : ''}`}
+            class="cat-sidebar-group-header"
             data-group={groupKey}
             type="button"
+            aria-expanded="true"
           >
             <span class="cat-sidebar-group-title">{GROUP_LABELS[groupKey] ?? groupKey}</span>
             <span class="cat-sidebar-group-count">{groupTotal}</span>
+            <svg
+              class="cat-sidebar-group-chevron"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
           </button>
           <ul class="cat-sidebar-group-list">
             {cats.map((cat) => (
@@ -93,6 +106,7 @@ const GROUP_LABELS: Record<string, string> = {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     padding: 14px 16px 6px;
     font-size: 0.7rem;
     font-weight: 850;
@@ -125,6 +139,7 @@ const GROUP_LABELS: Record<string, string> = {
   }
   .cat-sidebar-group-title {
     color: inherit;
+    flex: 1 1 auto;
   }
   .cat-sidebar-group-count {
     font-size: 0.68rem;
@@ -136,6 +151,26 @@ const GROUP_LABELS: Record<string, string> = {
   .cat-sidebar-group-header.is-active .cat-sidebar-group-count {
     background: rgba(251, 77, 8, 0.08);
     color: var(--orange, #FB4D08);
+  }
+  /* Discreet chevron: rotates -90deg when group is collapsed. */
+  .cat-sidebar-group-chevron {
+    width: 12px;
+    height: 12px;
+    color: var(--muted, #6c6b65);
+    flex-shrink: 0;
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), color 0.15s;
+  }
+  .cat-sidebar-group-header:hover .cat-sidebar-group-chevron {
+    color: var(--orange, #FB4D08);
+  }
+  .cat-sidebar-group.is-collapsed > .cat-sidebar-group-header {
+    border-left-color: transparent;
+  }
+  .cat-sidebar-group.is-collapsed .cat-sidebar-group-chevron {
+    transform: rotate(-90deg);
+  }
+  .cat-sidebar-group.is-collapsed .cat-sidebar-group-list {
+    display: none;
   }
   .cat-sidebar-group-list {
     list-style: none;
