@@ -264,3 +264,11 @@ Chain strategy: stacked-to-main
 6. **T27 idempotency proof is the structural reviewer check.** The second `npm run embed-assets` must produce zero `git diff`. If it produces any diff, abort — there is a non-determinism bug in the script.
 7. **No dev server.** Per the repo rule (AGENTS.md), do not run `astro dev` at any point. The user starts their own dev server for manual smoke checks.
 8. **Conventional commits only.** No `Co-Authored-By`, no AI attribution, no emoji, no `§`.
+
+## Final Status
+
+- PR1 commit: 655f987 (pushed)
+- PR2 commit: 5e2e956 (pushed)
+- Verify: PASS (0 critical, 0 warning, 3 non-blocking suggestions)
+- Archived: 2026-06-25
+- All 28 tasks completed
