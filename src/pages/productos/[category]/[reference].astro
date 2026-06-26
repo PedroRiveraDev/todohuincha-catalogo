@@ -25,10 +25,18 @@ import {
 } from '../../../lib/whatsapp.ts';
 
 export function getStaticPaths() {
-  return adapter.items.map((item) => ({
-    params: { category: item.category_code.toLowerCase(), reference: item.sku },
-    props: { item },
-  }));
+  return adapter.items.map((item) => {
+    // Use the dictionary slug (e.g. "acero-kapf") instead of the raw
+    // category_code (e.g. "ACERO.KAPF." with dots and a trailing dot),
+    // so the URL matches what the catalog page's "Ver" button generates
+    // via cat.slug.
+    const cat = adapter.getCategory(item.category_code);
+    const categorySlug = cat?.slug ?? item.category_code.toLowerCase();
+    return {
+      params: { category: categorySlug, reference: item.sku },
+      props: { item },
+    };
+  });
 }
 
 const { item } = Astro.props;
