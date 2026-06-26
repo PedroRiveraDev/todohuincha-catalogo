@@ -457,8 +457,15 @@ const jsonLd = {
 
     function maybeFloat(): void {
       if (isAnimating) return;
-      const rect = heroActions!.getBoundingClientRect();
-      const shouldFloat = rect.bottom < HEADER_HEIGHT + TRIGGER_OFFSET;
+      // CRITICAL: measure the HERO element, not the actions bar.
+      // Once the bar is floating in the header slot, its own rect sits
+      // inside the sticky header (always at y ~25-80) so checking the
+      // bar's rect would always report "shouldFloat = true" and the
+      // bar would never return to the hero on scroll-up.
+      const heroEl = document.querySelector<HTMLElement>('.catalog-hero-dark');
+      if (!heroEl) return;
+      const heroRect = heroEl.getBoundingClientRect();
+      const shouldFloat = heroRect.bottom < HEADER_HEIGHT + TRIGGER_OFFSET;
 
       if (shouldFloat && !isFloating) {
         isFloating = true;
