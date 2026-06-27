@@ -250,31 +250,104 @@ const jsonLd = {
 </style>
 
 <script>
-  // Vanilla JS filter: sidebar (by category) + search (debounced 100ms).
-  // PDF data attrs are updated to match the visible rows, so the
-  // PdfDownloadButton component always exports the current filtered set.
-  let activeSlug = '__all__';
-  let activeGroup: string | null = null;
+  // Unified selection state for the catalog sidebar.
+  //
+  // The sidebar exposes a checkbox on every row (master + 8 groups + 21
+  // subcategories). The selection is a single Set<string> of subcategory
+  // slugs that drives BOTH the center table filter AND the PDF data-rows
+  // attribute (rebuilt from currently visible rows on every change).
+  //
+  // Click contract (matches src/components/CategorySidebar.astro):
+  //   - clicking the checkbox toggles that slug in the set (additive)
+  //   - clicking the label text performs a unitary filter (replaces)
+  //   - the master checkbox is a convenience for "all/none"
+  //   - group checkboxes cascade to their subcategories
+  //   - the chevron is a sibling button, so it never toggles a checkbox
+  //
+  // Persistence: localStorage[cat:sidebar:selection] is a JSON array of
+  // slugs. Empty / missing storage -> default = all 21 subcategories
+  // selected (equivalent to "Todos los productos" checked).
+  const SELECTION_KEY = 'cat:sidebar:selection';
+  const COLLAPSE_KEY = 'cat:sidebar:collapsed';
+
+  const slugToName = new Map<string, string>();
+  const allSubcategorySlugs: string[] = [];
+  const groupSlugs = new Map<string, string[]>();
+  let selectedSlugs: Set<string> = new Set();
   let searchTerm = '';
   let debounceTimer: number | undefined;
 
-  function getVisibleRows(): HTMLElement[] {
-    return [
-      ...document.querySelectorAll<HTMLElement>('.cat-row:not(.is-hidden)'),
-    ];
+  function loadSelection(): Set<string> {
+    try {
+      const raw = localStorage.getItem(SELECTION_KEY);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return new Set();
+      return new Set(arr.filter((s): s is string => typeof s === 'string'));
+    } catch {
+      return new Set();
+    }
   }
 
-  function render() {
+  function saveSelection() {
+    try {
+      localStorage.setItem(
+        SELECTION_KEY,
+        JSON.stringify([...selectedSlugs].sort())
+      );
+    } catch {}
+  }
+
+  function isAllSelected(): boolean {
+    return (
+      allSubcategorySlugs.length > 0 &&
+      selectedSlugs.size === allSubcategorySlugs.length
+    );
+  }
+
+  function syncCheckboxes() {
+    const masterChk = document.querySelector<HTMLInputElement>('#cat-chk-all');
+    if (masterChk) {
+      const all = isAllSelected();
+      const none = selectedSlugs.size === 0;
+      masterChk.checked = all;
+      masterChk.indeterminate = !all && !none;
+    }
+
+    document
+      .querySelectorAll<HTMLInputElement>('.cat-sidebar-group-checkbox')
+      .forEach((chk) => {
+        const groupKey = chk.dataset.group ?? '';
+        const slugs = groupSlugs.get(groupKey) ?? [];
+        if (slugs.length === 0) {
+          chk.checked = false;
+          chk.indeterminate = false;
+          return;
+        }
+        const hit = slugs.filter((s) => selectedSlugs.has(s)).length;
+        chk.checked = hit === slugs.length;
+        chk.indeterminate = hit > 0 && hit < slugs.length;
+      });
+
+    document
+      .querySelectorAll<HTMLInputElement>('.cat-sidebar-checkbox[data-slug]')
+      .forEach((chk) => {
+        const slug = chk.dataset.slug ?? '';
+        if (slug === '__all__') return;
+        chk.checked = selectedSlugs.has(slug);
+      });
+  }
+
+  function applyFilter() {
     const rows = document.querySelectorAll<HTMLElement>('.cat-row');
     let visible = 0;
+    const showAll = isAllSelected() || selectedSlugs.size === 0;
     rows.forEach((row) => {
       const slugMatch =
-        activeSlug === '__all__' || row.dataset.slug === activeSlug;
-      const groupMatch =
-        activeGroup === null || row.dataset.group === activeGroup;
+        showAll || selectedSlugs.has(row.dataset.slug ?? '');
       const searchMatch =
         !searchTerm || (row.dataset.search ?? '').includes(searchTerm);
-      const show = slugMatch && groupMatch && searchMatch;
+      const show = slugMatch && searchMatch;
       row.classList.toggle('is-hidden', !show);
       if (show) visible++;
     });
@@ -282,70 +355,35 @@ const jsonLd = {
     const emptyEl = document.querySelector<HTMLElement>('#cat-empty');
     if (countEl) countEl.textContent = String(visible);
     if (emptyEl) emptyEl.style.display = visible > 0 ? 'none' : 'block';
-    updatePdfData();
+    updateLabel();
+    updatePdfData(visible);
   }
 
-  function activateCategory(slug: string) {
-    activeSlug = slug;
-    activeGroup = null;
-    syncButtonStates();
+  function updateLabel() {
     const labelEl = document.querySelector<HTMLElement>('#cat-label');
-    const activeBtn = document.querySelector<HTMLButtonElement>(
-      `.cat-sidebar-item[data-slug="${slug}"]`
-    );
-    if (labelEl && activeBtn) {
-      const name =
-        activeBtn.querySelector('.cat-sidebar-name')?.textContent ?? '';
-      labelEl.textContent = slug === '__all__' ? 'Todos los productos' : name;
+    if (!labelEl) return;
+    const showAll = isAllSelected() || selectedSlugs.size === 0;
+    if (showAll) {
+      labelEl.textContent = 'Todos los productos';
+      return;
     }
-    const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
-    if (searchInput) {
-      searchInput.value = '';
-      searchTerm = '';
+    if (selectedSlugs.size === 1) {
+      const slug = [...selectedSlugs][0];
+      labelEl.textContent = slugToName.get(slug) ?? slug;
+      return;
     }
-    render();
+    labelEl.textContent = `Selección personalizada (${selectedSlugs.size} categorías)`;
   }
 
-  function activateGroup(groupKey: string) {
-    activeGroup = groupKey;
-    activeSlug = '__all__';
-    syncButtonStates();
-    const labelEl = document.querySelector<HTMLElement>('#cat-label');
-    const groupBtn = document.querySelector<HTMLButtonElement>(
-      `.cat-sidebar-group-header[data-group="${groupKey}"]`
-    );
-    if (labelEl && groupBtn) {
-      const name =
-        groupBtn.querySelector('.cat-sidebar-group-title')?.textContent ?? '';
-      labelEl.textContent = name;
-    }
-    const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
-    if (searchInput) {
-      searchInput.value = '';
-      searchTerm = '';
-    }
-    render();
-  }
-
-  function syncButtonStates() {
-    const items = document.querySelectorAll<HTMLButtonElement>('.cat-sidebar-item');
-    items.forEach((btn) =>
-      btn.classList.toggle('is-active', btn.dataset.slug === activeSlug)
-    );
-    const groups = document.querySelectorAll<HTMLButtonElement>('.cat-sidebar-group-header');
-    groups.forEach((btn) =>
-      btn.classList.toggle('is-active', btn.dataset.group === activeGroup)
-    );
-  }
-
-  function updatePdfData() {
+  function updatePdfData(visibleCount: number) {
     const pdfBtn = document.querySelector<HTMLButtonElement>('#cat-pdf-btn');
     if (!pdfBtn) return;
-    const visibleRows = getVisibleRows();
+    const visibleRows = [
+      ...document.querySelectorAll<HTMLElement>('.cat-row:not(.is-hidden)'),
+    ];
     const pdfRows = visibleRows.map((r) => {
       const code = r.querySelector('.cat-row-code')?.textContent ?? '';
-      const name =
-        r.querySelector('.cat-row-name-text')?.textContent ?? '';
+      const name = r.querySelector('.cat-row-name-text')?.textContent ?? '';
       const category = r.querySelector('.cat-row-tag')?.textContent ?? '';
       return `${code} | ${name} | ${category}`;
     });
@@ -353,42 +391,172 @@ const jsonLd = {
     const searchActive = !!(
       searchInput && searchInput.value.trim().length > 0
     );
-    if (activeSlug === '__all__') {
+    const showAll = isAllSelected() || selectedSlugs.size === 0;
+    if (showAll) {
       pdfBtn.dataset.title = 'Catálogo Todo Huincha';
-      if (searchActive) {
-        pdfBtn.dataset.subtitle = `${visibleRows.length} productos encontrados para la búsqueda`;
-      } else {
-        const catCount =
-          document.querySelectorAll('.cat-sidebar-item').length - 1;
-        pdfBtn.dataset.subtitle = `${visibleRows.length} productos en ${catCount} categorías`;
-      }
+      pdfBtn.dataset.subtitle = searchActive
+        ? `${visibleCount} productos encontrados para la búsqueda`
+        : `${visibleCount} productos en ${allSubcategorySlugs.length} categorías`;
     } else {
-      const activeBtn = document.querySelector<HTMLButtonElement>(
-        `[data-slug="${activeSlug}"]`
-      );
+      const firstSlug = [...selectedSlugs][0];
       const catName =
-        activeBtn?.querySelector('.cat-sidebar-name')?.textContent ??
-        activeSlug;
-      pdfBtn.dataset.title = `Todo Huincha — ${catName}`;
-      if (searchActive) {
-        pdfBtn.dataset.subtitle = `${visibleRows.length} productos filtrados en esta categoría`;
-      } else {
-        pdfBtn.dataset.subtitle = `${visibleRows.length} productos en esta categoría`;
-      }
+        (firstSlug && slugToName.get(firstSlug)) || 'Selección';
+      const titleSuffix =
+        selectedSlugs.size === 1
+          ? catName
+          : `Selección (${selectedSlugs.size} categorías)`;
+      pdfBtn.dataset.title = `Todo Huincha — ${titleSuffix}`;
+      pdfBtn.dataset.subtitle = searchActive
+        ? `${visibleCount} productos filtrados en esta selección`
+        : `${visibleCount} productos en esta selección`;
     }
     pdfBtn.dataset.rows = JSON.stringify(pdfRows);
   }
 
+  function onMasterChange(checked: boolean) {
+    if (checked) {
+      allSubcategorySlugs.forEach((s) => selectedSlugs.add(s));
+    } else {
+      selectedSlugs.clear();
+    }
+    afterSelectionChange();
+  }
+
+  function onGroupChange(groupKey: string, checked: boolean) {
+    const slugs = groupSlugs.get(groupKey) ?? [];
+    if (checked) {
+      slugs.forEach((s) => selectedSlugs.add(s));
+    } else {
+      slugs.forEach((s) => selectedSlugs.delete(s));
+    }
+    afterSelectionChange();
+  }
+
+  function onSubcategoryChange(slug: string, checked: boolean) {
+    if (checked) selectedSlugs.add(slug);
+    else selectedSlugs.delete(slug);
+    afterSelectionChange();
+  }
+
+  function onLabelClick(slug: string) {
+    if (slug === '__all__') {
+      selectedSlugs.clear();
+      allSubcategorySlugs.forEach((s) => selectedSlugs.add(s));
+    } else {
+      selectedSlugs = new Set([slug]);
+    }
+    afterSelectionChange();
+  }
+
+  function onGroupLabelClick(groupKey: string) {
+    const slugs = groupSlugs.get(groupKey) ?? [];
+    selectedSlugs = new Set(slugs);
+    afterSelectionChange();
+  }
+
+  function afterSelectionChange() {
+    syncCheckboxes();
+    saveSelection();
+    applyFilter();
+  }
+
+  // Build slug/name/group maps from the sidebar DOM so the script
+  // doesn't need a JSON data bridge from Astro's frontmatter.
   document
-    .querySelectorAll<HTMLButtonElement>('.cat-sidebar-item')
-    .forEach((btn) => {
-      btn.addEventListener('click', () =>
-        activateCategory(btn.dataset.slug ?? '__all__')
-      );
+    .querySelectorAll<HTMLInputElement>('.cat-sidebar-checkbox[data-slug]')
+    .forEach((input) => {
+      const slug = input.dataset.slug ?? '';
+      if (slug === '__all__' || slug === '') return;
+      allSubcategorySlugs.push(slug);
+      const name =
+        input
+          .closest('label')
+          ?.querySelector('.cat-sidebar-name')
+          ?.textContent?.trim() ?? slug;
+      slugToName.set(slug, name);
+      const groupKey = input.dataset.group ?? '';
+      if (groupKey) {
+        const list = groupSlugs.get(groupKey) ?? [];
+        list.push(slug);
+        groupSlugs.set(groupKey, list);
+      }
     });
 
+  // Restore selection from localStorage; empty/missing -> all selected.
+  selectedSlugs = loadSelection();
+  if (selectedSlugs.size === 0) {
+    allSubcategorySlugs.forEach((s) => selectedSlugs.add(s));
+  }
+
+  // Master checkbox: change handler.
+  const masterChk = document.querySelector<HTMLInputElement>('#cat-chk-all');
+  if (masterChk) {
+    masterChk.addEventListener('change', (e) => {
+      onMasterChange((e.target as HTMLInputElement).checked);
+    });
+  }
+
+  // Master label: clicking the label text (not the checkbox) is a
+  // unitary filter -> select all. Distinguish via event.target.
+  const masterLabel = document.querySelector<HTMLLabelElement>(
+    'label[for="cat-chk-all"]'
+  );
+  if (masterLabel) {
+    masterLabel.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      e.preventDefault();
+      onLabelClick('__all__');
+    });
+  }
+
+  // Group checkboxes: change handler cascades to all sub-slugs.
   document
-    .querySelectorAll<HTMLButtonElement>('.cat-sidebar-group-header')
+    .querySelectorAll<HTMLInputElement>('.cat-sidebar-group-checkbox')
+    .forEach((chk) => {
+      chk.addEventListener('change', (e) => {
+        const input = e.target as HTMLInputElement;
+        onGroupChange(input.dataset.group ?? '', input.checked);
+      });
+    });
+
+  // Group labels: label click -> unitary filter by group.
+  document
+    .querySelectorAll<HTMLLabelElement>('.cat-sidebar-group-label')
+    .forEach((lbl) => {
+      const forAttr = lbl.getAttribute('for') ?? '';
+      const groupKey = forAttr.replace(/^cat-chk-group-/, '');
+      if (!groupKey) return;
+      lbl.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).tagName === 'INPUT') return;
+        e.preventDefault();
+        onGroupLabelClick(groupKey);
+      });
+    });
+
+  // Subcategory checkboxes + their wrapping labels.
+  document
+    .querySelectorAll<HTMLInputElement>('.cat-sidebar-checkbox[data-slug]')
+    .forEach((chk) => {
+      const slug = chk.dataset.slug ?? '';
+      if (slug === '__all__' || slug === '') return;
+      chk.addEventListener('change', (e) => {
+        const input = e.target as HTMLInputElement;
+        onSubcategoryChange(slug, input.checked);
+      });
+      const label = chk.closest('label');
+      if (label) {
+        label.addEventListener('click', (e) => {
+          if ((e.target as HTMLElement).tagName === 'INPUT') return;
+          e.preventDefault();
+          onLabelClick(slug);
+        });
+      }
+    });
+
+  // Group collapse: chevron button toggles the .is-collapsed class on
+  // the parent <li> and persists the boolean map to localStorage.
+  document
+    .querySelectorAll<HTMLButtonElement>('.cat-sidebar-group-chevron-btn')
     .forEach((btn) => {
       btn.addEventListener('click', () => {
         const groupLi = btn.closest<HTMLElement>('.cat-sidebar-group');
@@ -397,10 +565,10 @@ const jsonLd = {
         btn.setAttribute('aria-expanded', String(!isCollapsed));
         try {
           const stored = JSON.parse(
-            localStorage.getItem('cat:sidebar:collapsed') ?? '{}'
+            localStorage.getItem(COLLAPSE_KEY) ?? '{}'
           ) as Record<string, boolean>;
           stored[groupLi.dataset.group ?? ''] = isCollapsed;
-          localStorage.setItem('cat:sidebar:collapsed', JSON.stringify(stored));
+          localStorage.setItem(COLLAPSE_KEY, JSON.stringify(stored));
         } catch {}
       });
     });
@@ -408,7 +576,7 @@ const jsonLd = {
   // Restore collapsed state from localStorage on load.
   try {
     const stored = JSON.parse(
-      localStorage.getItem('cat:sidebar:collapsed') ?? '{}'
+      localStorage.getItem(COLLAPSE_KEY) ?? '{}'
     ) as Record<string, boolean>;
     for (const [groupKey, collapsed] of Object.entries(stored)) {
       if (!collapsed) continue;
@@ -417,24 +585,28 @@ const jsonLd = {
       );
       if (groupLi) {
         groupLi.classList.add('is-collapsed');
-        const btn = groupLi.querySelector<HTMLButtonElement>('.cat-sidebar-group-header');
+        const btn = groupLi.querySelector<HTMLButtonElement>(
+          '.cat-sidebar-group-chevron-btn'
+        );
         btn?.setAttribute('aria-expanded', 'false');
       }
     }
   } catch {}
 
+  // Search: 100ms debounce, AND on top of the current selection.
   const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
   if (searchInput) {
     searchInput.addEventListener('input', () => {
       clearTimeout(debounceTimer);
       debounceTimer = window.setTimeout(() => {
         searchTerm = searchInput.value.toLowerCase().trim();
-        render();
+        applyFilter();
       }, 100);
     });
   }
 
-  render();
+  syncCheckboxes();
+  applyFilter();
 
   // -------------------------------------------------------------------
   // Magic-bar: the #hero-actions-bar (search input + PDF button) starts

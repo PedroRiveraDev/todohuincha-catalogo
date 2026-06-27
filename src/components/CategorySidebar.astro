@@ -1,22 +1,25 @@
 ---
 // src/components/CategorySidebar.astro
-// Grouped 8-group category sidebar. Sticky on desktop, off-canvas dialog
-// drawer on mobile (<768px). Slice 2 of catalog-v2-ui-migration.
+// Checkbox-driven multi-selector sidebar. Each row has a checkbox + name
+// + count. Clicking the checkbox toggles that slug in the selection set
+// (additive). Clicking the label text performs a unitary filter, which
+// replaces the selection with just that slug. The 8 group rows cascade
+// into their subcategories; the "Todos los productos" master row
+// toggles all subcategories at once.
 //
-// Refs:
-//   openspec/changes/catalog-v2-ui-migration-slice-2/design.md (section 4)
+// Group collapse is orthogonal to selection: the chevron button is a
+// sibling of the group label (not nested) so clicking the chevron
+// never toggles the group checkbox.
 
 import type { CategorySummary } from '../lib/catalog.ts';
 import { groupCategoriesByGroup } from '../lib/categories.ts';
 
 interface Props {
   categories: CategorySummary[];
-  activeSlug: string | null;
-  activeGroup?: string | null;
   totalProducts: number;
 }
 
-const { categories, activeSlug = null, activeGroup = null, totalProducts } = Astro.props;
+const { categories, totalProducts } = Astro.props;
 
 const groups = groupCategoriesByGroup(categories);
 
@@ -38,54 +41,67 @@ const GROUP_LABELS: Record<string, string> = {
   </div>
   <ul class="cat-sidebar-list">
     <li>
-      <button
-        class={`cat-sidebar-item${activeSlug === null ? ' is-active' : ''}`}
-        data-slug="__all__"
-        id="cat-btn-all"
-        type="button"
-      >
+      <label class="cat-sidebar-item" for="cat-chk-all" data-slug="__all__">
+        <input
+          type="checkbox"
+          id="cat-chk-all"
+          class="cat-sidebar-checkbox"
+          data-slug="__all__"
+        >
         <span class="cat-sidebar-name">Todos los productos</span>
         <span class="cat-sidebar-count">{totalProducts}</span>
-      </button>
+      </label>
     </li>
     {[...groups.entries()].map(([groupKey, cats]) => {
       const groupTotal = cats.reduce((sum, c) => sum + c.products_count, 0);
       return (
         <li class="cat-sidebar-group" data-group={groupKey}>
-          <button
-            class="cat-sidebar-group-header"
-            data-group={groupKey}
-            type="button"
-            aria-expanded="true"
-          >
-            <span class="cat-sidebar-group-title">{GROUP_LABELS[groupKey] ?? groupKey}</span>
-            <span class="cat-sidebar-group-count">{groupTotal}</span>
-            <svg
-              class="cat-sidebar-group-chevron"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
+          <div class="cat-sidebar-group-header">
+            <label class="cat-sidebar-group-label" for={`cat-chk-group-${groupKey}`}>
+              <input
+                type="checkbox"
+                id={`cat-chk-group-${groupKey}`}
+                class="cat-sidebar-group-checkbox"
+                data-group={groupKey}
+              >
+              <span class="cat-sidebar-group-title">{GROUP_LABELS[groupKey] ?? groupKey}</span>
+              <span class="cat-sidebar-group-count">{groupTotal}</span>
+            </label>
+            <button
+              class="cat-sidebar-group-chevron-btn"
+              data-group={groupKey}
+              type="button"
+              aria-expanded="true"
+              aria-label="Colapsar grupo"
             >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
+              <svg
+                class="cat-sidebar-group-chevron"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
           <ul class="cat-sidebar-group-list">
             {cats.map((cat) => (
               <li>
-                <button
-                  class={`cat-sidebar-item${activeSlug === cat.slug ? ' is-active' : ''}`}
-                  data-slug={cat.slug}
-                  data-group={groupKey}
-                  id={`cat-btn-${cat.slug}`}
-                  type="button"
-                >
+                <label class="cat-sidebar-item" for={`cat-chk-${cat.slug}`} data-slug={cat.slug}>
+                  <input
+                    type="checkbox"
+                    id={`cat-chk-${cat.slug}`}
+                    class="cat-sidebar-checkbox"
+                    data-slug={cat.slug}
+                    data-group={groupKey}
+                  >
                   <span class="cat-sidebar-name">{cat.label}</span>
                   <span class="cat-sidebar-count">{cat.products_count}</span>
-                </button>
+                </label>
               </li>
             ))}
           </ul>
@@ -96,50 +112,66 @@ const GROUP_LABELS: Record<string, string> = {
 </aside>
 
 <style is:global>
-  /* Group headers and grouped section layout.
-     The .cat-sidebar / .cat-sidebar-item / .cat-sidebar-name / etc.
-     classes are owned by src/layouts/Base.astro and reused here verbatim. */
-  .cat-sidebar-group {
-    list-style: none;
+  /* Checkbox visual: native control sized down + orange accent.
+     The base styles for .cat-sidebar-item / .cat-sidebar-name /
+     .cat-sidebar-count live in src/layouts/Base.astro and are reused
+     verbatim. We override them only where the label structure
+     differs from the legacy button structure. */
+  .cat-sidebar-checkbox,
+  .cat-sidebar-group-checkbox {
+    accent-color: var(--orange, #FB4D08);
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
   }
+
+  /* Group header split into two siblings so the chevron button does
+     NOT toggle the group checkbox: a <label for=...> wrapping the
+     checkbox + title + count, then a separate <button> with the
+     chevron SVG. Both share the same flex row. */
   .cat-sidebar-group-header {
     display: flex;
     justify-content: space-between;
+    align-items: stretch;
+    gap: 4px;
+    border-top: 1px solid var(--line, #eadfd8);
+    background: var(--canvas, #fffaf7);
+    width: 100%;
+    transition: background 0.15s;
+  }
+  .cat-sidebar-group:first-child .cat-sidebar-group-header {
+    border-top: none;
+  }
+  .cat-sidebar-group-header:hover {
+    background: var(--soft, #fff0e9);
+  }
+  .cat-sidebar-group-label {
+    display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px 6px;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 14px 0 6px 16px;
     font-size: 0.7rem;
     font-weight: 850;
     letter-spacing: 0.09em;
     text-transform: uppercase;
     color: var(--muted, #6c6b65);
-    border-top: 1px solid var(--line, #eadfd8);
-    background: var(--canvas, #fffaf7);
-    width: 100%;
-    border-left: 0;
-    border-right: 0;
-    border-bottom: 0;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    font: inherit;
-    text-align: left;
+    transition: color 0.15s;
   }
-  .cat-sidebar-group-header:hover {
-    background: var(--soft, #fff0e9);
+  .cat-sidebar-group-label:hover {
     color: var(--orange, #FB4D08);
-  }
-  .cat-sidebar-group-header.is-active {
-    background: var(--soft, #fff0e9);
-    color: var(--orange, #FB4D08);
-    border-left: 3px solid var(--orange, #FB4D08);
-    padding-left: 13px;
-  }
-  .cat-sidebar-group:first-child .cat-sidebar-group-header {
-    border-top: none;
   }
   .cat-sidebar-group-title {
     color: inherit;
     flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .cat-sidebar-group-count {
     font-size: 0.68rem;
@@ -147,24 +179,31 @@ const GROUP_LABELS: Record<string, string> = {
     background: var(--soft, #fff0e9);
     padding: 1px 8px;
     border-radius: 99px;
+    flex-shrink: 0;
   }
-  .cat-sidebar-group-header.is-active .cat-sidebar-group-count {
-    background: rgba(251, 77, 8, 0.08);
+  .cat-sidebar-group-chevron-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 6px 8px 0 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted, #6c6b65);
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .cat-sidebar-group-chevron-btn:hover {
     color: var(--orange, #FB4D08);
+    background: rgba(251, 77, 8, 0.08);
   }
-  /* Discreet chevron: rotates -90deg when group is collapsed. */
   .cat-sidebar-group-chevron {
     width: 12px;
     height: 12px;
-    color: var(--muted, #6c6b65);
-    flex-shrink: 0;
-    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), color 0.15s;
-  }
-  .cat-sidebar-group-header:hover .cat-sidebar-group-chevron {
-    color: var(--orange, #FB4D08);
-  }
-  .cat-sidebar-group.is-collapsed > .cat-sidebar-group-header {
-    border-left-color: transparent;
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   .cat-sidebar-group.is-collapsed .cat-sidebar-group-chevron {
     transform: rotate(-90deg);
@@ -176,5 +215,16 @@ const GROUP_LABELS: Record<string, string> = {
     list-style: none;
     margin: 0;
     padding: 0 0 4px;
+  }
+
+  /* Sidebar item label: same look as the legacy button, with a
+     reserved 3px left border for hover/active visual continuity.
+     The checkbox sits inline before the name with 8px gap. */
+  .cat-sidebar-item {
+    padding: 9px 16px;
+    border-left: 3px solid transparent;
+  }
+  .cat-sidebar-item > .cat-sidebar-checkbox {
+    margin-right: 4px;
   }
 </style>
