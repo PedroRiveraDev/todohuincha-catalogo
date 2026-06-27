@@ -683,6 +683,7 @@ const { title, subtitle, rows } = Astro.props;
     // -------------------------------------------------------------------
 
     async function generatePDF(opts: PdfOptions): Promise<void> {
+      const docTitle = pdfBtn?.dataset.title ?? title;
       const payload = (window as any).__CATALOG_PAYLOAD__ as PdfCatalogPayload | undefined;
       if (!payload || !Array.isArray(payload.items)) {
         console.error('catalog payload missing; aborting PDF generation');
@@ -724,7 +725,7 @@ const { title, subtitle, rows } = Astro.props;
         // Page header
         pdf.addPage();
         pageNum++;
-        let y = drawHeaderBand(pdf, title);
+        let y = drawHeaderBand(pdf, docTitle);
         y = drawCategoryBanner(pdf, bannerBase64, label, y);
         y = drawCategoryTitle(pdf, label, y + 2);
         y = drawCategoryDescription(pdf, cat?.description, y);
@@ -755,7 +756,7 @@ const { title, subtitle, rows } = Astro.props;
 
       // ---- Filename ----
       const dateSlug = new Date().toISOString().slice(0, 10);
-      const stem = title
+      const stem = docTitle
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
