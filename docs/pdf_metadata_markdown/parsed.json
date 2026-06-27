@@ -1,0 +1,3206 @@
+{
+  "generated_at": "2026-06-27T03:06:41.211Z",
+  "source_dir": "docs\\pdf_metadata_markdown",
+  "total_processed": 17,
+  "total_errors": 11,
+  "items": [
+    {
+      "source_md_file": "MAQUINA AFILADORA DE CUCHILLOS MF2510B - 1000 2194I(1).md",
+      "format": "lote2",
+      "sku": "2194I",
+      "title": "MAQUINA AFILADORA DE CUCHILLOS MF2510B",
+      "model": "MF2510B",
+      "price": {
+        "sale_amount": 8330000,
+        "formatted": "8.330.000",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "Precisión",
+              "value_text": "0,01-0,02 mm",
+              "value_number": 0.01,
+              "unit": null
+            },
+            {
+              "label": "Longitud máxima de molienda",
+              "value_text": "1000 milímetros",
+              "value_number": 1000,
+              "unit": "mil"
+            },
+            {
+              "label": "Dimensiones de la muela abrasiva",
+              "value_text": "205*115*145 mm",
+              "value_number": 205,
+              "unit": null
+            },
+            {
+              "label": "Ángulo de apoyo del cortador ajustable",
+              "value_text": "0-90°",
+              "value_number": 0,
+              "unit": null
+            },
+            {
+              "label": "Velocidad de movimiento horizontal de la rueda",
+              "value_text": "0-60 Hz",
+              "value_number": 0,
+              "unit": null
+            },
+            {
+              "label": "Velocidad de rotación del cabezal de la rueda",
+              "value_text": "1440 rpm",
+              "value_number": 1440,
+              "unit": "rpm"
+            },
+            {
+              "label": "Potencia del motor eléctrico principal",
+              "value_text": "2,2 kW",
+              "value_number": 2.2,
+              "unit": "kW"
+            },
+            {
+              "label": "Alimentación de potencia del motor eléctrico",
+              "value_text": "0,75 kW",
+              "value_number": 0.75,
+              "unit": "kW"
+            },
+            {
+              "label": "Potencia de la bomba de agua",
+              "value_text": "90 W",
+              "value_number": 90,
+              "unit": "W"
+            },
+            {
+              "label": "Tamaño de la mesa de trabajo",
+              "value_text": "1000*200 mm",
+              "value_number": 1000,
+              "unit": null
+            },
+            {
+              "label": "Distancia máxima de elevación horizontal del cabezal de la",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "rueda",
+              "value_text": "200 milímetros",
+              "value_number": 200,
+              "unit": "mil"
+            },
+            {
+              "label": "Tamaño total",
+              "value_text": "2200x1100x1600mm",
+              "value_number": 2200,
+              "unit": "x"
+            },
+            {
+              "label": "Tamaño del embalaje",
+              "value_text": "2450 × 1180 × 1750 mm",
+              "value_number": 2450,
+              "unit": null
+            },
+            {
+              "label": "PESO NETO",
+              "value_text": "1600 kilos",
+              "value_number": 1600,
+              "unit": "kilos"
+            },
+            {
+              "label": "PRECIO",
+              "value_text": "8.330.000",
+              "value_number": 8.33,
+              "unit": null
+            },
+            {
+              "label": "IVA incl.",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "Precisión: 0,01-0,02 mm",
+        "Longitud máxima de molienda: 1000 milímetros",
+        "Dimensiones de la muela abrasiva: 205*115*145 mm",
+        "Ángulo de apoyo del cortador ajustable: 0-90°",
+        "Velocidad de movimiento horizontal de la rueda: 0-60 Hz",
+        "Velocidad de rotación del cabezal de la rueda: 1440 rpm",
+        "Potencia del motor eléctrico principal: 2,2 kW",
+        "Alimentación de potencia del motor eléctrico: 0,75 kW",
+        "Potencia de la bomba de agua: 90 W",
+        "Tamaño de la mesa de trabajo: 1000*200 mm",
+        "Distancia máxima de elevación horizontal del cabezal de la",
+        "rueda: 200 milímetros",
+        "Tamaño total: 2200x1100x1600mm",
+        "Tamaño del embalaje: 2450 × 1180 × 1750 mm",
+        "PESO NETO: 1600 kilos",
+        "PRECIO: 8.330.000",
+        "IVA incl."
+      ],
+      "source_pdf": null,
+      "parsing_warnings": [
+        "no_features_extracted"
+      ]
+    },
+    {
+      "source_md_file": "TH100 MAQUINA AFILADORA DE SIERRAS HUINCHAS 2197I(1).md",
+      "format": "lote3",
+      "sku": "2197I",
+      "title": "AFILADORA DE SIERRAS HUINCHAS CBN TH100",
+      "model": "TH100",
+      "price": {
+        "sale_amount": 2737000,
+        "formatted": "PRECIO $2.737.000 IVA incl.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "general",
+          "label": "GENERAL",
+          "description": null,
+          "values": [
+            {
+              "label": "220V",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "PASO 22.225 Y 28.575",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "ANCHO DE TRABAJO 32 A 100MM",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "AUTOMÁTICA",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "VELOCIDAD VARIABLE",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "INCLUYE ESMERIL PASO 22.225",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "220V",
+        "PASO 22.225 Y 28.575",
+        "ANCHO DE TRABAJO 32 A 100MM",
+        "AUTOMÁTICA",
+        "VELOCIDAD VARIABLE",
+        "INCLUYE ESMERIL PASO 22.225"
+      ],
+      "source_pdf": {
+        "file_name": "TH100 MAQUINA AFILADORA DE SIERRAS HUINCHAS 2197I(1).pdf",
+        "sha256": "e198b62ecc7f80c2cf5049d2777249ae13748c9928a52d97fdc2cc730ad7f588",
+        "byte_size": 1931197698
+      },
+      "parsing_warnings": [
+        "no_features_extracted"
+      ]
+    },
+    {
+      "source_md_file": "CANTEADORA 12 WOOD JOINTER W0101P 2198I(1).md",
+      "format": "lote2",
+      "sku": "2198I",
+      "title": "CANTEADORA 12\" WOOD JOINTER",
+      "model": "W0101P",
+      "price": {
+        "sale_amount": 3572313,
+        "formatted": "3.572.313.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "La guía montada en el centro cubre de forma segura la parte trasera del cabezal de corte al trabajar frente a la máquina.",
+        "Ajuste suave y preciso mediante el piñón y cremallera.",
+        "Las mesas de entrada y salida tienen una palanca de uso fácil para subir y bajar la mesa de la cama.",
+        "El sistema de soporte de paralelogramo permite que la mesa suba o baje en la misma área que el cabezal de corte, lo que permite menos espacio entre la mesa y el cabezal para cortes más eficientes y seguros.",
+        "Puerta de bisagra y panel extraíble que permiten un fácil acceso al motor y las correas en V."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "Salida",
+              "value_text": "3HP (2200W)",
+              "value_number": 2200,
+              "unit": "W"
+            },
+            {
+              "label": "Capacidad de corte",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Ancho",
+              "value_text": "12\" (304mm)",
+              "value_number": 304,
+              "unit": "mm"
+            },
+            {
+              "label": "Profundidad",
+              "value_text": "3/4\" (19mm máx.)",
+              "value_number": 19,
+              "unit": "mm"
+            },
+            {
+              "label": "Capacidad de rebaje",
+              "value_text": "3/4\" (19mm máx.)",
+              "value_number": 19,
+              "unit": "mm"
+            },
+            {
+              "label": "Cabezal de corte",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Velocidad",
+              "value_text": "50Hz: 4400RPM 17600CPM",
+              "value_number": 50,
+              "unit": "Hz"
+            },
+            {
+              "label": "60Hz",
+              "value_text": "5320RPM 21280CPM",
+              "value_number": 5320,
+              "unit": "RPM"
+            },
+            {
+              "label": "Número de cuchillas",
+              "value_text": "4",
+              "value_number": 4,
+              "unit": null
+            },
+            {
+              "label": "Diámetro",
+              "value_text": "3-4/5\" (96mm)",
+              "value_number": 96,
+              "unit": "mm"
+            },
+            {
+              "label": "Mesa",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "83.9-9/10\" (2120mm)",
+              "value_number": 2120,
+              "unit": "mm"
+            },
+            {
+              "label": "Longitud de la mesa de entrada",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "40-9/10\" (1039mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud de la mesa de salida",
+              "value_text": "40- 9/10\"",
+              "value_number": 40,
+              "unit": null
+            },
+            {
+              "label": "(1039mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Ancho",
+              "value_text": "12\" (304mm)",
+              "value_number": 304,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura desde el suelo",
+              "value_text": "33-5/64\" (840mm",
+              "value_number": 840,
+              "unit": "mm"
+            },
+            {
+              "label": "Tamaño",
+              "value_text": "47-1/5\" x 5.9/10\" (1200 x 150mm)",
+              "value_number": 1200,
+              "unit": "x"
+            },
+            {
+              "label": "Inclinación hacia dentro y fuera",
+              "value_text": "45°",
+              "value_number": 45,
+              "unit": null
+            },
+            {
+              "label": "Topes positivos",
+              "value_text": "90° y 45° hacia dentro y fuera",
+              "value_number": 90,
+              "unit": null
+            },
+            {
+              "label": "Guía",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Tamaño",
+              "value_text": "47-1/5\" x 5.9/10\" (1200 x 150mm)",
+              "value_number": 1200,
+              "unit": "x"
+            },
+            {
+              "label": "Inclinación hacia dentro y fuera",
+              "value_text": "45°",
+              "value_number": 45,
+              "unit": null
+            },
+            {
+              "label": "Topes positivos",
+              "value_text": "90° y 45° hacia dentro y fuera",
+              "value_number": 90,
+              "unit": null
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "Salida: 3HP (2200W)",
+        "Capacidad de corte:",
+        "Ancho: 12\" (304mm)",
+        "Profundidad: 3/4\" (19mm máx.)",
+        "Capacidad de rebaje: 3/4\" (19mm máx.)",
+        "Cabezal de corte:",
+        "Velocidad: 50Hz: 4400RPM 17600CPM",
+        "60Hz: 5320RPM 21280CPM",
+        "Número de cuchillas: 4",
+        "Diámetro: 3-4/5\" (96mm)",
+        "Mesa:",
+        "Longitud: 83.9-9/10\" (2120mm)",
+        "Longitud de la mesa de entrada:",
+        "40-9/10\" (1039mm)",
+        "Longitud de la mesa de salida: 40- 9/10\"",
+        "(1039mm)",
+        "Ancho: 12\" (304mm)",
+        "Altura desde el suelo: 33-5/64\" (840mm",
+        "Tamaño: 47-1/5\" x 5.9/10\" (1200 x 150mm)",
+        "Inclinación hacia dentro y fuera: 45°",
+        "Topes positivos: 90° y 45° hacia dentro y fuera",
+        "Guía:",
+        "Tamaño: 47-1/5\" x 5.9/10\" (1200 x 150mm)",
+        "Inclinación hacia dentro y fuera: 45°",
+        "Topes positivos: 90° y 45° hacia dentro y fuera"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "CEPILLADORA 20 PRODUCTION PLANER - W0201 2199I(1).md",
+      "format": "lote2",
+      "sku": "2199I",
+      "title": "CEPILLADORA 20\" PRODUCTION PLANER",
+      "model": "W0201",
+      "price": {
+        "sale_amount": 3391143,
+        "formatted": "3.391.143.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "Base, mesa y cabezal de hierro fundido.",
+        "Rodillo de acero estriado y rodillo de salida de poliuretano que mantienen el material en movimiento de manera suave y eficiente.",
+        "Dedos antirretroceso proporcionados en el lado de entrada para prevenir el retroceso del material.",
+        "Eje de precisión y mesa pulida para cortes suaves, con ajuste de altura fácil mediante una gran rueda manual."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "Motor",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Potencia",
+              "value_text": "3HP (2200W), con opción a 5HP (3750W)",
+              "value_number": 2200,
+              "unit": "W"
+            },
+            {
+              "label": "Cabezal de Corte",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Velocidad",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50Hz",
+              "value_text": "4000RPM (16000 cortes por minuto)",
+              "value_number": 16000,
+              "unit": "cortes"
+            },
+            {
+              "label": "60Hz",
+              "value_text": "4840RPM (19360 cortes por minuto)",
+              "value_number": 19360,
+              "unit": "cortes"
+            },
+            {
+              "label": "Número de cuchillas",
+              "value_text": "4",
+              "value_number": 4,
+              "unit": null
+            },
+            {
+              "label": "Diámetro",
+              "value_text": "3” (78mm)",
+              "value_number": 78,
+              "unit": "mm"
+            },
+            {
+              "label": "Capacidad",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Grosor mínimo del material",
+              "value_text": "1/4” (6.35mm)",
+              "value_number": 6.35,
+              "unit": "mm"
+            },
+            {
+              "label": "Grosor máximo del material",
+              "value_text": "8” (204mm)",
+              "value_number": 204,
+              "unit": "mm"
+            },
+            {
+              "label": "Longitud mínima del material",
+              "value_text": "6-9/10” (175mm)",
+              "value_number": 175,
+              "unit": "mm"
+            },
+            {
+              "label": "Profundidad máxima de corte",
+              "value_text": "1/4” (6mm)",
+              "value_number": 6,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho de cepillado",
+              "value_text": "20” (508mm)",
+              "value_number": 508,
+              "unit": "mm"
+            },
+            {
+              "label": "Velocidad de alimentación",
+              "value_text": "16/20 pies por minuto",
+              "value_number": 16,
+              "unit": null
+            },
+            {
+              "label": "(4.8/6.1 metros por minuto)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Rodillos de Alimentación",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Rodillos de entrada",
+              "value_text": "Acero estriado sólido",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Rodillos de salida",
+              "value_text": "Poliuretano",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Mesa",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud total (con extensiones)",
+              "value_text": "56-3/10” (1430mm)",
+              "value_number": 1430,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "20” (510mm)",
+              "value_number": 510,
+              "unit": "mm"
+            },
+            {
+              "label": "Puerto de Recolección de Polvo",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Diámetro",
+              "value_text": "5” (125mm)",
+              "value_number": 125,
+              "unit": "mm"
+            },
+            {
+              "label": "Dimensiones Generales",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Profundidad",
+              "value_text": "56-3/10” (1430mm)",
+              "value_number": 1430,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "43-3/10” (1100mm)",
+              "value_number": 1100,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura",
+              "value_text": "44-1/2” (1130mm)",
+              "value_number": 1130,
+              "unit": "mm"
+            },
+            {
+              "label": "Dimensiones del Empaque",
+              "value_text": "960x720x1150mm",
+              "value_number": 960,
+              "unit": "x"
+            },
+            {
+              "label": "Peso Neto/Bruto",
+              "value_text": "342 kg / 372 Kg",
+              "value_number": 342,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "Motor:",
+        "Potencia: 3HP (2200W), con opción a 5HP (3750W)",
+        "Cabezal de Corte:",
+        "Velocidad:",
+        "50Hz: 4000RPM (16000 cortes por minuto)",
+        "60Hz: 4840RPM (19360 cortes por minuto)",
+        "Número de cuchillas: 4",
+        "Diámetro: 3” (78mm)",
+        "Capacidad:",
+        "Grosor mínimo del material: 1/4” (6.35mm)",
+        "Grosor máximo del material: 8” (204mm)",
+        "Longitud mínima del material: 6-9/10” (175mm)",
+        "Profundidad máxima de corte: 1/4” (6mm)",
+        "Ancho de cepillado: 20” (508mm)",
+        "Velocidad de alimentación: 16/20 pies por minuto",
+        "(4.8/6.1 metros por minuto)",
+        "Rodillos de Alimentación:",
+        "Rodillos de entrada: Acero estriado sólido",
+        "Rodillos de salida: Poliuretano",
+        "Mesa:",
+        "Longitud total (con extensiones): 56-3/10” (1430mm)",
+        "Ancho: 20” (510mm)",
+        "Puerto de Recolección de Polvo:",
+        "Diámetro: 5” (125mm)",
+        "Dimensiones Generales:",
+        "Profundidad: 56-3/10” (1430mm)",
+        "Ancho: 43-3/10” (1100mm)",
+        "Altura: 44-1/2” (1130mm)",
+        "Dimensiones del Empaque: 960x720x1150mm",
+        "Peso Neto/Bruto: 342 kg / 372 Kg"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "TUPI 1,5 HP SHAPER W. SLIDING TABLE - W0404 2200I(1).md",
+      "format": "lote3",
+      "sku": "2200I",
+      "title": "TUPI 1,5 HP SHAPER W. SLIDING TABLE -",
+      "model": "W0404",
+      "price": {
+        "sale_amount": 1666840,
+        "formatted": "Precio $1.666.840.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": false,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "general",
+          "label": "GENERAL",
+          "description": null,
+          "values": [
+            {
+              "label": "El volante grande permite un ajuste rápido, fácil y preciso",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Potencia de salida",
+              "value_text": "1.5 HP (1100 W) de la altura del husillo. EJE:",
+              "value_number": 1100,
+              "unit": "W"
+            },
+            {
+              "label": "Diámetro (estándar)",
+              "value_text": "3/4\" (19 mm)",
+              "value_number": 19,
+              "unit": "mm"
+            },
+            {
+              "label": "Capacidad (debajo de la tuerca)",
+              "value_text": "2-7/10\" (69 mm)",
+              "value_number": 69,
+              "unit": "mm"
+            },
+            {
+              "label": "Velocidad",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50 HZ",
+              "value_text": "7850/5600 rpm",
+              "value_number": 7850,
+              "unit": null
+            },
+            {
+              "label": "60 HZ",
+              "value_text": "9500/6780 rpm",
+              "value_number": 9500,
+              "unit": null
+            },
+            {
+              "label": "Recorrido del eje",
+              "value_text": "3-1/2\" (90 mm)",
+              "value_number": 90,
+              "unit": "mm"
+            },
+            {
+              "label": "MESA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "24\" (610 mm)",
+              "value_number": 610,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "21\" (534 mm)",
+              "value_number": 534,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura desde el suelo",
+              "value_text": "34-1/4\" (870 mm)",
+              "value_number": 870,
+              "unit": "mm"
+            },
+            {
+              "label": "Diámetros de las aberturas",
+              "value_text": "2-1/10\", 3-1/5\" (55 mm, 82 mm)",
+              "value_number": 55,
+              "unit": "mm"
+            }
+          ]
+        },
+        {
+          "group_code": "mesa_deslizante",
+          "label": "MESA DESLIZANTE",
+          "description": null,
+          "values": [
+            {
+              "label": "Longitud",
+              "value_text": "12-3/5\" (320 mm)",
+              "value_number": 320,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "8-21/32\" (220 mm)",
+              "value_number": 220,
+              "unit": "mm"
+            },
+            {
+              "label": "Recorrido de la mesa",
+              "value_text": "22-4/5\" (580 mm) TAMAÑO DE LA CERCA (cada lado):",
+              "value_number": 580,
+              "unit": "mm"
+            },
+            {
+              "label": "12\" x 5-1/8\" (300 x 130 mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Dimensiones generales",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Ancho",
+              "value_text": "34-1/4\" (870 mm)",
+              "value_number": 870,
+              "unit": "mm"
+            },
+            {
+              "label": "Profundidad",
+              "value_text": "33-4/5\" (860 mm)",
+              "value_number": 860,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura",
+              "value_text": "50-2/5\" (1280 mm)",
+              "value_number": 1280,
+              "unit": "mm"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "El volante grande permite un ajuste rápido, fácil y preciso",
+        "Potencia de salida: 1.5 HP (1100 W) de la altura del husillo. EJE:",
+        "Diámetro (estándar): 3/4\" (19 mm)",
+        "Capacidad (debajo de la tuerca): 2-7/10\" (69 mm)",
+        "Velocidad:",
+        "50 HZ: 7850/5600 rpm",
+        "60 HZ: 9500/6780 rpm",
+        "Recorrido del eje: 3-1/2\" (90 mm)",
+        "MESA:",
+        "Longitud: 24\" (610 mm)",
+        "Ancho: 21\" (534 mm)",
+        "Altura desde el suelo: 34-1/4\" (870 mm)",
+        "Diámetros de las aberturas: 2-1/10\", 3-1/5\" (55 mm, 82 mm)",
+        "MESA DESLIZANTE:",
+        "Longitud: 12-3/5\" (320 mm)",
+        "Ancho: 8-21/32\" (220 mm)",
+        "Recorrido de la mesa: 22-4/5\" (580 mm) TAMAÑO DE LA CERCA (cada lado):",
+        "12\" x 5-1/8\" (300 x 130 mm)",
+        "Dimensiones generales:",
+        "Ancho: 34-1/4\" (870 mm)",
+        "Profundidad: 33-4/5\" (860 mm)",
+        "Altura: 50-2/5\" (1280 mm)"
+      ],
+      "source_pdf": {
+        "file_name": "TUPI 1,5 HP SHAPER W. SLIDING TABLE - W0404 2200I(1).pdf",
+        "sha256": "719b56a6b39878e76de5affac75a78ecb2d9da9f3808e9415682bb6c4aedc71c",
+        "byte_size": 1734177582
+      },
+      "parsing_warnings": [
+        "no_features_extracted",
+        "concatenated_values:3"
+      ]
+    },
+    {
+      "source_md_file": "TUPI 3 HP PRODUCTION SHAPER - W0401FX 2201I(1).md",
+      "format": "lote3",
+      "sku": "2201I",
+      "title": "TUPI 3 HP PRODUCTION SHAPER -",
+      "model": "W0401FX",
+      "price": {
+        "sale_amount": 2270342,
+        "formatted": "Precio $2.270.342.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": false,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "general",
+          "label": "GENERAL",
+          "description": null,
+          "values": [
+            {
+              "label": "configuración y extracción rápida de las cuchillas. MOTOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Potencia de salida",
+              "value_text": "3 HP (2200 W)Eje intercambiable de 30 EJE: mm, con portabrocas de",
+              "value_number": 2200,
+              "unit": "W"
+            },
+            {
+              "label": "Diámetro (estándar)",
+              "value_text": "1-3/16\" (30 mm) fresadora de 1/2\" y 1/4\"",
+              "value_number": 30,
+              "unit": "mm"
+            },
+            {
+              "label": "Capacidad (debajo de la tuerca)",
+              "value_text": "3-3/10\" (85 mm) para usar con cortadoras y Velocidad:",
+              "value_number": 85,
+              "unit": "mm"
+            },
+            {
+              "label": "50 HZ",
+              "value_text": "9000/7000/5000/3000 rpmfresadoras.",
+              "value_number": 9000,
+              "unit": null
+            },
+            {
+              "label": "60 HZ",
+              "value_text": "10900/8400/6000/3600 rpm",
+              "value_number": 10900,
+              "unit": null
+            },
+            {
+              "label": "Recorrido del eje",
+              "value_text": "3-1/2\" (90 mm)",
+              "value_number": 90,
+              "unit": "mm"
+            },
+            {
+              "label": "Portabrocas de fresadora (estándar)",
+              "value_text": "1/2\" (12.5 mm), 1/4\" (6.35 mm)",
+              "value_number": 12.5,
+              "unit": "mm"
+            },
+            {
+              "label": "MESA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "28-3/16\" (716 mm) Ancho: 21-9/10\" (556 mm)",
+              "value_number": 716,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura desde el suelo",
+              "value_text": "34-3/5\" (880 mm)",
+              "value_number": 880,
+              "unit": "mm"
+            },
+            {
+              "label": "Diámetros de las aberturas",
+              "value_text": "2-7/16\", 4-3/10\" (62 mm, 110 mm)",
+              "value_number": 62,
+              "unit": "mm"
+            }
+          ]
+        },
+        {
+          "group_code": "mesa_extensible",
+          "label": "MESA EXTENSIBLE",
+          "description": null,
+          "values": [
+            {
+              "label": "Longitud",
+              "value_text": "28-3/16\" (716 mm) Ancho: 8-21/36\" (220 mm)",
+              "value_number": 716,
+              "unit": "mm"
+            },
+            {
+              "label": "TAMAÑO DE LA CERCA (cada lado)",
+              "value_text": "16\" x 4-7/10\" (400 x 120 mm)",
+              "value_number": 400,
+              "unit": "x"
+            }
+          ]
+        },
+        {
+          "group_code": "dimensiones_generales",
+          "label": "DIMENSIONES GENERALES",
+          "description": null,
+          "values": [
+            {
+              "label": "Ancho",
+              "value_text": "35-7/16\" (900 mm)",
+              "value_number": 900,
+              "unit": "mm"
+            },
+            {
+              "label": "Profundidad",
+              "value_text": "30-7/10\" (780 mm)",
+              "value_number": 780,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura",
+              "value_text": "51-3/16\" (1300 mm)",
+              "value_number": 1300,
+              "unit": "mm"
+            }
+          ]
+        },
+        {
+          "group_code": "dimensiones_de_empaque",
+          "label": "DIMENSIONES DE EMPAQUE",
+          "description": null,
+          "values": [
+            {
+              "label": "800 x 680 x 1165 mm PESO NETO/BRUTO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "190 kg / 220 kg",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "configuración y extracción rápida de las cuchillas. MOTOR:",
+        "Potencia de salida: 3 HP (2200 W)Eje intercambiable de 30 EJE: mm, con portabrocas de",
+        "Diámetro (estándar): 1-3/16\" (30 mm) fresadora de 1/2\" y 1/4\"",
+        "Capacidad (debajo de la tuerca): 3-3/10\" (85 mm) para usar con cortadoras y Velocidad:",
+        "50 HZ: 9000/7000/5000/3000 rpmfresadoras.",
+        "60 HZ: 10900/8400/6000/3600 rpm",
+        "Recorrido del eje: 3-1/2\" (90 mm)",
+        "Portabrocas de fresadora (estándar): 1/2\" (12.5 mm), 1/4\" (6.35 mm)",
+        "MESA:",
+        "Longitud: 28-3/16\" (716 mm) Ancho: 21-9/10\" (556 mm)",
+        "Altura desde el suelo: 34-3/5\" (880 mm)",
+        "Diámetros de las aberturas: 2-7/16\", 4-3/10\" (62 mm, 110 mm)",
+        "MESA EXTENSIBLE:",
+        "Longitud: 28-3/16\" (716 mm) Ancho: 8-21/36\" (220 mm)",
+        "TAMAÑO DE LA CERCA (cada lado): 16\" x 4-7/10\" (400 x 120 mm)",
+        "DIMENSIONES GENERALES:",
+        "Ancho: 35-7/16\" (900 mm)",
+        "Profundidad: 30-7/10\" (780 mm)",
+        "Altura: 51-3/16\" (1300 mm)",
+        "DIMENSIONES DE EMPAQUE:",
+        "800 x 680 x 1165 mm PESO NETO/BRUTO:",
+        "190 kg / 220 kg"
+      ],
+      "source_pdf": {
+        "file_name": "TUPI 3 HP PRODUCTION SHAPER - W0401FX 2201I(1).pdf",
+        "sha256": "a1651402dfa70b4681250ecfff0bc81208663fb988d20c735b84a7dc48ac5ac7",
+        "byte_size": 1600163887
+      },
+      "parsing_warnings": [
+        "no_features_extracted",
+        "concatenated_values:2"
+      ]
+    },
+    {
+      "source_md_file": "LIJADORA DE DISCO Y BANDA 6x9 - W0506 2204I.md",
+      "format": "lote2",
+      "sku": "2204I",
+      "title": "LIJADORA DE DISCO Y BANDA 6x9\"",
+      "model": "W0506",
+      "price": {
+        "sale_amount": 876524,
+        "formatted": "876.524.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "El mecanismo rápido de tensión de la banda permite cambiar la banda fácilmente.",
+        "El botón de alineación de la banda facilita el ajuste de alineación.",
+        "El gran disco abrasivo de 9\" es ideal para lijar grandes curvas o redondear esquinas afiladas.",
+        "La unidad de la banda ajustable funciona vertical, horizontalmente o en cualquier ángulo intermedio.",
+        "La banda es ideal para el lijado de contornos.",
+        "La mesa de fundición con ranura para ingletes se inclina hasta 45° para lijado biselado y puede usarse en ambas direcciones."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "MOTOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "3/4HP (550W) de salida",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "BANDA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50Hz",
+              "value_text": "1024 FPM (312 MPM)",
+              "value_number": 312,
+              "unit": "MPM"
+            },
+            {
+              "label": "60Hz",
+              "value_text": "1240 FPM (378 MPM)",
+              "value_number": 378,
+              "unit": "MPM"
+            },
+            {
+              "label": "DISCO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50Hz",
+              "value_text": "1400 RPM",
+              "value_number": 1400,
+              "unit": "RPM"
+            },
+            {
+              "label": "60Hz",
+              "value_text": "1700 RPM",
+              "value_number": 1700,
+              "unit": "RPM"
+            },
+            {
+              "label": "LIJA ABRASIVA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "48\" (1219mm)",
+              "value_number": 1219,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "6\" (152mm)",
+              "value_number": 152,
+              "unit": "mm"
+            },
+            {
+              "label": "DIÁMETRO DEL DISCO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "9\" (228.9mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Tamaño e inclinación de la mesa",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Tamaño",
+              "value_text": "6\"x11-7/10\" (152x298mm)",
+              "value_number": 152,
+              "unit": "x"
+            },
+            {
+              "label": "Inclinación",
+              "value_text": "0-45°",
+              "value_number": 0,
+              "unit": null
+            },
+            {
+              "label": "DIMENSIONES GENERALES",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "29-1/10\" (740mm)",
+              "value_number": 740,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "20\" (500mm)",
+              "value_number": 500,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura",
+              "value_text": "40-5/32\" (1020mm)",
+              "value_number": 1020,
+              "unit": "mm"
+            },
+            {
+              "label": "DIMENSIONES DE EMBALAJE",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "695x560x450mm",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Peso neto/bruto",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "55 kgs / 57 kgs",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "MOTOR:",
+        "3/4HP (550W) de salida:",
+        "BANDA:",
+        "50Hz: 1024 FPM (312 MPM)",
+        "60Hz: 1240 FPM (378 MPM)",
+        "DISCO:",
+        "50Hz: 1400 RPM",
+        "60Hz: 1700 RPM",
+        "LIJA ABRASIVA:",
+        "Longitud: 48\" (1219mm)",
+        "Ancho: 6\" (152mm)",
+        "DIÁMETRO DEL DISCO:",
+        "9\" (228.9mm)",
+        "Tamaño e inclinación de la mesa:",
+        "Tamaño: 6\"x11-7/10\" (152x298mm)",
+        "Inclinación: 0-45°",
+        "DIMENSIONES GENERALES:",
+        "Longitud: 29-1/10\" (740mm)",
+        "Ancho: 20\" (500mm)",
+        "Altura: 40-5/32\" (1020mm)",
+        "DIMENSIONES DE EMBALAJE:",
+        "695x560x450mm",
+        "Peso neto/bruto:",
+        "55 kgs / 57 kgs"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "LIJADORA BANDA OSCILLATING EDGE SANDER W. SPILNDLE - W0501 2205I(1).md",
+      "format": "lote2",
+      "sku": "2205I",
+      "title": "LIJADORA DE BANDA OSCILANTE",
+      "model": "W0501",
+      "price": {
+        "sale_amount": 2471511,
+        "formatted": "2.471.511.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "Potentes motores de 2HP que proporcionan un rendimiento suave y constante para trabajos pesados.",
+        "El rodillo loco puede usarse para lijado de bordes en formas irregulares.",
+        "La tensión rápida de la banda facilita el cambio de la misma.",
+        "La mesa de hierro fundido puede moverse hacia arriba, hacia abajo, hacia adelante y hacia atrás.",
+        "La cabeza ajustable se inclina de 0° a 90°.",
+        "Kit de lijado de husillo con tres tamaños de tambores y abrazaderas para lijado de contornos.",
+        "La mesa de lijado con grafito puede inclinarse de 0° a 90° o a cualquier ángulo intermedio."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "MOTOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "2HP (1500W) de salida",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "TAMAÑO DE LA BANDA ABRASIVA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "6\"x108\" (152x2743mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "VELOCIDAD DE LA BANDA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50Hz",
+              "value_text": "2602 FPM (793 MPM)",
+              "value_number": 793,
+              "unit": "MPM"
+            },
+            {
+              "label": "60Hz",
+              "value_text": "3150 FPM (960 MPM)",
+              "value_number": 960,
+              "unit": "MPM"
+            },
+            {
+              "label": "TAMAÑO DE LA MESA FRONTAL",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "35-5/8\"x12\" (905x305mm",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "TAMAÑO DE LA MESA AUXILIAR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "11-3/8\"x8-7/8\" (289x225mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "INCLINACIÓN DE LA MESA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "0° - 90°",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "AJUSTABILIDAD DE LA MESA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Hacia arriba",
+              "value_text": "4\" (110mm)",
+              "value_number": 110,
+              "unit": "mm"
+            },
+            {
+              "label": "Hacia adelante",
+              "value_text": "4-3/4\" (121mm)",
+              "value_number": 121,
+              "unit": "mm"
+            },
+            {
+              "label": "DISTANCIA DE OSCILACIÓN",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "3/4\" (19mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "TAMBORES DE LIJADO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Diámetro",
+              "value_text": "1-1/2\", 2\", 3\" (38, 51, 76 mm)",
+              "value_number": 1,
+              "unit": null
+            },
+            {
+              "label": "Largo",
+              "value_text": "4-1/2\" (114 mm)",
+              "value_number": 114,
+              "unit": "mm"
+            },
+            {
+              "label": "ABERTURA PARA EL POLVO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "4\" (102mm)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "DIMENSIONES GENERALES",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "49-3/5\" (1260mm)",
+              "value_number": 1260,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "31-1/10\" (790mm)",
+              "value_number": 790,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura",
+              "value_text": "51-5/16\" (1303mm)",
+              "value_number": 1303,
+              "unit": "mm"
+            },
+            {
+              "label": "DIMENSIONES DE EMBALAJE",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "1475x810x1130mm",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "PESO NETO/BRUTO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "220 kgs / 255 kgs",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "MOTOR:",
+        "2HP (1500W) de salida",
+        "TAMAÑO DE LA BANDA ABRASIVA:",
+        "6\"x108\" (152x2743mm)",
+        "VELOCIDAD DE LA BANDA:",
+        "50Hz: 2602 FPM (793 MPM)",
+        "60Hz: 3150 FPM (960 MPM)",
+        "TAMAÑO DE LA MESA FRONTAL",
+        "35-5/8\"x12\" (905x305mm",
+        "TAMAÑO DE LA MESA AUXILIAR:",
+        "11-3/8\"x8-7/8\" (289x225mm)",
+        "INCLINACIÓN DE LA MESA:",
+        "0° - 90°",
+        "AJUSTABILIDAD DE LA MESA:",
+        "Hacia arriba: 4\" (110mm)",
+        "Hacia adelante: 4-3/4\" (121mm)",
+        "DISTANCIA DE OSCILACIÓN:",
+        "3/4\" (19mm)",
+        "TAMBORES DE LIJADO:",
+        "Diámetro: 1-1/2\", 2\", 3\" (38, 51, 76 mm)",
+        "Largo: 4-1/2\" (114 mm)",
+        "ABERTURA PARA EL POLVO:",
+        "4\" (102mm)",
+        "DIMENSIONES GENERALES:",
+        "Longitud: 49-3/5\" (1260mm)",
+        "Ancho: 31-1/10\" (790mm)",
+        "Altura: 51-5/16\" (1303mm)",
+        "DIMENSIONES DE EMBALAJE:",
+        "1475x810x1130mm",
+        "PESO NETO/BRUTO:",
+        "220 kgs / 255 kgs"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "LIJADORA DE BANCO 26 VARIABLE SPEED DUAL DRUM SANDER - W0602 2206I.md",
+      "format": "lote2",
+      "sku": "2206I",
+      "title": "LIJADORA DE BANCO 26\" VARIABLE SPEED DUAL DRUM SANDER",
+      "model": "W0602",
+      "price": {
+        "sale_amount": 3276189,
+        "formatted": "3.276.189.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "El diseño de doble tambor permite el uso de dos tipos de papel de lija diferentes, logrando un lijado rugoso en la parte frontal y un lijado fino en la parte trasera para obtener el mejor acabado.",
+        "La estructura cerrada de la máquina refuerza la fortaleza durante el trabajo de lijado intensivo.",
+        "El control de lijado inteligente monitorea continuamente la carga en el motor del tambor y ajusta automáticamente la velocidad del motor del transportador para mantener la mejor velocidad de alimentación sin sobrecargar.",
+        "El tambor de aluminio, de precisión mecanizada y equilibrado dinámicamente, está diseñado para disipar el calor y proteger la superficie de trabajo del daño por calor."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "MOTOR PRINCIPAL",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "SALIDA DE 3 HP (2200 W)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "CAPACIDAD DE LIJADO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "ANCHO MÁXIMO DE LIJADO",
+              "value_text": "26\" (660 MM)",
+              "value_number": 660,
+              "unit": "MM"
+            },
+            {
+              "label": "LONGITUD MÍNIMA DE LA PIEZA",
+              "value_text": "5\" (127 MM)",
+              "value_number": 127,
+              "unit": "MM"
+            },
+            {
+              "label": "ESPESOR MÁXIMO DE LA PIEZA",
+              "value_text": "5\" (127 MM)",
+              "value_number": 127,
+              "unit": "MM"
+            },
+            {
+              "label": "ESPESOR MÍNIMO DE LA PIEZA",
+              "value_text": "1/4\" (6 MM)",
+              "value_number": 6,
+              "unit": "MM"
+            },
+            {
+              "label": "TRANSPORTADOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "MOTOR",
+              "value_text": "1/6HP (120 W), MOTOR DE CORRIENTE CONTINUA",
+              "value_number": 120,
+              "unit": "W"
+            },
+            {
+              "label": "VELOCIDAD VARIABLE INFINITAMENTE",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "▪",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "3-20FPM (0.9-6.2MPM)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "TAMBOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "DIÁMETRO",
+              "value_text": "5\" (125 MM)",
+              "value_number": 125,
+              "unit": "MM"
+            },
+            {
+              "label": "LONGITUD",
+              "value_text": "26\" (660 MM)",
+              "value_number": 660,
+              "unit": "MM"
+            },
+            {
+              "label": "VELOCIDAD",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "o",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50 HZ",
+              "value_text": "1280 RPM",
+              "value_number": 1280,
+              "unit": "RPM"
+            },
+            {
+              "label": "o",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "60 HZ",
+              "value_text": "1550 RPM",
+              "value_number": 1550,
+              "unit": "RPM"
+            },
+            {
+              "label": "APERTURA DEL PUERTO DE POLVO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "HACIA ARRIBA",
+              "value_text": "4\" (102 MM) X 2",
+              "value_number": 102,
+              "unit": "MM"
+            },
+            {
+              "label": "DIMENSIONES GENERALES",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "PROFUNDIDAD",
+              "value_text": "31-1/10\" (790 MM)",
+              "value_number": 790,
+              "unit": "MM"
+            },
+            {
+              "label": "ANCHO",
+              "value_text": "49-3/5\" (1260 MM)",
+              "value_number": 1260,
+              "unit": "MM"
+            },
+            {
+              "label": "ALTURA",
+              "value_text": "51-3/16\" (1300 MM)",
+              "value_number": 1300,
+              "unit": "MM"
+            },
+            {
+              "label": "DIMENSIONES DE EMPAQUE",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "1150 X 860 X 1290 MM",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "PESO NETO/BRUTO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "223 KG / 273 KG",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "MOTOR PRINCIPAL:",
+        "SALIDA DE 3 HP (2200 W)",
+        "CAPACIDAD DE LIJADO:",
+        "ANCHO MÁXIMO DE LIJADO: 26\" (660 MM)",
+        "LONGITUD MÍNIMA DE LA PIEZA: 5\" (127 MM)",
+        "ESPESOR MÁXIMO DE LA PIEZA: 5\" (127 MM)",
+        "ESPESOR MÍNIMO DE LA PIEZA: 1/4\" (6 MM)",
+        "TRANSPORTADOR:",
+        "MOTOR: 1/6HP (120 W), MOTOR DE CORRIENTE CONTINUA",
+        "VELOCIDAD VARIABLE INFINITAMENTE",
+        "▪",
+        "3-20FPM (0.9-6.2MPM)",
+        "TAMBOR:",
+        "DIÁMETRO: 5\" (125 MM)",
+        "LONGITUD: 26\" (660 MM)",
+        "VELOCIDAD:",
+        "o",
+        "50 HZ: 1280 RPM",
+        "o",
+        "60 HZ: 1550 RPM",
+        "APERTURA DEL PUERTO DE POLVO:",
+        "HACIA ARRIBA: 4\" (102 MM) X 2",
+        "DIMENSIONES GENERALES:",
+        "PROFUNDIDAD: 31-1/10\" (790 MM)",
+        "ANCHO: 49-3/5\" (1260 MM)",
+        "ALTURA: 51-3/16\" (1300 MM)",
+        "DIMENSIONES DE EMPAQUE:",
+        "1150 X 860 X 1290 MM",
+        "PESO NETO/BRUTO:",
+        "223 KG / 273 KG"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "SIERRA HUINCHA 15 WOODWORKING BANDSAW - W0802 2207I(1).md",
+      "format": "lote3",
+      "sku": "2207I",
+      "title": "SIERRA HUINCHA 15 WOODWORKING BANDSAW -",
+      "model": "W0802",
+      "price": {
+        "sale_amount": 2643942,
+        "formatted": "Precio $2.643.942.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": false,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "general",
+          "label": "GENERAL",
+          "description": null,
+          "values": [
+            {
+              "label": "45° a la derecha. MOTOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "2HP (1500W) de salida CUCHILLA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "132.4\" (3,375 mm)",
+              "value_number": 3.375,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho máximo de la cuchilla",
+              "value_text": "1\" (25 mm)",
+              "value_number": 25,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho mínimo de la cuchilla",
+              "value_text": "1/8\" (3 mm)",
+              "value_number": 3,
+              "unit": "mm"
+            },
+            {
+              "label": "Velocidad",
+              "value_text": "50HZ: 1,570/3,260 FPM (478/780 MPM) 60HZ: 1,900/3,910 FPM (579/945 MPM)",
+              "value_number": 50,
+              "unit": "HZ"
+            }
+          ]
+        },
+        {
+          "group_code": "capacidad_de_corte",
+          "label": "CAPACIDAD DE CORTE",
+          "description": null,
+          "values": [
+            {
+              "label": "Diámetro de la rueda",
+              "value_text": "15-3/4\" (400 mm)",
+              "value_number": 400,
+              "unit": "mm"
+            },
+            {
+              "label": "Capacidad de resierra",
+              "value_text": "12\" (305 mm)",
+              "value_number": 305,
+              "unit": "mm"
+            },
+            {
+              "label": "Capacidad de garganta",
+              "value_text": "14-1/8\" (359 mm)",
+              "value_number": 359,
+              "unit": "mm"
+            },
+            {
+              "label": "Máxima altura de corte a la derecha de la guía",
+              "value_text": "12- 3/8\" (316 mm)",
+              "value_number": 316,
+              "unit": "mm"
+            },
+            {
+              "label": "MESA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud",
+              "value_text": "15-7/8\" (405 mm)",
+              "value_number": 405,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "15-3/4\" (400 mm)",
+              "value_number": 400,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura desde el suelo",
+              "value_text": "37-1/4\" (940 mm)",
+              "value_number": 940,
+              "unit": "mm"
+            }
+          ]
+        },
+        {
+          "group_code": "gua",
+          "label": "GUÍA",
+          "description": null,
+          "values": [
+            {
+              "label": "Tamaño",
+              "value_text": "18-1/8\" (460 x 152 x 45 mm)",
+              "value_number": 460,
+              "unit": "x"
+            },
+            {
+              "label": "Ajuste de altura en 2 posiciones",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Movimiento",
+              "value_text": "Redondo o barra deslizante, ajustable manualmente",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Apertura del Puerto de Polvo",
+              "value_text": "4\" (102 mm) x 2 DIMENSIONES GENERALES:",
+              "value_number": 102,
+              "unit": "mm"
+            },
+            {
+              "label": "Longitud",
+              "value_text": "33-7/8\" (860 mm)",
+              "value_number": 860,
+              "unit": "mm"
+            },
+            {
+              "label": "Profundidad",
+              "value_text": "27-1/2\" (700 mm)",
+              "value_number": 700,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura",
+              "value_text": "71-1/2\" (1,820 mm)",
+              "value_number": 1.82,
+              "unit": "mm"
+            },
+            {
+              "label": "Dimensiones de Empaque",
+              "value_text": "850 x 715 x 1,830 mm",
+              "value_number": 850,
+              "unit": "x"
+            },
+            {
+              "label": "Peso Neto/Peso Bruto",
+              "value_text": "175 kg / 210 kg",
+              "value_number": 175,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "45° a la derecha. MOTOR:",
+        "2HP (1500W) de salida CUCHILLA:",
+        "Longitud: 132.4\" (3,375 mm)",
+        "Ancho máximo de la cuchilla: 1\" (25 mm)",
+        "Ancho mínimo de la cuchilla: 1/8\" (3 mm)",
+        "Velocidad: 50HZ: 1,570/3,260 FPM (478/780 MPM) 60HZ: 1,900/3,910 FPM (579/945 MPM)",
+        "CAPACIDAD DE CORTE:",
+        "Diámetro de la rueda: 15-3/4\" (400 mm)",
+        "Capacidad de resierra: 12\" (305 mm)",
+        "Capacidad de garganta: 14-1/8\" (359 mm)",
+        "Máxima altura de corte a la derecha de la guía: 12- 3/8\" (316 mm)",
+        "MESA:",
+        "Longitud: 15-7/8\" (405 mm)",
+        "Ancho: 15-3/4\" (400 mm)",
+        "Altura desde el suelo: 37-1/4\" (940 mm)",
+        "GUÍA:",
+        "Tamaño: 18-1/8\" (460 x 152 x 45 mm)",
+        "Ajuste de altura en 2 posiciones",
+        "Movimiento: Redondo o barra deslizante, ajustable manualmente",
+        "Apertura del Puerto de Polvo: 4\" (102 mm) x 2 DIMENSIONES GENERALES:",
+        "Longitud: 33-7/8\" (860 mm)",
+        "Profundidad: 27-1/2\" (700 mm)",
+        "Altura: 71-1/2\" (1,820 mm)",
+        "Dimensiones de Empaque: 850 x 715 x 1,830 mm",
+        "Peso Neto/Peso Bruto: 175 kg / 210 kg"
+      ],
+      "source_pdf": {
+        "file_name": "SIERRA HUINCHA 15 WOODWORKING BANDSAW - W0802 2207I(1).pdf",
+        "sha256": "ca198c7d21a7824b30d3c7b5ba3b0d848221d16ebdc75b027d958feb25a7c22b",
+        "byte_size": 1712175270
+      },
+      "parsing_warnings": [
+        "no_features_extracted",
+        "concatenated_values:1"
+      ]
+    },
+    {
+      "source_md_file": "CEPILLADORA DOBLE SIDE WOOD PLANER - W0202 2208I(1).md",
+      "format": "lote2",
+      "sku": "2208I",
+      "title": "CEPILLADORA DOBLE SIDE WOOD PLANER",
+      "model": "W0202",
+      "price": {
+        "sale_amount": 3879698,
+        "formatted": "3.879.698.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "Su diseño de \"motor en la parte superior\" te ahorra tiempo al eliminar la necesidad de mover los rodillos de entrada y salida cada vez que haces un corte.",
+        "La caja de engranajes con baño de aceite toma energía directamente del cabezal de corte para los rodillos de alimentación.",
+        "Los rodillos de entrada de acero dentado en espiral y los rodillos de salida de poliuretano mantienen el material en movimiento suave y eficiente.",
+        "Las columnas de precisión rectificadas brindan estabilidad extra al subir y bajar la mesa.",
+        "Un puerto de polvo de 4\" en ángulo diseñado para eliminar las virutas y el aserrín de manera eficiente y mantener la manguera de recolección de polvo fuera de tu espacio de trabajo."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "MOTOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Motor superior",
+              "value_text": "3 HP (2200 W) de salida",
+              "value_number": 2200,
+              "unit": "W"
+            },
+            {
+              "label": "Motor inferior",
+              "value_text": "2 HP (1500 W) de salida",
+              "value_number": 1500,
+              "unit": "W"
+            },
+            {
+              "label": "CABEZAL DE CORTE",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Velocidad",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50 HZ",
+              "value_text": "4000 RPM, 12000 CPM",
+              "value_number": 4000,
+              "unit": "RPM"
+            },
+            {
+              "label": "60 HZ",
+              "value_text": "4800 RPM, 14520 CPM",
+              "value_number": 4800,
+              "unit": "RPM"
+            },
+            {
+              "label": "Número de cuchillas",
+              "value_text": "Superior: 3 / Inferior: 3",
+              "value_number": 3,
+              "unit": null
+            },
+            {
+              "label": "Diámetro",
+              "value_text": "Superior: 73 mm / Inferior: 73 mm",
+              "value_number": 73,
+              "unit": "mm"
+            },
+            {
+              "label": "CAPACIDAD",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Espesor mínimo de la pieza",
+              "value_text": "1/4\" (6.35 mm)",
+              "value_number": 6.35,
+              "unit": "mm"
+            },
+            {
+              "label": "Espesor máximo de la pieza",
+              "value_text": "6-1/2\" (152 mm)",
+              "value_number": 152,
+              "unit": "mm"
+            },
+            {
+              "label": "Longitud mínima de la pieza",
+              "value_text": "6-1/10\" (155 mm)",
+              "value_number": 155,
+              "unit": "mm"
+            },
+            {
+              "label": "Profundidad máxima de corte",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Superior",
+              "value_text": "1/8\" (3 mm) Inferior: 1/12\" (2 mm)",
+              "value_number": 3,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho de cepillado",
+              "value_text": "16\" (406 mm)",
+              "value_number": 406,
+              "unit": "mm"
+            },
+            {
+              "label": "Velocidad de alimentación",
+              "value_text": "16/20 FPM (4.8/6.1 MPM)",
+              "value_number": 16,
+              "unit": null
+            },
+            {
+              "label": "RODILLOS DE ALIMENTACIÓN",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Rodillos de entrada",
+              "value_text": "Acero sólido dentado",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Rodillos de salida",
+              "value_text": "Poliuretano",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "DIMENSIONES DE LA MESA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Longitud total (con extensiones)",
+              "value_text": "50\" (1270 mm)",
+              "value_number": 1270,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "16\" (406 mm)",
+              "value_number": 406,
+              "unit": "mm"
+            },
+            {
+              "label": "APERTURA DEL PUERTO DE POLVO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "4\" (100 mm) x 2",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "DIMENSIONES GENERALES",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Profundidad",
+              "value_text": "50\" (1270 mm)",
+              "value_number": 1270,
+              "unit": "mm"
+            },
+            {
+              "label": "Ancho",
+              "value_text": "34-3/5\" (880 mm)",
+              "value_number": 880,
+              "unit": "mm"
+            },
+            {
+              "label": "Altura",
+              "value_text": "48-4/5\" (1240 mm)",
+              "value_number": 1240,
+              "unit": "mm"
+            },
+            {
+              "label": "DIMENSIONES DE EMPAQUE",
+              "value_text": "900 x 760 x 1170 mm",
+              "value_number": 900,
+              "unit": "x"
+            },
+            {
+              "label": "PESO NETO",
+              "value_text": "350 kg",
+              "value_number": 350,
+              "unit": "kg"
+            },
+            {
+              "label": "PESO BRUTO",
+              "value_text": "385 kg",
+              "value_number": 385,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "MOTOR:",
+        "Motor superior: 3 HP (2200 W) de salida",
+        "Motor inferior: 2 HP (1500 W) de salida",
+        "CABEZAL DE CORTE:",
+        "Velocidad:",
+        "50 HZ: 4000 RPM, 12000 CPM",
+        "60 HZ: 4800 RPM, 14520 CPM",
+        "Número de cuchillas: Superior: 3 / Inferior: 3",
+        "Diámetro: Superior: 73 mm / Inferior: 73 mm",
+        "CAPACIDAD:",
+        "Espesor mínimo de la pieza: 1/4\" (6.35 mm)",
+        "Espesor máximo de la pieza: 6-1/2\" (152 mm)",
+        "Longitud mínima de la pieza: 6-1/10\" (155 mm)",
+        "Profundidad máxima de corte:",
+        "Superior: 1/8\" (3 mm) Inferior: 1/12\" (2 mm)",
+        "Ancho de cepillado: 16\" (406 mm)",
+        "Velocidad de alimentación: 16/20 FPM (4.8/6.1 MPM)",
+        "RODILLOS DE ALIMENTACIÓN:",
+        "Rodillos de entrada: Acero sólido dentado",
+        "Rodillos de salida: Poliuretano",
+        "DIMENSIONES DE LA MESA:",
+        "Longitud total (con extensiones): 50\" (1270 mm)",
+        "Ancho: 16\" (406 mm)",
+        "APERTURA DEL PUERTO DE POLVO:",
+        "4\" (100 mm) x 2",
+        "DIMENSIONES GENERALES:",
+        "Profundidad: 50\" (1270 mm)",
+        "Ancho: 34-3/5\" (880 mm)",
+        "Altura: 48-4/5\" (1240 mm)",
+        "DIMENSIONES DE EMPAQUE: 900 x 760 x 1170 mm",
+        "PESO NETO: 350 kg",
+        "PESO BRUTO: 385 kg"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "CEPILLADORA 16x8 WOOD PLANER - W0204 2222I.md",
+      "format": "lote2",
+      "sku": "2222I",
+      "title": "CEPILLADORA 16x8” DELUXE PLANER",
+      "model": "W0204",
+      "price": {
+        "sale_amount": 2500250,
+        "formatted": "2.500.250.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "La mesa se ajusta de forma rápida y precisa con una manivela a través de un sistema de transmisión de engranajes positivo.",
+        "Construcción de hierro fundido y acero para mayor estabilidad y durabilidad.",
+        "Los rodillos de alimentación de acero, serrados en la entrada y lisos en la salida, permiten una profundidad de corte de 1/8.",
+        "El cabezal de corte cuenta con tornillos de gato con resortes para que el ajuste de la cuchilla sea fácil y preciso.",
+        "La caja de engranajes cuenta con un tensor de cadena automático.",
+        "Dos rodillos de retorno de trabajo de acero en la parte superior de la máquina para facilitar la transferencia de la madera hacia atrás.",
+        "Bloqueos de mesa para asegurar que no haya movimiento de la mesa mientras la máquina está en uso."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "MOTOR",
+              "value_text": "3 HP (2200W) DE SALIDA",
+              "value_number": 2200,
+              "unit": "W"
+            },
+            {
+              "label": "CABEZAL DE CORTE",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "VELOCIDAD",
+              "value_text": "50 HZ: 4000 RPM 12000 CPM, 60",
+              "value_number": 50,
+              "unit": "HZ"
+            },
+            {
+              "label": "HZ",
+              "value_text": "4840 RPM 14520 CPM",
+              "value_number": 4840,
+              "unit": "RPM"
+            },
+            {
+              "label": "NÚMERO DE CUCHILLAS",
+              "value_text": "3",
+              "value_number": 3,
+              "unit": null
+            },
+            {
+              "label": "DIÁMETRO",
+              "value_text": "2-4/5\" (72.5 MM)",
+              "value_number": 72.5,
+              "unit": "MM"
+            },
+            {
+              "label": "CAPACIDAD",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "ESPESOR MÍNIMO DE LA MADERA",
+              "value_text": "3/16\" (4.7 MM)",
+              "value_number": 4.7,
+              "unit": "MM"
+            },
+            {
+              "label": "ESPESOR MÁXIMO DE LA MADERA",
+              "value_text": "8\" (204 MM)",
+              "value_number": 204,
+              "unit": "MM"
+            },
+            {
+              "label": "LONGITUD MÍNIMA DE LA MADERA",
+              "value_text": "6-1/10\" (155 MM)",
+              "value_number": 155,
+              "unit": "MM"
+            },
+            {
+              "label": "PROFUNDIDAD MÁXIMA DE CORTE",
+              "value_text": "4.5 MM",
+              "value_number": 4.5,
+              "unit": "MM"
+            },
+            {
+              "label": "ANCHO DE CEPILLADO",
+              "value_text": "15\" (381 MM)",
+              "value_number": 381,
+              "unit": "MM"
+            },
+            {
+              "label": "VELOCIDAD DE AVANCE",
+              "value_text": "16/20 FPM (4.8/6.1 MPM)",
+              "value_number": 16,
+              "unit": null
+            },
+            {
+              "label": "RODILLOS DE ALIMENTACIÓN",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "RODILLOS DE ENTRADA",
+              "value_text": "ACERO SÓLIDO SERRADO",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "RODILLOS DE SALIDA",
+              "value_text": "POLIURETANO",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "TAMAÑO DE LA MESA",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "LONGITUD TOTAL (CON EXTENSIONES)",
+              "value_text": "41- 7/10\" (1060",
+              "value_number": 41,
+              "unit": null
+            },
+            {
+              "label": "MM)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "ANCHO",
+              "value_text": "15\" (381 MM)",
+              "value_number": 381,
+              "unit": "MM"
+            },
+            {
+              "label": "ABERTURA DE POLVO",
+              "value_text": "4\" (100 MM)",
+              "value_number": 100,
+              "unit": "MM"
+            },
+            {
+              "label": "DIMENSIONES GENERALES",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "PROFUNDIDAD",
+              "value_text": "41-7/10\" (1060 MM)",
+              "value_number": 1060,
+              "unit": "MM"
+            },
+            {
+              "label": "ANCHO",
+              "value_text": "38-1/5\" (970 MM)",
+              "value_number": 970,
+              "unit": "MM"
+            },
+            {
+              "label": "ALTURA",
+              "value_text": "43-7/10\" (1110 MM)",
+              "value_number": 1110,
+              "unit": "MM"
+            },
+            {
+              "label": "DIMENSIONES DEL EMBALAJE",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "830 X 620 X 1165 MM",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "PESO NETO/PESO BRUTO",
+              "value_text": "240 KG / 270 KG",
+              "value_number": 240,
+              "unit": "KG"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "MOTOR: 3 HP (2200W) DE SALIDA",
+        "CABEZAL DE CORTE:",
+        "VELOCIDAD: 50 HZ: 4000 RPM 12000 CPM, 60",
+        "HZ: 4840 RPM 14520 CPM",
+        "NÚMERO DE CUCHILLAS: 3",
+        "DIÁMETRO: 2-4/5\" (72.5 MM)",
+        "CAPACIDAD:",
+        "ESPESOR MÍNIMO DE LA MADERA: 3/16\" (4.7 MM)",
+        "ESPESOR MÁXIMO DE LA MADERA: 8\" (204 MM)",
+        "LONGITUD MÍNIMA DE LA MADERA: 6-1/10\" (155 MM)",
+        "PROFUNDIDAD MÁXIMA DE CORTE: 4.5 MM",
+        "ANCHO DE CEPILLADO: 15\" (381 MM)",
+        "VELOCIDAD DE AVANCE: 16/20 FPM (4.8/6.1 MPM)",
+        "RODILLOS DE ALIMENTACIÓN:",
+        "RODILLOS DE ENTRADA: ACERO SÓLIDO SERRADO",
+        "RODILLOS DE SALIDA: POLIURETANO",
+        "TAMAÑO DE LA MESA:",
+        "LONGITUD TOTAL (CON EXTENSIONES): 41- 7/10\" (1060",
+        "MM)",
+        "ANCHO: 15\" (381 MM)",
+        "ABERTURA DE POLVO: 4\" (100 MM)",
+        "DIMENSIONES GENERALES:",
+        "PROFUNDIDAD: 41-7/10\" (1060 MM)",
+        "ANCHO: 38-1/5\" (970 MM)",
+        "ALTURA: 43-7/10\" (1110 MM)",
+        "DIMENSIONES DEL EMBALAJE:",
+        "830 X 620 X 1165 MM",
+        "PESO NETO/PESO BRUTO: 240 KG / 270 KG"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "LIJADORA DE BANCO 20-40 DRUM SANDER - W0604 2223I.md",
+      "format": "lote2",
+      "sku": "2223I",
+      "title": "LIJADORA 20\"- 40\" DRUM SANDER",
+      "model": "W0604",
+      "price": {
+        "sale_amount": 1911110,
+        "formatted": "1.911.110.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [
+        "El cabezal, el marco y la base están fabricados en hierro fundido para mayor durabilidad y reducir vibraciones durante el trabajo.",
+        "Un solo perno ajusta el transportador en paralelo con el cabezal de lijado, facilitando la alineación para un lijado rápido y sencillo.",
+        "La palanca rápida (Fast Lever) permite un ajuste indexado para materiales anchos y estrechos.",
+        "Cuando la pieza es más ancha que el tambor de lijado, la palanca ajusta automáticamente el transportador para un lijado sin fallos.",
+        "La mesa del transportador es más ancha que el tambor para brindar un soporte adecuado a piezas grandes.",
+        "El control inteligente de lijado (Intel- Sanding) monitorea constantemente la carga del motor del tambor y regula automáticamente la velocidad del transportador para mantener la máxima eficiencia sin sobrecarga.",
+        "El tambor de aluminio está mecanizado con precisión y equilibrado dinámicamente para disipar el calor y proteger la superficie de trabajo contra daños."
+      ],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "MOTOR PRINCIPAL",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "W0604",
+              "value_text": "2HP (1500W)",
+              "value_number": 1500,
+              "unit": "W"
+            },
+            {
+              "label": "CAPACIDAD DE LIJADO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "ANCHO MÁXIMO DE LIJADO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "W0604",
+              "value_text": "40\" (1016 MM) CON 2 PASADAS",
+              "value_number": 1016,
+              "unit": "MM"
+            },
+            {
+              "label": "LONGITUD MÍNIMA DE LA PIEZA",
+              "value_text": "2-1/4\" (57 MM)",
+              "value_number": 57,
+              "unit": "MM"
+            },
+            {
+              "label": "ESPESOR MÁXIMO DE LA PIEZA",
+              "value_text": "4\" (100 MM)",
+              "value_number": 100,
+              "unit": "MM"
+            },
+            {
+              "label": "ESPESOR MÍNIMO DE LA PIEZA",
+              "value_text": "1/32\" (0.8 MM)",
+              "value_number": 0.8,
+              "unit": "MM"
+            },
+            {
+              "label": "TRANSPORTADOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "MOTOR",
+              "value_text": "1/6HP (120W), MOTOR DE CORRIENTE",
+              "value_number": 120,
+              "unit": "W"
+            },
+            {
+              "label": "CONTINUA (DC)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "VELOCIDAD",
+              "value_text": "VARIABLE INFINITAMENTE, 0-10 FPM",
+              "value_number": 0,
+              "unit": null
+            },
+            {
+              "label": "(0-3 MPM)",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "TAMBOR",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "DIÁMETRO",
+              "value_text": "5\" (125 MM)",
+              "value_number": 125,
+              "unit": "MM"
+            },
+            {
+              "label": "LONGITUD W0604",
+              "value_text": "20\" (500 MM)",
+              "value_number": 500,
+              "unit": "MM"
+            },
+            {
+              "label": "VELOCIDAD",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "50 HZ",
+              "value_text": "1245 RPM",
+              "value_number": 1245,
+              "unit": "RPM"
+            },
+            {
+              "label": "60 HZ",
+              "value_text": "1725 RPM",
+              "value_number": 1725,
+              "unit": "RPM"
+            },
+            {
+              "label": "ABERTURA PARA POLVO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "SUPERIOR",
+              "value_text": "4\" (102 MM)",
+              "value_number": 102,
+              "unit": "MM"
+            },
+            {
+              "label": "DIMENSIONES GENERALES",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "W0604",
+              "value_text": "PROFUNDIDAD: 45-3/10\" (1150 MM)",
+              "value_number": 1150,
+              "unit": "MM"
+            },
+            {
+              "label": "ANCHO",
+              "value_text": "44-5/16\" (1100 MM)",
+              "value_number": 1100,
+              "unit": "MM"
+            },
+            {
+              "label": "ALTURA",
+              "value_text": "51-3/16\" (1300 MM)",
+              "value_number": 1300,
+              "unit": "MM"
+            },
+            {
+              "label": "DIMENSIONES DEL EMPAQUE",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "W0604",
+              "value_text": "CAJA 1/2: 1150 X 780 X 650 MM",
+              "value_number": 1,
+              "unit": null
+            },
+            {
+              "label": "CAJA 2/2",
+              "value_text": "930 X 430 X 670 MM",
+              "value_number": 930,
+              "unit": "X"
+            },
+            {
+              "label": "PESO NETO/BRUTO",
+              "value_text": "",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "W0604",
+              "value_text": "153 KG / 180 KG",
+              "value_number": 153,
+              "unit": "KG"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "MOTOR PRINCIPAL:",
+        "W0604: 2HP (1500W)",
+        "CAPACIDAD DE LIJADO:",
+        "ANCHO MÁXIMO DE LIJADO:",
+        "W0604: 40\" (1016 MM) CON 2 PASADAS",
+        "LONGITUD MÍNIMA DE LA PIEZA: 2-1/4\" (57 MM)",
+        "ESPESOR MÁXIMO DE LA PIEZA: 4\" (100 MM)",
+        "ESPESOR MÍNIMO DE LA PIEZA: 1/32\" (0.8 MM)",
+        "TRANSPORTADOR:",
+        "MOTOR: 1/6HP (120W), MOTOR DE CORRIENTE",
+        "CONTINUA (DC)",
+        "VELOCIDAD: VARIABLE INFINITAMENTE, 0-10 FPM",
+        "(0-3 MPM)",
+        "TAMBOR:",
+        "DIÁMETRO: 5\" (125 MM)",
+        "LONGITUD W0604: 20\" (500 MM)",
+        "VELOCIDAD:",
+        "50 HZ: 1245 RPM",
+        "60 HZ: 1725 RPM",
+        "ABERTURA PARA POLVO:",
+        "SUPERIOR: 4\" (102 MM)",
+        "DIMENSIONES GENERALES:",
+        "W0604: PROFUNDIDAD: 45-3/10\" (1150 MM)",
+        "ANCHO: 44-5/16\" (1100 MM)",
+        "ALTURA: 51-3/16\" (1300 MM)",
+        "DIMENSIONES DEL EMPAQUE:",
+        "W0604: CAJA 1/2: 1150 X 780 X 650 MM",
+        "CAJA 2/2: 930 X 430 X 670 MM",
+        "PESO NETO/BRUTO:",
+        "W0604: 153 KG / 180 KG"
+      ],
+      "source_pdf": null,
+      "parsing_warnings": []
+    },
+    {
+      "source_md_file": "PERFILADORA MF223C 2280I(1).md",
+      "format": "lote3",
+      "sku": "2280I",
+      "title": "PERFILADORA MF223C",
+      "model": "MF223C",
+      "price": {
+        "sale_amount": 714000,
+        "formatted": "PRECIO USD 7,140.00 IVA incl. \\",
+        "currency": "USD"
+      },
+      "currency": "USD",
+      "iva_included": true,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "general",
+          "label": "GENERAL",
+          "description": null,
+          "values": [
+            {
+              "label": "Motor Principal",
+              "value_text": "2.2KW",
+              "value_number": 2.2,
+              "unit": "KW"
+            },
+            {
+              "label": "Bomba de agua",
+              "value_text": "90W",
+              "value_number": 90,
+              "unit": "W"
+            },
+            {
+              "label": "Longitud máxima de la hoja",
+              "value_text": "300mm",
+              "value_number": 300,
+              "unit": "mm"
+            },
+            {
+              "label": "Diámetro de la hoja",
+              "value_text": "φ355mm",
+              "value_number": 355,
+              "unit": "mm"
+            },
+            {
+              "label": "Recorrido del husillo hacia adelante",
+              "value_text": "100mm",
+              "value_number": 100,
+              "unit": "mm"
+            },
+            {
+              "label": "Muela giratoria",
+              "value_text": "4500 - 10000r/min",
+              "value_number": 4500,
+              "unit": null
+            },
+            {
+              "label": "Especificaciones de la rueda",
+              "value_text": "32x250mm",
+              "value_number": 32,
+              "unit": "x"
+            },
+            {
+              "label": "Ángulo de rotación de la rueda",
+              "value_text": "+ - 450mm",
+              "value_number": 450,
+              "unit": "mm"
+            },
+            {
+              "label": "Diámetro del eje de la cuchilla",
+              "value_text": "φ25.4/p30/p35/p40",
+              "value_number": 25.4,
+              "unit": null
+            },
+            {
+              "label": "Tamaño total",
+              "value_text": "1220x1000x1380mm",
+              "value_number": 1220,
+              "unit": "x"
+            },
+            {
+              "label": "Peso",
+              "value_text": "520Kg",
+              "value_number": 520,
+              "unit": "Kg"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "Motor Principal: 2.2KW",
+        "Bomba de agua: 90W",
+        "Longitud máxima de la hoja: 300mm",
+        "Diámetro de la hoja: φ355mm",
+        "Recorrido del husillo hacia adelante: 100mm",
+        "Muela giratoria: 4500 - 10000r/min",
+        "Especificaciones de la rueda: 32x250mm",
+        "Ángulo de rotación de la rueda: + - 450mm",
+        "Diámetro del eje de la cuchilla: φ25.4/p30/p35/p40",
+        "Tamaño total: 1220x1000x1380mm",
+        "Peso: 520Kg"
+      ],
+      "source_pdf": {
+        "file_name": "PERFILADORA MF223C 2280I(1).pdf",
+        "sha256": "ef69945cdfdf958db2de12d697352e825195a3a2c41adb0fd4de81c006d59a6e",
+        "byte_size": 1638167745
+      },
+      "parsing_warnings": [
+        "no_features_extracted"
+      ]
+    },
+    {
+      "source_md_file": "TENSIONADOR DE SIERRAS HUINCHAS MR146 2281I(1).md",
+      "format": "lote3",
+      "sku": "2281I",
+      "title": "MÁQUINA HOJAS TENSIONADOR DE SIERRAS HUINCHAS MR146",
+      "model": "MR146",
+      "price": {
+        "sale_amount": 3570000,
+        "formatted": "PRECIO $3.570.000.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": false,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "general",
+          "label": "GENERAL",
+          "description": null,
+          "values": [
+            {
+              "label": "Voltaje de potencia",
+              "value_text": "380 V 3 phase 50 hz",
+              "value_number": 380,
+              "unit": "V"
+            },
+            {
+              "label": "Tensionado",
+              "value_text": "50 a 160 mm",
+              "value_number": 50,
+              "unit": "a"
+            },
+            {
+              "label": "Radio rodillos",
+              "value_text": "250 mm",
+              "value_number": 250,
+              "unit": "mm"
+            },
+            {
+              "label": "Marcador hidráulico de presión",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Peso",
+              "value_text": "120 kg",
+              "value_number": 120,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "Voltaje de potencia: 380 V 3 phase 50 hz",
+        "Tensionado: 50 a 160 mm",
+        "Radio rodillos: 250 mm",
+        "Marcador hidráulico de presión",
+        "Peso: 120 kg"
+      ],
+      "source_pdf": {
+        "file_name": "TENSIONADOR DE SIERRAS HUINCHAS MR146 2281I(1).pdf",
+        "sha256": "72cd349de129cc0c47b893e908cc013bb9437fbbaec3d2de0217009ec1026213",
+        "byte_size": 1652169127
+      },
+      "parsing_warnings": [
+        "no_features_extracted"
+      ]
+    },
+    {
+      "source_md_file": "MOTOR LIFAN BEN MOD AQ-2V80F-2DA 27HP (851).md",
+      "format": "lote3",
+      "sku": "851",
+      "title": "MOTOR LIFAN BEN MOD AQ-2V80F-2DA 27HP",
+      "model": "AQ-2V80F-2DA",
+      "price": {
+        "sale_amount": 937125,
+        "formatted": "PRECIO $ 937.125 IVA incl.",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones_visuales",
+          "label": "Especificaciones (tabla visual)",
+          "description": "Datos leídos desde tabla rasterizada del PDF original",
+          "values": [
+            {
+              "label": "Campo visual",
+              "value_text": "Valor",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Item#",
+              "value_text": "2V80F-2A",
+              "value_number": 2,
+              "unit": "V"
+            },
+            {
+              "label": "Enfriamiento",
+              "value_text": "Aire",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Cilindros",
+              "value_text": "Bicilíndrico",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Tipo de motor",
+              "value_text": "4 tiempos",
+              "value_number": 4,
+              "unit": "tiempos"
+            },
+            {
+              "label": "Potencia máxima",
+              "value_text": "27 hp",
+              "value_number": 27,
+              "unit": "hp"
+            },
+            {
+              "label": "Kw",
+              "value_text": "20",
+              "value_number": 20,
+              "unit": null
+            },
+            {
+              "label": "Capacidad de tanque",
+              "value_text": "-----",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Capacidad de aceite",
+              "value_text": "1.4 litro(s)",
+              "value_number": 1.4,
+              "unit": "litro"
+            },
+            {
+              "label": "Rotación máxima",
+              "value_text": "3600 RPM",
+              "value_number": 3600,
+              "unit": "RPM"
+            },
+            {
+              "label": "Filtro de aire",
+              "value_text": "Elemento doble",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Sistema de encendido",
+              "value_text": "Manual",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Alerta de aceite",
+              "value_text": "Sí",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Eje",
+              "value_text": "Eje con llave",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Peso",
+              "value_text": "48 kg",
+              "value_number": 48,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [],
+      "source_pdf": {
+        "file_name": "MOTOR LIFAN BEN MOD AQ-2V80F-2DA 27HP (851).pdf",
+        "sha256": "33e4b10f5b1ca683d60595a5997e11454207f62b65d537b0140499c9549f27c9",
+        "byte_size": 1801184397
+      },
+      "parsing_warnings": [
+        "no_features_extracted"
+      ]
+    },
+    {
+      "source_md_file": "MOTOR LIFAN BEN      MOD AQ-2V78F-2D (852)(1).md",
+      "format": "lote2",
+      "sku": "852",
+      "title": "MOTOR LIFAN BEN MOD AQ-2V78F-2D 24HP",
+      "model": "AQ-2V78F-2D",
+      "price": {
+        "sale_amount": 892500,
+        "formatted": "892.500",
+        "currency": "CLP"
+      },
+      "currency": "CLP",
+      "iva_included": true,
+      "features": [],
+      "specification_groups": [
+        {
+          "group_code": "especificaciones",
+          "label": "Especificaciones",
+          "description": null,
+          "values": [
+            {
+              "label": "PRECIO $ 892.500",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "IVA incl.",
+              "value_text": null,
+              "value_number": null,
+              "unit": null
+            }
+          ]
+        },
+        {
+          "group_code": "especificaciones_visuales",
+          "label": "Especificaciones (tabla visual)",
+          "description": "Datos leídos desde tabla rasterizada del PDF original",
+          "values": [
+            {
+              "label": "Item#",
+              "value_text": "2V78F-2D",
+              "value_number": 2,
+              "unit": "V"
+            },
+            {
+              "label": "Enfriamiento",
+              "value_text": "Aire",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Cilindros",
+              "value_text": "Bicilíndrico",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Tipo de motor",
+              "value_text": "4 tiempos",
+              "value_number": 4,
+              "unit": "tiempos"
+            },
+            {
+              "label": "Potencia Máxima",
+              "value_text": "24 Hp",
+              "value_number": 24,
+              "unit": "Hp"
+            },
+            {
+              "label": "Kw",
+              "value_text": "17",
+              "value_number": 17,
+              "unit": null
+            },
+            {
+              "label": "Capacidad de Tanque",
+              "value_text": "-----",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Capacidad de Aceite",
+              "value_text": "1.4 litro(s)",
+              "value_number": 1.4,
+              "unit": "litro"
+            },
+            {
+              "label": "Rotación Máxima",
+              "value_text": "3600 RPM",
+              "value_number": 3600,
+              "unit": "RPM"
+            },
+            {
+              "label": "Filtro de Aire",
+              "value_text": "Elemento Doble",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Sistema de Encendido",
+              "value_text": "Manual y eléctrica",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Alerta de Aceite",
+              "value_text": "SI",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Eje",
+              "value_text": "Eje con llave",
+              "value_number": null,
+              "unit": null
+            },
+            {
+              "label": "Peso",
+              "value_text": "47 kg.",
+              "value_number": 47,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "raw_specification_lines": [
+        "PRECIO $ 892.500",
+        "IVA incl."
+      ],
+      "source_pdf": null,
+      "parsing_warnings": [
+        "no_features_extracted"
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "file": "1,5 TUPI 1,5 HP SHAPER W. SLIDING TABLE - W0404 2200I(1).md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "AFILADOR DE CUCHILLOS UNIVERSAL MF2720 2283I(1).md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "AFILADOR DE CUCHILLOS UNIVERSAL MF2720 OK(1).md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "AFILADORA DE HOJAS DE SIERRA MF026B OK.md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "AFILADORA DE SIERRAS CIRCULARES MF026B 2284I USD.md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "AFILADORA DE SIERRAS CIRCULARES MF026B 2284I.md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "AFILADORA DE SIERRAS CIRCULARES MF668 2282I.md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "BANCO SIERRA 10 CABINET TABLE SAW - W0708-10 2202I(1).md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "BANCO SIERRA 12 CABINET TABLE SAW - W0708-12 2203I.md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "CANTEADORA 6 DELUXE JOINTER - W0109D 2221I.md",
+      "reason": "extraction_failed"
+    },
+    {
+      "file": "PILANA MADERAS SIERRAS(1).md",
+      "reason": "no_sku_detected"
+    }
+  ],
+  "statistics": {
+    "lote2_processed": 10,
+    "lote3_processed": 7,
+    "items_with_features": 8,
+    "items_with_specs": 17,
+    "total_specification_values": 363,
+    "total_features": 45
+  }
+}
