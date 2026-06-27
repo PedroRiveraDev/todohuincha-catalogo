@@ -18,6 +18,7 @@ import {
 import CategorySidebar from '../../components/CategorySidebar.astro';
 import WhatsAppCta from '../../components/WhatsAppCta.astro';
 import PdfDownloadButton from '../../components/PdfDownloadButton.astro';
+import PdfOptionsDialog from '../../components/PdfOptionsDialog.astro';
 
 const totalProducts = adapter.items.length;
 const totalCategories = adapter.categories.length;
@@ -47,6 +48,35 @@ function formatPrice(p: {
 }): string {
   if (!p.is_price_available) return 'A cotizar';
   return p.formatted ?? 'Consultar';
+}
+
+/**
+ * Build the minimal catalog payload exposed to the client-side PDF
+ * generator. Only fields the per-type dispatcher reads are included so
+ * the inline JSON stays small (~30 KB for 681 items).
+ */
+function buildPdfPayload(adapter: typeof import('../../lib/catalog.ts').adapter) {
+  return {
+    catalog_assets: (adapter as unknown as { catalog_assets?: unknown }).catalog_assets ?? null,
+    families: adapter.families.map((f) => {
+      const fam = f as { family_key?: string; assets?: unknown };
+      return { sku: fam.family_key ?? null, assets: fam.assets ?? null };
+    }),
+    categories: adapter.categories.map((c) => ({
+      label: c.label,
+      assets: (c as unknown as { assets?: unknown }).assets ?? null,
+    })),
+    items: adapter.items.map((it) => ({
+      sku: it.sku,
+      item_type: it.item_type,
+      category_label: it.category_label,
+      assets: it.assets ?? null,
+      machinery_profile: it.machinery_profile ?? null,
+      service_profile: it.service_profile ?? null,
+      specifications: it.specifications ?? {},
+      pricing: it.pricing,
+    })),
+  };
 }
 
 const jsonLd = {
@@ -168,6 +198,17 @@ const jsonLd = {
   </div>
 
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <!-- Catalog payload exposed to the PDF generator so the per-type
+       dispatcher can render machinery sheets / service cards. Only the
+       fields the dispatcher reads are exposed; everything else stays
+       server-rendered. -->
+  <script is:inline define:vars={{ catalogPayload: buildPdfPayload(adapter) }}>
+    window.__CATALOG_PAYLOAD__ = catalogPayload;
+  </script>
+
+  <!-- Catalog PDF options popup (native <dialog>, hidden by default). -->
+  <PdfOptionsDialog />
 
   <!-- Per-group WhatsApp CTAs at the end of each section. Rendered as a
        plain section list so JS-side search/filter applies the same

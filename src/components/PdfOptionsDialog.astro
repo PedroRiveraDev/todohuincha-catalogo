@@ -1,0 +1,508 @@
+---
+// src/components/PdfOptionsDialog.astro
+// Accessible PDF options popup. Native <dialog> element with four
+// controls: modo (radio group), incluirPortada, incluirContraportada,
+// incluirQrPorCategoria (checkboxes), plus submit/cancel.
+//
+// Submission flow: read form state -> serializePdfOptions ->
+// write to localStorage['cat:pdf:options'] -> dispatch
+// CustomEvent('pdf:options-confirmed') on document -> close dialog.
+// The receiving component (PdfDownloadButton) listens on document and
+// kicks off generatePDF with the supplied options.
+//
+// Slice pdf-catalog-v2.
+// Refs:
+//   openspec/changes/pdf-catalog-v2/spec.md (Requirement: pdf options popup)
+//   openspec/changes/pdf-catalog-v2/design.md (section 6)
+---
+<dialog
+  id="pdf-options-dialog"
+  data-pdf-options-dialog
+  aria-labelledby="pdf-options-title"
+  aria-describedby="pdf-options-desc"
+  class="pdf-options-dialog"
+>
+  <form
+    method="dialog"
+    class="pdf-options-form"
+    data-pdf-options-form
+    novalidate
+  >
+    <header class="pdf-options-head">
+      <h2 id="pdf-options-title" class="pdf-options-title">
+        Configurar catalogo PDF
+      </h2>
+      <p id="pdf-options-desc" class="pdf-options-desc">
+        Elige que paginas y que nivel de detalle quieres en tu PDF.
+      </p>
+      <button
+        type="button"
+        class="pdf-options-close"
+        data-pdf-options-close
+        aria-label="Cerrar"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+        </svg>
+      </button>
+    </header>
+
+    <fieldset class="pdf-options-field">
+      <legend class="pdf-options-legend">Modo de visualizacion</legend>
+      <label class="pdf-options-radio">
+        <input
+          type="radio"
+          name="modo"
+          value="completo"
+          data-pdf-options-modo
+          checked
+        />
+        <span class="pdf-options-radio-body">
+          <strong>Completo</strong>
+          <small>Fichas tecnicas por tipo (maquinaria, repuestos, servicios).</small>
+        </span>
+      </label>
+      <label class="pdf-options-radio">
+        <input
+          type="radio"
+          name="modo"
+          value="compacto"
+          data-pdf-options-modo
+        />
+        <span class="pdf-options-radio-body">
+          <strong>Compacto</strong>
+          <small>Una sola tabla agrupada por categoria.</small>
+        </span>
+      </label>
+    </fieldset>
+
+    <fieldset class="pdf-options-field">
+      <legend class="pdf-options-legend">Paginas adicionales</legend>
+      <label class="pdf-options-check">
+        <input
+          type="checkbox"
+          name="incluirPortada"
+          data-pdf-options-portada
+          checked
+        />
+        <span>Incluir portada con logo y foto del taller</span>
+      </label>
+      <label class="pdf-options-check">
+        <input
+          type="checkbox"
+          name="incluirContraportada"
+          data-pdf-options-contraportada
+          checked
+        />
+        <span>Incluir contraportada con datos de contacto</span>
+      </label>
+      <label class="pdf-options-check">
+        <input
+          type="checkbox"
+          name="incluirQrPorCategoria"
+          data-pdf-options-qr
+        />
+        <span>Incluir codigo QR por categoria (WhatsApp directo)</span>
+      </label>
+    </fieldset>
+
+    <footer class="pdf-options-foot">
+      <button
+        type="button"
+        class="pdf-options-cancel"
+        data-pdf-options-cancel
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="pdf-options-submit"
+        data-pdf-options-submit
+      >
+        Generar Catalogo
+      </button>
+    </footer>
+  </form>
+</dialog>
+
+<style>
+  .pdf-options-dialog {
+    border: none;
+    padding: 0;
+    background: transparent;
+    color: var(--ink, #292925);
+    max-width: min(480px, calc(100vw - 32px));
+    width: 100%;
+  }
+  .pdf-options-dialog::backdrop {
+    background: rgba(20, 20, 18, 0.55);
+    backdrop-filter: blur(2px);
+  }
+  .pdf-options-dialog[open] {
+    animation: pdfOptionsFadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes pdfOptionsFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .pdf-options-form {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+    padding: 24px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+  .pdf-options-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    align-items: start;
+  }
+  .pdf-options-title {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--charcoal, #313e48);
+    text-wrap: balance;
+  }
+  .pdf-options-desc {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 4px 0 0;
+    font-size: 0.88rem;
+    color: var(--muted, #6c6b65);
+    line-height: 1.4;
+    text-wrap: pretty;
+  }
+  .pdf-options-close {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--charcoal, #313e48);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                background 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pdf-options-close svg {
+    width: 16px;
+    height: 16px;
+  }
+  .pdf-options-close:hover {
+    background: var(--soft, #fff0e9);
+    transform: scale(1.04);
+  }
+  .pdf-options-close:active {
+    transform: scale(0.96);
+  }
+  .pdf-options-field {
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface, #fff);
+  }
+  .pdf-options-legend {
+    font-size: 0.74rem;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted, #6c6b65);
+    padding: 0 6px;
+  }
+  .pdf-options-radio,
+  .pdf-options-check {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    column-gap: 12px;
+    align-items: start;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--charcoal, #313e48);
+    line-height: 1.4;
+  }
+  .pdf-options-radio input,
+  .pdf-options-check input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--orange, #fb4d08);
+  }
+  .pdf-options-radio-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .pdf-options-radio-body strong {
+    font-weight: 800;
+  }
+  .pdf-options-radio-body small {
+    color: var(--muted, #6c6b65);
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+  .pdf-options-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .pdf-options-cancel {
+    background: var(--soft, #fff0e9);
+    color: var(--charcoal, #313e48);
+    border: 1px solid var(--line, #eadfd8);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pdf-options-cancel:hover {
+    background: #ffe2d3;
+  }
+  .pdf-options-submit {
+    background: var(--orange, #fb4d08);
+    color: #fff;
+    border: 1px solid var(--orange, #fb4d08);
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+                0 12px 28px rgba(251, 77, 8, 0.32);
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                background 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pdf-options-submit:hover {
+    background: var(--orange-deep, #c93a04);
+    transform: translateY(-1px);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+                0 16px 32px rgba(251, 77, 8, 0.42);
+  }
+  .pdf-options-submit:active {
+    transform: scale(0.97);
+  }
+
+  @media (max-width: 639px) {
+    .pdf-options-dialog {
+      max-width: 100vw;
+      width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      margin: 0;
+    }
+    .pdf-options-form {
+      border-radius: 0;
+      max-height: 100vh;
+      padding: 22px 18px 18px;
+      gap: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pdf-options-dialog[open] {
+      animation: none;
+    }
+    .pdf-options-close,
+    .pdf-options-cancel,
+    .pdf-options-submit {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import {
+    defaultPdfOptions,
+    serializePdfOptions,
+    deserializePdfOptions,
+    PDF_OPTIONS_STORAGE_KEY,
+    type PdfOptions,
+  } from '../lib/pdf-options.ts';
+
+  const dialog = document.querySelector<HTMLDialogElement>(
+    '[data-pdf-options-dialog]'
+  );
+  if (dialog) {
+    // Non-null alias so closures don't need repeated null checks.
+    const dlg: HTMLDialogElement = dialog;
+    const form = dlg.querySelector<HTMLFormElement>('[data-pdf-options-form]');
+    const radios = dlg.querySelectorAll<HTMLInputElement>(
+      '[data-pdf-options-modo]'
+    );
+    const chkPortada = dlg.querySelector<HTMLInputElement>(
+      '[data-pdf-options-portada]'
+    );
+    const chkContraportada = dlg.querySelector<HTMLInputElement>(
+      '[data-pdf-options-contraportada]'
+    );
+    const chkQr = dlg.querySelector<HTMLInputElement>('[data-pdf-options-qr]');
+    const btnClose = dlg.querySelector<HTMLButtonElement>(
+      '[data-pdf-options-close]'
+    );
+    const btnCancel = dlg.querySelector<HTMLButtonElement>(
+      '[data-pdf-options-cancel]'
+    );
+
+    let lastFocusedTrigger: HTMLElement | null = null;
+
+    function applyOptions(opts: PdfOptions): void {
+      if (!form) return;
+      for (const r of Array.from(radios)) {
+        r.checked = r.value === opts.modo;
+      }
+      if (chkPortada) chkPortada.checked = opts.incluirPortada;
+      if (chkContraportada) chkContraportada.checked = opts.incluirContraportada;
+      if (chkQr) chkQr.checked = opts.incluirQrPorCategoria;
+    }
+
+    function readFormOptions(): PdfOptions {
+      const modo = (form?.querySelector<HTMLInputElement>(
+        '[data-pdf-options-modo]:checked'
+      )?.value ?? 'completo') as 'completo' | 'compacto';
+      const defaults = defaultPdfOptions();
+      return {
+        modo,
+        incluirPortada: chkPortada?.checked ?? defaults.incluirPortada,
+        incluirContraportada:
+          chkContraportada?.checked ?? defaults.incluirContraportada,
+        incluirQrPorCategoria: chkQr?.checked ?? defaults.incluirQrPorCategoria,
+        selectedSlugs: defaults.selectedSlugs,
+        savedAt: new Date().toISOString(),
+      };
+    }
+
+    function openWithStored(): void {
+      let opts = defaultPdfOptions();
+      try {
+        const raw = localStorage.getItem(PDF_OPTIONS_STORAGE_KEY);
+        if (raw) opts = deserializePdfOptions(raw);
+      } catch {
+        // localStorage unavailable / corrupt -> defaults
+      }
+      applyOptions(opts);
+      lastFocusedTrigger = document.activeElement as HTMLElement | null;
+      if (typeof dlg.showModal === 'function') {
+        dlg.showModal();
+      } else {
+        // Fallback for environments without <dialog>: toggle the
+        // `open` attribute so the user can still see the form.
+        dlg.setAttribute('open', '');
+      }
+      // Focus the first interactive control for keyboard users.
+      const firstRadio = dlg.querySelector<HTMLInputElement>(
+        '[data-pdf-options-modo]'
+      );
+      firstRadio?.focus();
+    }
+
+    function closeDialog(): void {
+      if (typeof dlg.close === 'function') {
+        dlg.close();
+      } else {
+        dlg.removeAttribute('open');
+      }
+    }
+
+    function onSubmit(event: Event): void {
+      event.preventDefault();
+      const opts = readFormOptions();
+      try {
+        localStorage.setItem(PDF_OPTIONS_STORAGE_KEY, serializePdfOptions(opts));
+      } catch {
+        // localStorage quota or unavailable: still emit the event so
+        // the PDF generates this session.
+      }
+      document.dispatchEvent(
+        new CustomEvent<PdfOptions>('pdf:options-confirmed', {
+          detail: opts,
+          bubbles: true,
+        })
+      );
+      closeDialog();
+      // Restore focus to the trigger that opened the dialog.
+      if (lastFocusedTrigger && typeof lastFocusedTrigger.focus === 'function') {
+        lastFocusedTrigger.focus();
+      }
+    }
+
+    // Trap focus inside the dialog while open: cycle Tab between first
+    // and last focusable element so keyboard users cannot escape.
+    function onKeydown(event: KeyboardEvent): void {
+      if (event.key !== 'Tab') return;
+      const focusables = dlg.querySelectorAll<HTMLElement>(
+        'button, input, [href], [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    // Click on the dialog backdrop (the <dialog> element itself,
+    // outside the inner form) closes it. We detect this by comparing
+    // event.target to dlg.
+    function onDialogClick(event: MouseEvent): void {
+      if (event.target === dlg) {
+        closeDialog();
+      }
+    }
+
+    if (form) form.addEventListener('submit', onSubmit);
+    btnClose?.addEventListener('click', closeDialog);
+    btnCancel?.addEventListener('click', closeDialog);
+    dlg.addEventListener('click', onDialogClick);
+    dlg.addEventListener('keydown', onKeydown);
+    dlg.addEventListener('close', () => {
+      if (lastFocusedTrigger && typeof lastFocusedTrigger.focus === 'function') {
+        lastFocusedTrigger.focus();
+      }
+    });
+
+    // Public API: the button calls this via a CustomEvent so the
+    // dialog and the button stay loosely coupled. The trigger is passed
+    // in `event.detail` so we can restore focus to it on close even
+    // when the original click was programmatic (where the browser does
+    // not move focus to the button).
+    document.addEventListener('pdf:options-open', (event) => {
+      const ev = event as CustomEvent<{ trigger?: HTMLElement | null }>;
+      if (ev.detail?.trigger) {
+        lastFocusedTrigger = ev.detail.trigger;
+      }
+      openWithStored();
+    });
+  }
+</script>
