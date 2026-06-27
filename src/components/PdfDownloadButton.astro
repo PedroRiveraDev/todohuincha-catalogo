@@ -1,31 +1,25 @@
 ---
 // src/components/PdfDownloadButton.astro
-// Catalog-level jsPDF generator with modular per-type dispatcher.
+// Catalog PDF generator with 3 density-based templates (denso/medio/compacto)
+// and cover/back covers using images provided by the user.
 //
-// Slice pdf-catalog-v2. Branches on item.item_type to one of:
-//   - renderMachinerySheet   (full technical sheet)
-//   - renderCompactRow       (legacy flat table row)
-//   - renderServiceCard      (service card with WhatsApp link)
+// Pipeline:
+//   1. Two full-bleed cover pages (cover-1.png, cover-2.png)
+//   2. For each category: banner + title + description + items grouped by density
+//   3. One full-bleed back cover (back-cover.png)
 //
-// Modes (driven by PdfOptions):
-//   - completo: dispatcher per item
-//   - compacto: legacy flat grouped-by-category loop (verbatim from slice 2)
+// Image fallback chain (per item):
+//   - item.assets.main_image  (data_base64 or url)
+//   - item.assets.gallery[i]
+//   - category.assets.banner.url
+//   - /catalog/placeholder.svg  (brand logo, drawn inline)
 //
-// Optional cover, back-cover and QR-per-category toggles compose on top
-// of both modes.
-//
-// Click contract:
-//   1. localStorage['cat:pdf:options'] present -> deserialize -> generatePDF
-//      (popup is skipped — replay the user's prior choice silently).
-//   2. localStorage missing / corrupt -> dispatch CustomEvent
-//      'pdf:options-open' on document so PdfOptionsDialog opens.
-//   3. PdfOptionsDialog emits 'pdf:options-confirmed' -> we generatePDF
-//      with the supplied options.
+// Driven by PdfOptions (popup-confirmed) with skip-if-saved behaviour.
 //
 // Refs:
-//   openspec/changes/pdf-catalog-v2/proposal.md
+//   docs/INVENTARIO_CATEGORIAS.md
+//   docs/catalogo_productos_schema_validacion_corregido.json
 //   openspec/changes/pdf-catalog-v2/spec.md
-//   openspec/changes/pdf-catalog-v2/design.md
 
 interface Props {
   title: string;
@@ -46,1019 +40,754 @@ const { title, subtitle, rows } = Astro.props;
   data-pdf-trigger
 >
   <svg class="download-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-  Descargar PDF
+  Generar Catalogo
 </button>
 
 <script>
   import { jsPDF } from 'jspdf';
-  import { getLogoBase64, getCoverImageBase64 } from '../lib/pdf-brand.ts';
-  import { resolvePdfImageSrc, VECTOR_SENTINEL } from '../lib/pdf-image-fallback.ts';
-  import { dispatchItemKind } from '../lib/pdf-types.ts';
-  import {
-    defaultPdfOptions,
-    deserializePdfOptions,
-    serializePdfOptions,
-    PDF_OPTIONS_STORAGE_KEY,
-    type PdfOptions,
-  } from '../lib/pdf-options.ts';
+  import { classifyDensity, hasImage } from '../lib/pdf-types.ts';
 
   const pdfBtn = document.querySelector<HTMLButtonElement>('[data-pdf-trigger]');
-  if (pdfBtn) {
-    // Shared color palette used across the document.
-    const orange: [number, number, number] = [251, 77, 8];
-    const slate: [number, number, number] = [49, 62, 72];
-    const muted: [number, number, number] = [108, 107, 101];
-    const borderCol: [number, number, number] = [234, 223, 216];
-    const bgHeader: [number, number, number] = [244, 246, 248];
-    const bgRowAlt: [number, number, number] = [250, 251, 252];
+  if (!pdfBtn) {
+    // No-op: button is not on the page (defensive guard).
+  } else {
+    // -------------------------------------------------------------------
+    // Constants and palette
+    // -------------------------------------------------------------------
 
-    // Parse env values that may be inlined at build time as string or undefined.
-    const envValue = (import.meta as any).env?.PUBLIC_WHATSAPP_NUMBERS;
-    const envString: string | undefined =
-      typeof envValue === 'string' ? envValue : undefined;
+    const ORANGE: [number, number, number] = [251, 77, 8];
+    const SLATE: [number, number, number] = [49, 62, 72];
+    const MUTED: [number, number, number] = [108, 107, 101];
+    const LINE: [number, number, number] = [234, 223, 216];
+    const CREAM: [number, number, number] = [255, 250, 247];
+    const A4_W = 210;
+    const A4_H = 297;
+    const MARGIN_X = 15;
+    const CONTENT_W = A4_W - 2 * MARGIN_X;
 
-    // ---------------------------------------------------------------------
-    // Public WhatsApp deep-link helpers
-    // ---------------------------------------------------------------------
+    const PLACEHOLDER_PATH = '/catalog/placeholder.svg';
 
-    function parseWhatsAppNumbers(env: string | undefined): Record<string, string> {
-      if (!env || env.trim().length === 0) return {};
-      const result: Record<string, string> = {};
-      const tokens = env
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-      const bareTokens: string[] = [];
-      let hasKeyedToken = false;
-      for (const token of tokens) {
-        const colonIdx = token.indexOf(':');
-        if (colonIdx === -1) {
-          bareTokens.push(token);
-        } else {
-          hasKeyedToken = true;
-        }
-      }
-      for (const token of tokens) {
-        const colonIdx = token.indexOf(':');
-        if (colonIdx === -1) {
-          if (!hasKeyedToken && token === bareTokens[bareTokens.length - 1]) {
-            result.general = token;
-          }
-          continue;
-        }
-        const key = token.slice(0, colonIdx).trim();
-        const value = token.slice(colonIdx + 1).trim();
-        if (key.length === 0) continue;
-        result[key] = value;
-      }
-      return result;
+    // -------------------------------------------------------------------
+    // Catalog payload (read from window.__CATALOG_PAYLOAD__)
+    // -------------------------------------------------------------------
+
+    interface PdfMachineryProfile {
+      model?: string | null;
+      brand?: string | null;
+      short_description?: string | null;
+      long_description?: string | null;
+      features?: string[] | null;
+      specification_groups?: Array<{
+        group_code?: string;
+        label?: string;
+        values?: Array<{
+          label?: string;
+          value_text?: string | null;
+          value_number?: number | null;
+          unit?: string | null;
+        }>;
+      }> | null;
+      price_observations?: unknown[] | null;
     }
-
-    function buildWhatsAppUrl(number: string, message: string): string {
-      const stripped = number.startsWith('+') ? number.slice(1) : number;
-      return `https://wa.me/${stripped}?text=${encodeURIComponent(message)}`;
-    }
-
-    // ---------------------------------------------------------------------
-    // Decoded row shape (parsed from data-rows).
-    // ---------------------------------------------------------------------
-
-    interface PdfRow {
-      code: string;
-      name: string;
-      category: string;
-      type?: string;
+    interface PdfItem {
       sku?: string;
+      display_name?: string;
+      item_type?: string;
+      category_code?: string;
+      category_label?: string;
+      category_group?: string;
+      machinery_profile?: PdfMachineryProfile | null;
+      pricing?: { sale_amount?: number | null; currency?: string; formatted?: string; is_price_available?: boolean };
+      assets?: {
+        main_image?: { url?: string | null; data_base64?: string | null } | null;
+        gallery?: Array<{ url?: string | null; data_base64?: string | null }>;
+      };
+    }
+    interface PdfCategory {
+      label?: string;
+      slug?: string;
+      group?: string;
+      description?: string | null;
+      assets?: {
+        banner?: { url?: string | null } | null;
+        background?: { url?: string | null } | null;
+      };
+    }
+    interface PdfCatalogPayload {
+      items?: PdfItem[];
+      categories?: PdfCategory[];
+      catalog_assets?: {
+        cover_image_1?: { url?: string | null };
+        cover_image_2?: { url?: string | null };
+        back_cover?: { url?: string | null };
+        placeholder_image?: { url?: string | null };
+        logo?: { url?: string | null };
+      };
+    }
+    interface PdfOptions {
+      incluirPortada: boolean;
+      incluirContraportada: boolean;
     }
 
-    function decodeRows(raw: string[]): PdfRow[] {
-      return raw.map((row) => {
-        const parts = row.split(' | ');
-        const codeRaw = parts[0] ?? '';
-        const name = (parts[1] ?? row).trim();
-        const category = (parts[2] ?? 'General').trim();
+    const PDF_OPTIONS_KEY = 'cat:pdf:options';
+    const PDF_OPEN_EVENT = 'pdf:options-open';
+    const PDF_CONFIRMED_EVENT = 'pdf:options-confirmed';
+
+    function defaultOptions(): PdfOptions {
+      return { incluirPortada: true, incluirContraportada: true };
+    }
+
+    function loadOptions(): PdfOptions | null {
+      try {
+        const raw = localStorage.getItem(PDF_OPTIONS_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as Partial<PdfOptions>;
+        if (typeof parsed !== 'object' || parsed === null) return null;
         return {
-          code: codeRaw.replace(/^C[oó]d\.\s*/i, '').trim(),
-          name,
-          category,
+          incluirPortada: parsed.incluirPortada === true,
+          incluirContraportada: parsed.incluirContraportada === true,
         };
-      });
+      } catch {
+        return null;
+      }
     }
 
-    // ---------------------------------------------------------------------
-    // Drawing primitives (shared by every sub-renderer).
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // Image loading
+    // -------------------------------------------------------------------
+
+    async function urlToBase64(url: string): Promise<string | null> {
+      if (typeof document === 'undefined' || typeof Image === 'undefined') return null;
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = url;
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error(`image load failed: ${url}`));
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || 600;
+        canvas.height = img.naturalHeight || 600;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(img, 0, 0);
+        return canvas.toDataURL('image/jpeg', 0.85);
+      } catch {
+        return null;
+      }
+    }
+
+    function dataBase64ToJpeg(b64: string): string | null {
+      if (!b64) return null;
+      if (b64.startsWith('data:image/')) return b64;
+      return `data:image/png;base64,${b64}`;
+    }
+
+    /**
+     * Resolve the best image for an item. Returns a base64 JPEG/PNG string
+     * ready to be passed to jsPDF.addImage, or null if nothing usable exists.
+     */
+    async function resolveItemImage(item: PdfItem, category: PdfCategory | undefined): Promise<string | null> {
+      // 1. main_image data_base64
+      const main = item.assets?.main_image;
+      if (main?.data_base64) {
+        const asJpeg = dataBase64ToJpeg(main.data_base64);
+        if (asJpeg) return asJpeg;
+      }
+      // 2. main_image url
+      if (main?.url) {
+        const b64 = await urlToBase64(main.url);
+        if (b64) return b64;
+      }
+      // 3. gallery[0]
+      const gallery = item.assets?.gallery ?? [];
+      for (const g of gallery) {
+        if (g.data_base64) {
+          const asJpeg = dataBase64ToJpeg(g.data_base64);
+          if (asJpeg) return asJpeg;
+        }
+        if (g.url) {
+          const b64 = await urlToBase64(g.url);
+          if (b64) return b64;
+        }
+      }
+      // 4. category banner
+      if (category?.assets?.banner?.url) {
+        const b64 = await urlToBase64(category.assets.banner.url);
+        if (b64) return b64;
+      }
+      // 5. placeholder (always present, never throws)
+      return await urlToBase64(PLACEHOLDER_PATH);
+    }
+
+    async function loadAssetImage(url: string | null | undefined): Promise<string | null> {
+      if (!url) return null;
+      return await urlToBase64(url);
+    }
+
+    // -------------------------------------------------------------------
+    // Drawing helpers
+    // -------------------------------------------------------------------
 
     let pageNum = 1;
 
-    function drawLogoAndHeader(pdf: jsPDF, logoBase64: string | null) {
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(0, 0, 210, 3.5, 'F');
-
-      if (logoBase64) {
-        pdf.addImage(logoBase64, 'PNG', 15, 8, 36, 10.3);
-      } else {
-        // Vector fallback: the same outline used by CategoryPdfDownloadButton
-        // and the product-detail generator.
-        pdf.setDrawColor(orange[0], orange[1], orange[2]);
-        pdf.setLineWidth(0.5);
-        pdf.circle(20, 13.5, 4);
-        pdf.circle(20, 13.5, 1.2);
-        for (let angle = 0; angle < 360; angle += 30) {
-          const rad = (angle * Math.PI) / 180;
-          pdf.line(
-            20 + 4 * Math.cos(rad),
-            13.5 + 4 * Math.sin(rad),
-            20 + 5.2 * Math.cos(rad + 0.1),
-            13.5 + 5.2 * Math.sin(rad + 0.1)
-          );
-        }
-        pdf.setTextColor(slate[0], slate[1], slate[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(14);
-        pdf.text('TODO', 27, 13.5);
-        pdf.setTextColor(orange[0], orange[1], orange[2]);
-        pdf.text('HUINCHA', 41, 13.5);
-      }
-
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.text('CATALOGO DE PRODUCTOS', 195, 12.5, { align: 'right' });
-
-      pdf.setTextColor(muted[0], muted[1], muted[2]);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7.5);
-      pdf.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 195, 16.5, { align: 'right' });
-
-      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-      pdf.setLineWidth(0.25);
-      pdf.line(15, 22, 195, 22);
-      pdf.line(15, 276, 195, 276);
-      pdf.setTextColor(muted[0], muted[1], muted[2]);
-      pdf.setFontSize(7.5);
-      pdf.text(
-        'Comercializadora Todo Huincha Ltda. - Longitudinal Sur 4277, Padre Las Casas - info@todohuincha.com - (45) 240 0000',
-        105,
-        281.5,
-        { align: 'center' }
-      );
-      pdf.text(`Pagina ${pageNum}`, 195, 281.5, { align: 'right' });
-    }
-
-    function drawTableHeader(pdf: jsPDF, posY: number) {
-      pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
-      pdf.rect(15, posY, 180, 8, 'F');
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(15, posY, 1.5, 8, 'F');
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.text('CODIGO', 18, posY + 5.5);
-      pdf.text('PRODUCTO', 50, posY + 5.5);
-    }
-
-    function ensureRoom(
-      pdf: jsPDF,
-      currentY: number,
-      needed: number,
-      ctx: RenderCtx
-    ): number {
-      if (currentY + needed <= 268) return currentY;
+    function addFullBleedPage(pdf: jsPDF, imageBase64: string | null): void {
       pdf.addPage();
       pageNum++;
-      drawLogoAndHeader(pdf, ctx.logoBase64);
-      const nextY = 26;
-      drawTableHeader(pdf, nextY);
-      return nextY + 8;
-    }
-
-    function drawVectorPlaceholder(
-      pdf: jsPDF,
-      x: number,
-      y: number,
-      w: number,
-      h: number
-    ): void {
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(x, y, w, h, 'F');
-    }
-
-    // ---------------------------------------------------------------------
-    // Image resolution (async -> awaited before any addImage call).
-    // ---------------------------------------------------------------------
-
-    async function resolveImageForItem(
-      row: PdfRow,
-      ctx: RenderCtx
-    ): Promise<string | null> {
-      const catalogAssets = ctx.catalogAssets ?? {};
-      const category = ctx.categoryByLabel.get(row.category) ?? null;
-      const family = row.sku ? ctx.familyBySku.get(row.sku) ?? null : null;
-
-      // Build a minimal item shape that satisfies resolvePdfImageSrc.
-      const itemShape = {
-        assets: {
-          main_image:
-            ctx.itemAssetBySku.get(row.code)?.assets?.main_image ?? null,
-        },
-      };
-
-      const out = await resolvePdfImageSrc(itemShape, category, family, catalogAssets);
-      if (out === VECTOR_SENTINEL) return null;
-      return out;
-    }
-
-    // ---------------------------------------------------------------------
-    // Sub-renderer: renderMachinerySheet
-    // ---------------------------------------------------------------------
-
-    async function renderMachinerySheet(
-      row: PdfRow,
-      y: number,
-      pdf: jsPDF,
-      ctx: RenderCtx
-    ): Promise<number> {
-      y = ensureRoom(pdf, y, 90, ctx);
-
-      // Photo block: max 60mm height, scaled to width 180mm.
-      const photoH = 50;
-      const imageSrc = await resolveImageForItem(row, ctx);
-      if (imageSrc) {
+      if (imageBase64) {
         try {
-          pdf.addImage(imageSrc, 'PNG', 15, y, 180, photoH);
+          pdf.addImage(imageBase64, 'JPEG', 0, 0, A4_W, A4_H);
         } catch {
-          drawVectorPlaceholder(pdf, 15, y, 180, photoH);
+          // Fallback: orange page with logo vector
+          pdf.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+          pdf.rect(0, 0, A4_W, A4_H, 'F');
         }
       } else {
-        drawVectorPlaceholder(pdf, 15, y, 180, photoH);
+        pdf.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+        pdf.rect(0, 0, A4_W, A4_H, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(28);
+        pdf.text('TODO HUINCHA', A4_W / 2, A4_H / 2, { align: 'center' });
       }
-      y += photoH + 4;
+    }
 
-      // Brand + model + display name heading.
-      const profile = ctx.machineryProfileBySku.get(row.code);
-      const brand = (profile?.brand ?? row.category ?? '').toString().toUpperCase();
-      const model = profile?.model ?? null;
-      const displayName = row.name;
+    function drawHeaderBand(pdf: jsPDF, text: string): number {
+      pdf.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+      pdf.rect(MARGIN_X, 8, CONTENT_W, 10, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text(text.toUpperCase(), MARGIN_X + 4, 15);
+      pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.text(`Pagina ${pageNum}`, MARGIN_X + CONTENT_W - 2, 15, { align: 'right' });
+      return 24;
+    }
 
-      pdf.setTextColor(orange[0], orange[1], orange[2]);
+    function drawFooter(pdf: jsPDF): void {
+      pdf.setDrawColor(LINE[0], LINE[1], LINE[2]);
+      pdf.setLineWidth(0.3);
+      pdf.line(MARGIN_X, A4_H - 14, MARGIN_X + CONTENT_W, A4_H - 14);
+      pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.text(
+        'Comercializadora Todo Huincha Ltda. - Longitudinal Sur 4277, Padre Las Casas - (45) 240 0000 - info@todohuincha.com',
+        A4_W / 2,
+        A4_H - 10,
+        { align: 'center' }
+      );
+    }
+
+    function ensureRoom(pdf: jsPDF, currentY: number, needed: number): number {
+      if (currentY + needed <= A4_H - 18) return currentY;
+      drawFooter(pdf);
+      pdf.addPage();
+      pageNum++;
+      return drawHeaderBand(pdf, 'Continuacion');
+    }
+
+    function drawCategoryBanner(pdf: jsPDF, bannerBase64: string | null, label: string, y: number): number {
+      const bandH = 28;
+      if (bannerBase64) {
+        try {
+          pdf.addImage(bannerBase64, 'JPEG', MARGIN_X, y, CONTENT_W, bandH);
+        } catch {
+          drawOrangeBand(pdf, label, y, bandH);
+        }
+      } else {
+        drawOrangeBand(pdf, label, y, bandH);
+      }
+      return y + bandH + 4;
+    }
+
+    function drawOrangeBand(pdf: jsPDF, text: string, y: number, h: number): void {
+      pdf.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+      pdf.rect(MARGIN_X, y, CONTENT_W, h, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.text(text.toUpperCase(), MARGIN_X + 4, y + h / 2 + 5);
+    }
+
+    function drawCategoryTitle(pdf: jsPDF, label: string, y: number): number {
+      pdf.setTextColor(SLATE[0], SLATE[1], SLATE[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(18);
+      pdf.text(label, MARGIN_X, y);
+      return y + 7;
+    }
+
+    function drawCategoryDescription(pdf: jsPDF, description: string | null | undefined, y: number): number {
+      if (!description) return y;
+      pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9.5);
+      const lines = pdf.splitTextToSize(description, CONTENT_W);
+      const maxLines = Math.min(lines.length, 4);
+      for (let i = 0; i < maxLines; i++) {
+        pdf.text(lines[i], MARGIN_X, y + i * 4.2);
+      }
+      return y + maxLines * 4.2 + 3;
+    }
+
+    function drawPriceLine(pdf: jsPDF, item: PdfItem, y: number): number {
+      const p = item.pricing;
+      let label = 'A cotizar';
+      if (p?.is_price_available && typeof p?.sale_amount === 'number' && p.sale_amount > 0) {
+        const formatted = p.sale_amount.toLocaleString('es-CL');
+        const currency = (p.currency ?? 'CLP').toUpperCase();
+        label = `${currency} $${formatted} (IVA incl.)`;
+      }
+      pdf.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text(`Precio: ${label}`, MARGIN_X, y);
+      return y + 6;
+    }
+
+    function drawBadge(pdf: jsPDF, text: string, x: number, y: number): number {
+      const w = 38;
+      const h = 9;
+      pdf.setFillColor(40, 167, 69); // green
+      pdf.roundedRect(x, y, w, h, 1.5, 1.5, 'F');
+      pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(9);
+      pdf.text(text, x + w / 2, y + h / 2 + 3, { align: 'center' });
+      return x + w + 4;
+    }
+
+    // -------------------------------------------------------------------
+    // Spec cleanup: trim next-group leakage and word-wrap long values
+    // -------------------------------------------------------------------
+
+    function cleanSpecValue(valueText: string | null | undefined): string {
+      if (!valueText) return '';
+      const parts = valueText.split(
+        /\s+(?=(?:MOTOR|EJE|MESA(?:\s+DESLIZANTE)?|MESA(?:\s+EXTENSIBLE)?|VELOCIDAD|TAMAÑO\s+DE\s+LA\s+CERCA|TAMANO\s+DE\s+LA\s+CERCA|DIMENSIONES|PESO|CAPACIDAD|GUIA|GUÍA|CABEZAL)\s*:)/i
+      );
+      return (parts[0] ?? '').replace(/\s+/g, ' ').trim();
+    }
+
+    // -------------------------------------------------------------------
+    // Template DENSO: machinery sheet (TUPI 3HP-style)
+    // -------------------------------------------------------------------
+
+    async function renderDenso(
+      pdf: jsPDF,
+      item: PdfItem,
+      imageBase64: string | null,
+      category: PdfCategory | undefined,
+      y: number
+    ): Promise<number> {
+      const profile = item.machinery_profile;
+      const brand = (profile?.brand ?? item.category_label ?? '').toString().toUpperCase();
+      const model = profile?.model ?? null;
+      const displayName = (item.display_name ?? '').replace(/[\s\-–—]+$/, '').trim();
+
+      y = ensureRoom(pdf, y, 70);
+
+      // 2-column header: photo on the left, text on the right
+      const photoX = MARGIN_X;
+      const photoY = y;
+      const photoW = 60;
+      const photoH = 45;
+      if (imageBase64) {
+        try {
+          pdf.addImage(imageBase64, 'JPEG', photoX, photoY, photoW, photoH);
+        } catch {
+          pdf.setFillColor(CREAM[0], CREAM[1], CREAM[2]);
+          pdf.rect(photoX, photoY, photoW, photoH, 'F');
+        }
+      } else {
+        pdf.setFillColor(CREAM[0], CREAM[1], CREAM[2]);
+        pdf.rect(photoX, photoY, photoW, photoH, 'F');
+      }
+      const textX = photoX + photoW + 6;
+      const textW = CONTENT_W - photoW - 6;
+
+      let textY = y + 7;
       if (brand) {
-        pdf.text(brand, 15, y);
-        y += 4;
-      }
-      if (model) {
-        pdf.setTextColor(muted[0], muted[1], muted[2]);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8);
-        pdf.text(`Modelo: ${model}`, 15, y);
-        y += 4;
-      }
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      const nameLines = pdf.splitTextToSize(displayName, 180);
-      pdf.text(nameLines, 15, y);
-      y += nameLines.length * 5.5 + 2;
-
-      // Description (1-2 lines).
-      const desc = profile?.short_description ?? null;
-      if (desc) {
-        pdf.setTextColor(muted[0], muted[1], muted[2]);
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(9);
-        const descLines = pdf.splitTextToSize(desc, 180).slice(0, 2);
-        pdf.text(descLines, 15, y);
-        y += descLines.length * 4.5 + 2;
-      }
-
-      // Features bullets (cap 8).
-      const features = Array.isArray(profile?.features) ? profile.features.slice(0, 8) : [];
-      if (features.length > 0) {
-        y = ensureRoom(pdf, y, features.length * 4.5 + 6, ctx);
-        pdf.setTextColor(orange[0], orange[1], orange[2]);
+        pdf.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(10);
-        pdf.text('Caracteristicas', 15, y);
+        pdf.text(brand, textX, textY);
+        textY += 5;
+      }
+      if (model) {
+        pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.text(`Modelo: ${model}`, textX, textY);
+        textY += 4;
+      }
+      pdf.setTextColor(SLATE[0], SLATE[1], SLATE[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(13);
+      const nameLines = pdf.splitTextToSize(displayName, textW);
+      pdf.text(nameLines, textX, textY);
+      textY += nameLines.length * 5.2 + 1.5;
+      const desc = profile?.short_description ?? null;
+      if (desc) {
+        pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(8.5);
+        const descLines = pdf.splitTextToSize(desc, textW).slice(0, 2);
+        pdf.text(descLines, textX, textY);
+        textY += descLines.length * 4 + 1;
+      }
+      drawBadge(pdf, 'DISPONIBLE', textX, textY);
+      y = Math.max(y + photoH + 4, textY + 6);
+
+      // Features bullets (cap 6)
+      const features = (profile?.features ?? []).slice(0, 6);
+      if (features.length > 0) {
+        y = ensureRoom(pdf, y, features.length * 4.5 + 6);
+        pdf.setTextColor(SLATE[0], SLATE[1], SLATE[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.text('Caracteristicas', MARGIN_X, y);
         y += 5;
         pdf.setTextColor(50, 50, 50);
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
         for (const feat of features) {
-          const lines = pdf.splitTextToSize('* ' + feat, 175);
-          y = ensureRoom(pdf, y, lines.length * 4.5 + 1, ctx);
-          pdf.text(lines, 18, y);
+          const lines = pdf.splitTextToSize('* ' + feat, CONTENT_W - 6);
+          y = ensureRoom(pdf, y, lines.length * 4.5 + 1);
+          pdf.text(lines, MARGIN_X + 3, y);
           y += lines.length * 4.5 + 1;
         }
         y += 2;
       }
 
-      // Specification groups (cap 25 rows total).
-      const groups = Array.isArray(profile?.specification_groups)
-        ? profile.specification_groups
-        : [];
+      // Spec groups in 3-column grid (TUPI-style)
+      const groups = profile?.specification_groups ?? [];
       if (groups.length > 0) {
-        let totalRows = 0;
+        y = ensureRoom(pdf, y, 20);
+        pdf.setTextColor(SLATE[0], SLATE[1], SLATE[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(11);
+        pdf.text('Especificaciones tecnicas', MARGIN_X, y);
+        y += 6;
+
+        // Flatten all values, group into rows of 3 columns
+        const cells: { label: string; value: string }[] = [];
         for (const g of groups) {
-          if (totalRows >= 25) break;
-          y = ensureRoom(pdf, y, 12, ctx);
-          pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
-          pdf.rect(15, y, 180, 6, 'F');
-          pdf.setFillColor(orange[0], orange[1], orange[2]);
-          pdf.rect(15, y, 1.5, 6, 'F');
-          pdf.setTextColor(slate[0], slate[1], slate[2]);
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(9);
-          pdf.text(
-            (g.label ?? g.group_code ?? 'Grupo').toString().toUpperCase(),
-            19,
-            y + 4.2
-          );
-          y += 6;
+          const label = (g.label ?? g.group_code ?? '').toString();
           for (const v of g.values ?? []) {
-            if (totalRows >= 25) break;
-            y = ensureRoom(pdf, y, 5, ctx);
-            pdf.setTextColor(50, 50, 50);
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(8.5);
-            const label = (v.label ?? '').toString();
-            const value = (v.value_text ?? '').toString();
-            pdf.text(`${label}: ${value}`, 19, y + 3.5);
-            y += 5;
-            totalRows++;
+            cells.push({ label: `${label}: ${v.label ?? ''}`, value: cleanSpecValue(v.value_text) });
           }
         }
-        if (totalRows >= 25) {
-          pdf.setTextColor(muted[0], muted[1], muted[2]);
-          pdf.setFontSize(7.5);
-          pdf.text(
-            '(mostrando 25 de mas; ver ficha completa del producto)',
-            19,
-            y + 2
-          );
+
+        const cellW = (CONTENT_W - 4) / 3;
+        const rowH = 12;
+        const cellsPerRow = 3;
+        for (let i = 0; i < cells.length; i += cellsPerRow) {
+          y = ensureRoom(pdf, y, rowH + 1);
+          // Header band for the row
+          pdf.setFillColor(ORANGE[0], ORANGE[1], ORANGE[2]);
+          pdf.rect(MARGIN_X, y, CONTENT_W, 5, 'F');
+          for (let c = 0; c < cellsPerRow && i + c < cells.length; c++) {
+            const cell = cells[i + c];
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(7.5);
+            pdf.text(cell.label.toUpperCase(), MARGIN_X + 2 + c * cellW, y + 3.5, {
+              maxWidth: cellW - 4,
+            });
+          }
           y += 5;
+          // Value row
+          pdf.setFillColor(CREAM[0], CREAM[1], CREAM[2]);
+          pdf.rect(MARGIN_X, y, CONTENT_W, rowH - 5, 'F');
+          for (let c = 0; c < cellsPerRow && i + c < cells.length; c++) {
+            const cell = cells[i + c];
+            pdf.setTextColor(40, 40, 40);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(8);
+            const valueLines = pdf.splitTextToSize(cell.value, cellW - 4);
+            for (let lineIdx = 0; lineIdx < Math.min(valueLines.length, 2); lineIdx++) {
+              pdf.text(valueLines[lineIdx], MARGIN_X + 2 + c * cellW, y + 4 + lineIdx * 3.6);
+            }
+          }
+          y += rowH - 5;
         }
-        y += 3;
       }
 
-      // Price line.
-      const price = ctx.priceBySku.get(row.code);
-      let priceLabel = 'A cotizar';
-      if (price?.is_price_available && price.sale_amount != null) {
-        priceLabel = price.formatted ?? `CLP ${price.sale_amount.toLocaleString('es-CL')}`;
-      }
-      pdf.setTextColor(orange[0], orange[1], orange[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(11);
-      pdf.text(`Precio: ${priceLabel}`, 15, y);
-      y += 7;
-
-      // WhatsApp CTA footer (always sales context per spec gap #2).
-      const salesNumber = ctx.whatsapp.sales ?? ctx.whatsapp.general;
-      if (salesNumber) {
-        const url = buildWhatsAppUrl(
-          salesNumber,
-          `Hola, quiero cotizar maquinaria: ${displayName} (codigo ${row.code})`
-        );
-        y = ensureRoom(pdf, y, 12, ctx);
-        pdf.setFillColor(orange[0], orange[1], orange[2]);
-        pdf.rect(15, y, 180, 8, 'F');
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(9);
-        pdf.text('Cotizar por WhatsApp:', 18, y + 5.5);
-        pdf.text(url, 192, y + 5.5, { align: 'right' });
-        y += 12;
-      }
-
+      y = ensureRoom(pdf, y, 6);
+      y = drawPriceLine(pdf, item, y);
       return y + 4;
     }
 
-    // ---------------------------------------------------------------------
-    // Sub-renderer: renderCompactRow (used by simple_product + spare_part)
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // Template MEDIO: card with bullet list (MOTOCULTIVADOR-style)
+    // -------------------------------------------------------------------
 
-    function renderCompactRow(
-      row: PdfRow,
-      y: number,
+    async function renderMedio(
       pdf: jsPDF,
-      ctx: RenderCtx,
-      isAlt: boolean
-    ): { y: number; isAlt: boolean } {
-      const item = ctx.itemBySku.get(row.code);
-      const spareManufacturerRef =
-        item?.item_type === 'spare_part' &&
-        typeof item.specifications?.manufacturer_reference === 'string' &&
-        (item.specifications.manufacturer_reference as string).length > 0
-          ? (item.specifications.manufacturer_reference as string)
-          : null;
-      const spareBrand =
-        item?.item_type === 'spare_part' &&
-        typeof item.specifications?.brand === 'string' &&
-        (item.specifications.brand as string).length > 0
-          ? (item.specifications.brand as string)
-          : null;
+      item: PdfItem,
+      imageBase64: string | null,
+      y: number
+    ): Promise<number> {
+      const profile = item.machinery_profile;
+      const displayName = (item.display_name ?? '').replace(/[\s\-–—]+$/, '').trim();
+      const brand = (profile?.brand ?? item.category_label ?? '').toString().toUpperCase();
 
-      const nameLines = pdf.splitTextToSize(row.name, 140);
-      const rowHeight = Math.max(
-        7.5,
-        nameLines.length * 4.5 + 3 + (spareManufacturerRef ? 4 : 0) + (spareBrand ? 4 : 0)
-      );
+      y = ensureRoom(pdf, y, 55);
 
-      y = ensureRoom(pdf, y, rowHeight, ctx);
-
-      if (isAlt) {
-        pdf.setFillColor(bgRowAlt[0], bgRowAlt[1], bgRowAlt[2]);
-        pdf.rect(15, y, 180, rowHeight, 'F');
+      // Photo + text side by side
+      const photoW = 55;
+      const photoH = 42;
+      if (imageBase64) {
+        try {
+          pdf.addImage(imageBase64, 'JPEG', MARGIN_X, y, photoW, photoH);
+        } catch {
+          pdf.setFillColor(CREAM[0], CREAM[1], CREAM[2]);
+          pdf.rect(MARGIN_X, y, photoW, photoH, 'F');
+        }
+      } else {
+        pdf.setFillColor(CREAM[0], CREAM[1], CREAM[2]);
+        pdf.rect(MARGIN_X, y, photoW, photoH, 'F');
       }
+      const textX = MARGIN_X + photoW + 5;
+      const textW = CONTENT_W - photoW - 5;
 
-      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-      pdf.setLineWidth(0.15);
-      pdf.line(15, y + rowHeight, 195, y + rowHeight);
-
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(row.code, 18, y + 4.8);
-
-      pdf.setTextColor(30, 30, 30);
-      pdf.setFont('helvetica', 'normal');
-      let lineY = y + 4.8;
-      for (const line of nameLines) {
-        pdf.text(line, 50, lineY);
-        lineY += 4.5;
-      }
-
-      if (spareManufacturerRef) {
-        pdf.setTextColor(orange[0], orange[1], orange[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(7.5);
-        pdf.text(`MFR: ${spareManufacturerRef}`, 50, lineY + 1);
-        lineY += 4;
-      }
-      if (spareBrand) {
-        pdf.setTextColor(muted[0], muted[1], muted[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(7.5);
-        pdf.text(`Marca: ${spareBrand}`, 50, lineY + 1);
-      }
-
-      return { y: y + rowHeight, isAlt: !isAlt };
-    }
-
-    // ---------------------------------------------------------------------
-    // Sub-renderer: renderServiceCard
-    // ---------------------------------------------------------------------
-
-    function renderServiceCard(
-      row: PdfRow,
-      y: number,
-      pdf: jsPDF,
-      ctx: RenderCtx
-    ): number {
-      y = ensureRoom(pdf, y, 80, ctx);
-
-      const item = ctx.itemBySku.get(row.code);
-      const profile = item?.service_profile ?? null;
-      const capabilities = Array.isArray(profile?.capabilities)
-        ? (profile.capabilities as unknown[]).filter(
-            (c): c is string => typeof c === 'string' && c.length > 0
-          )
-        : [];
-
-      pdf.setFillColor(253, 246, 242);
-      pdf.rect(15, y, 180, 8, 'F');
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(15, y, 1.5, 8, 'F');
-      pdf.setTextColor(orange[0], orange[1], orange[2]);
+      let textY = y + 5;
+      pdf.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(11);
-      pdf.text('SERVICIO', 19, y + 5.5);
-      y += 8;
+      const titleLines = pdf.splitTextToSize(displayName.toUpperCase(), textW);
+      pdf.text(titleLines, textX, textY);
+      textY += titleLines.length * 5 + 1;
+      if (brand) {
+        pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.text(brand, textX, textY);
+        textY += 4;
+      }
+      const model = profile?.model ?? null;
+      if (model) {
+        pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.text(`Modelo: ${model}`, textX, textY);
+      }
+      y = Math.max(y + photoH + 4, textY + 6);
 
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(13);
-      const nameLines = pdf.splitTextToSize(row.name, 175);
-      pdf.text(nameLines, 15, y);
-      y += nameLines.length * 5.5 + 2;
-
-      if (capabilities.length > 0) {
+      // Inline spec bullets (cap 6)
+      const groups = profile?.specification_groups ?? [];
+      const features = profile?.features ?? [];
+      const bullets: string[] = [];
+      for (const f of features.slice(0, 6)) bullets.push(f);
+      for (const g of groups.slice(0, 3)) {
+        for (const v of (g.values ?? []).slice(0, 2)) {
+          bullets.push(`${g.label ?? g.group_code}: ${v.label ?? ''} ${cleanSpecValue(v.value_text)}`.trim());
+          if (bullets.length >= 8) break;
+        }
+        if (bullets.length >= 8) break;
+      }
+      if (bullets.length > 0) {
+        y = ensureRoom(pdf, y, bullets.length * 4 + 4);
         pdf.setTextColor(50, 50, 50);
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
-        for (const cap of capabilities) {
-          const lines = pdf.splitTextToSize('* ' + cap, 175);
-          y = ensureRoom(pdf, y, lines.length * 4.5 + 1, ctx);
-          pdf.text(lines, 18, y);
-          y += lines.length * 4.5 + 1;
+        for (const b of bullets) {
+          const lines = pdf.splitTextToSize('* ' + b, CONTENT_W - 6);
+          y = ensureRoom(pdf, y, lines.length * 4 + 1);
+          pdf.text(lines, MARGIN_X + 3, y);
+          y += lines.length * 4 + 1;
         }
         y += 2;
       }
 
-      // A cotizar stamp.
-      y = ensureRoom(pdf, y, 12, ctx);
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(15, y, 180, 8, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(11);
-      pdf.text('A COTIZAR', 105, y + 5.5, { align: 'center' });
-      y += 12;
-
-      // WhatsApp CTA (sales context per spec gap #2).
-      const salesNumber = ctx.whatsapp.sales ?? ctx.whatsapp.general;
-      if (salesNumber) {
-        const url = buildWhatsAppUrl(
-          salesNumber,
-          `Hola, quiero cotizar el servicio ${row.name}`
-        );
-        y = ensureRoom(pdf, y, 10, ctx);
-        pdf.setTextColor(muted[0], muted[1], muted[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(8);
-        pdf.text('WhatsApp:', 15, y + 4);
-        pdf.setTextColor(slate[0], slate[1], slate[2]);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8);
-        pdf.text(url, 50, y + 4);
-        y += 10;
-      }
-
-      return y + 4;
+      y = ensureRoom(pdf, y, 6);
+      y = drawPriceLine(pdf, item, y);
+      return y + 2;
     }
 
-    // ---------------------------------------------------------------------
-    // Cover / back-cover / QR-per-category helpers
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // Template COMPACTO: flat grouped table (CUCHILLO INDUSTRIAL-style)
+    // -------------------------------------------------------------------
 
-    async function drawCoverPage(
+    function renderCompacto(
       pdf: jsPDF,
-      logoBase64: string | null,
-      title: string,
-      subtitle: string
-    ): Promise<void> {
-      pdf.addPage();
-      pageNum++;
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(0, 0, 210, 40, 'F');
-      if (logoBase64) {
-        pdf.addImage(logoBase64, 'PNG', 15, 12, 50, 14);
-      } else {
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(20);
-        pdf.text('TODO HUINCHA', 15, 26);
+      item: PdfItem,
+      y: number
+    ): number {
+      const sku = item.sku ?? '';
+      const name = (item.display_name ?? '').replace(/[\s\-–—]+$/, '').trim();
+
+      y = ensureRoom(pdf, y, 7);
+      // Zebra striping
+      if (pageNum % 2 === 0) {
+        pdf.setFillColor(CREAM[0], CREAM[1], CREAM[2]);
+        pdf.rect(MARGIN_X, y - 4, CONTENT_W, 7, 'F');
       }
-      pdf.setTextColor(255, 255, 255);
+      pdf.setDrawColor(LINE[0], LINE[1], LINE[2]);
+      pdf.setLineWidth(0.15);
+      pdf.line(MARGIN_X, y + 3, MARGIN_X + CONTENT_W, y + 3);
+
+      pdf.setTextColor(SLATE[0], SLATE[1], SLATE[2]);
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.text('CATALOGO DE PRODUCTOS', 195, 18, { align: 'right' });
-
-      const cover = await getCoverImageBase64();
-      if (cover) {
-        try {
-          pdf.addImage(cover, 'PNG', 15, 60, 180, 120);
-        } catch {
-          drawVectorPlaceholder(pdf, 15, 60, 180, 120);
-        }
-      } else {
-        drawVectorPlaceholder(pdf, 15, 60, 180, 120);
-      }
-
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(20);
-      const titleLines = pdf.splitTextToSize(title.toUpperCase(), 180);
-      pdf.text(titleLines, 105, 200, { align: 'center' });
-
-      if (subtitle) {
-        pdf.setTextColor(muted[0], muted[1], muted[2]);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(11);
-        const subLines = pdf.splitTextToSize(subtitle, 180);
-        pdf.text(subLines, 105, 215, { align: 'center' });
-      }
-
-      pdf.setTextColor(muted[0], muted[1], muted[2]);
+      pdf.setFontSize(8.5);
+      pdf.text(sku, MARGIN_X + 2, y);
+      pdf.setTextColor(30, 30, 30);
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      pdf.text(
-        `Fecha: ${new Date().toLocaleDateString('es-CL')}`,
-        105,
-        260,
-        { align: 'center' }
-      );
-    }
+      const nameLines = pdf.splitTextToSize(name, 110);
+      pdf.text(nameLines[0] ?? name, MARGIN_X + 25, y);
 
-    function drawBackCoverPage(pdf: jsPDF, whatsapp: Record<string, string>): void {
-      pdf.addPage();
-      pageNum++;
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(0, 0, 210, 30, 'F');
-      pdf.setTextColor(255, 255, 255);
+      // Price on the right
+      const p = item.pricing;
+      let priceText = 'A cotizar';
+      if (p?.is_price_available && typeof p?.sale_amount === 'number' && p.sale_amount > 0) {
+        priceText = `${(p.currency ?? 'CLP').toUpperCase()} $${p.sale_amount.toLocaleString('es-CL')}`;
+      }
+      pdf.setTextColor(ORANGE[0], ORANGE[1], ORANGE[2]);
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(20);
-      pdf.text('TODO HUINCHA', 105, 20, { align: 'center' });
+      pdf.text(priceText, MARGIN_X + CONTENT_W - 2, y, { align: 'right' });
 
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(11);
-      pdf.text(
-        'Comercializadora Todo Huincha Ltda.',
-        105,
-        60,
-        { align: 'center' }
-      );
-      pdf.text('Longitudinal Sur 4277, Padre Las Casas', 105, 68, { align: 'center' });
-      pdf.text('info@todohuincha.com - (45) 240 0000', 105, 76, { align: 'center' });
-
-      // WhatsApp CTA
-      const salesNumber = whatsapp.sales ?? whatsapp.general;
-      if (salesNumber) {
-        pdf.setFillColor(orange[0], orange[1], orange[2]);
-        pdf.rect(40, 100, 130, 14, 'F');
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(12);
-        pdf.text('Cotizar por WhatsApp', 105, 110, { align: 'center' });
-      }
-
-      // Social placeholders (vector boxes).
-      const socialY = 150;
-      const items = ['Instagram', 'Facebook', 'Web'];
-      const slotW = 50;
-      const gap = 8;
-      const totalW = slotW * items.length + gap * (items.length - 1);
-      const startX = (210 - totalW) / 2;
-      items.forEach((label, i) => {
-        const x = startX + i * (slotW + gap);
-        pdf.setDrawColor(orange[0], orange[1], orange[2]);
-        pdf.setLineWidth(0.5);
-        pdf.rect(x, socialY, slotW, 24);
-        pdf.setTextColor(slate[0], slate[1], slate[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(10);
-        pdf.text(label, x + slotW / 2, socialY + 14, { align: 'center' });
-      });
-
-      // QR placeholder.
-      pdf.setDrawColor(slate[0], slate[1], slate[2]);
-      pdf.setLineWidth(0.4);
-      pdf.rect(80, 200, 50, 50);
-      pdf.setTextColor(muted[0], muted[1], muted[2]);
-      pdf.setFontSize(8);
-      pdf.text('QR', 105, 230, { align: 'center' });
+      return y + 5;
     }
 
-    function drawCategoryQrBadge(
-      pdf: jsPDF,
-      categoryLabel: string,
-      whatsapp: Record<string, string>
-    ): void {
-      // Vector-only placeholder (real QR generation is out of scope per
-      // proposal section "Out of Scope").
-      const number = whatsapp.sales ?? whatsapp.general;
-      pdf.setFillColor(orange[0], orange[1], orange[2]);
-      pdf.rect(15, 22, 180, 6, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7);
-      pdf.text(categoryLabel.toUpperCase(), 19, 26.5);
-      pdf.text(number ? 'QR WhatsApp ->' : 'QR', 191, 26.5, { align: 'right' });
-    }
+    // -------------------------------------------------------------------
+    // Pre-resolve images in parallel (faster sequential generation)
+    // -------------------------------------------------------------------
 
-    // ---------------------------------------------------------------------
-    // Context shared across sub-renderers
-    // ---------------------------------------------------------------------
-
-    interface RenderCtx {
-      logoBase64: string | null;
-      whatsapp: Record<string, string>;
-      catalogAssets: Record<string, unknown> | null;
-      itemBySku: Map<string, CatalogItemLike>;
-      itemAssetBySku: Map<string, CatalogItemLike>;
-      familyBySku: Map<string, FamilyLike>;
-      categoryByLabel: Map<string, CategoryLike>;
-      machineryProfileBySku: Map<string, MachineryProfileLike>;
-      priceBySku: Map<string, PriceLike>;
-    }
-
-    interface CatalogItemLike {
-      item_type?: string;
-      assets?: {
-        main_image?: { url?: string | null; data_base64?: string | null } | null;
-      } | null;
-      machinery_profile?: MachineryProfileLike;
-      service_profile?: { capabilities?: unknown[] };
-      specifications?: Record<string, unknown>;
-    }
-
-    interface FamilyLike {
-      assets?: { main_image?: { url?: string | null } | null } | null;
-    }
-
-    interface CategoryLike {
-      assets?: { banner?: { url?: string | null } | null } | null;
-    }
-
-    interface MachineryProfileLike {
-      brand?: string | null;
-      model?: string | null;
-      short_description?: string | null;
-      features?: string[];
-      specification_groups?: Array<{
-        group_code?: string;
-        label?: string;
-        values?: Array<{ label?: string; value_text?: string }>;
-      }>;
-    }
-
-    interface PriceLike {
-      sale_amount?: number | null;
-      formatted?: string | null;
-      is_price_available?: boolean;
-    }
-
-    // ---------------------------------------------------------------------
-    // Build the render context from the trigger button's data attributes.
-    // ---------------------------------------------------------------------
-
-    function buildRenderCtx(
-      rows: PdfRow[],
-      logoBase64: string | null
-    ): RenderCtx {
-      const whatsapp = parseWhatsAppNumbers(envString);
-
-      // Read the catalog payload (if the parent page exposed it on the
-      // document via dataset). The catalog page injects
-      // window.__CATALOG_PAYLOAD__ for the per-type dispatcher to use.
-      const payload =
-        (typeof window !== 'undefined' &&
-          ((window as any).__CATALOG_PAYLOAD__ as CatalogPayload | undefined)) ||
-        null;
-
-      const itemBySku = new Map<string, CatalogItemLike>();
-      const itemAssetBySku = new Map<string, CatalogItemLike>();
-      const familyBySku = new Map<string, FamilyLike>();
-      const categoryByLabel = new Map<string, CategoryLike>();
-      const machineryProfileBySku = new Map<string, MachineryProfileLike>();
-      const priceBySku = new Map<string, PriceLike>();
-
-      if (payload) {
-        for (const item of payload.items ?? []) {
-          if (item?.sku) itemBySku.set(item.sku, item as CatalogItemLike);
-          if (item?.sku && item.assets)
-            itemAssetBySku.set(item.sku, item as CatalogItemLike);
-          if (item?.sku && item.machinery_profile) {
-            machineryProfileBySku.set(item.sku, item.machinery_profile);
-          }
-          if (item?.sku && item.pricing) {
-            priceBySku.set(item.sku, item.pricing);
-          }
-        }
-        for (const fam of payload.families ?? []) {
-          if (fam?.sku) familyBySku.set(fam.sku, fam as FamilyLike);
-        }
-        for (const cat of payload.categories ?? []) {
-          if (cat?.label) categoryByLabel.set(cat.label, cat as CategoryLike);
-        }
-      }
-
-      return {
-        logoBase64,
-        whatsapp,
-        catalogAssets: (payload?.catalog_assets as Record<string, unknown>) ?? null,
-        itemBySku,
-        itemAssetBySku,
-        familyBySku,
-        categoryByLabel,
-        machineryProfileBySku,
-        priceBySku,
-      };
-    }
-
-    interface CatalogPayload {
-      items?: Array<{
-        sku?: string;
-        item_type?: string;
-        assets?: CatalogItemLike['assets'];
-        machinery_profile?: MachineryProfileLike;
-        service_profile?: CatalogItemLike['service_profile'];
-        specifications?: Record<string, unknown>;
-        pricing?: PriceLike;
-      }>;
-      families?: Array<{ sku?: string } & FamilyLike>;
-      categories?: Array<{ label?: string } & CategoryLike>;
-      catalog_assets?: unknown;
-    }
-
-    // ---------------------------------------------------------------------
-    // Main generator
-    // ---------------------------------------------------------------------
-
-    async function generatePDF(opts: PdfOptions): Promise<void> {
-      if (!pdfBtn) return;
-      const title = pdfBtn.dataset.title ?? 'Todo Huincha';
-      const subtitle = pdfBtn.dataset.subtitle ?? '';
-      const pdfRows = decodeRows(
-        JSON.parse(pdfBtn.dataset.rows ?? '[]') as string[]
-      );
-
-      const logoBase64 = await getLogoBase64();
-      const ctx = buildRenderCtx(pdfRows, logoBase64);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      pageNum = 1;
-
-      if (opts.incluirPortada) {
-        await drawCoverPage(pdf, logoBase64, title, subtitle);
-      }
-
-      if (opts.modo === 'compacto') {
-        // Legacy flat grouped-by-category layout (verbatim from slice 2,
-        // refactored to share drawTableHeader + drawLogoAndHeader).
-        drawLogoAndHeader(pdf, logoBase64);
-        let y = 30;
-        pdf.setTextColor(slate[0], slate[1], slate[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(13);
-        pdf.text(title.toUpperCase(), 15, y);
-        y += 5.5;
-        if (subtitle) {
-          pdf.setTextColor(muted[0], muted[1], muted[2]);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(8.5);
-          pdf.text(subtitle, 15, y);
-          y += 9;
-        } else {
-          y += 3;
-        }
-        drawTableHeader(pdf, y);
-        y += 8;
-
-        const grouped = new Map<string, PdfRow[]>();
-        for (const row of pdfRows) {
-          const arr = grouped.get(row.category) ?? [];
-          arr.push(row);
-          grouped.set(row.category, arr);
-        }
-
-        let isAlt = false;
-        pdf.setFontSize(8.5);
-        grouped.forEach((productsList, categoryName) => {
-          if (opts.incluirQrPorCategoria) {
-            drawCategoryQrBadge(pdf, categoryName, ctx.whatsapp);
-          }
-          if (y + 18 > 268) {
-            pdf.addPage();
-            pageNum++;
-            drawLogoAndHeader(pdf, logoBase64);
-            y = 26;
-            drawTableHeader(pdf, y);
-            y += 8;
-            isAlt = false;
-          }
-          pdf.setFillColor(253, 246, 242);
-          pdf.rect(15, y, 180, 8, 'F');
-          pdf.setFillColor(orange[0], orange[1], orange[2]);
-          pdf.rect(15, y, 1.5, 8, 'F');
-          pdf.setTextColor(orange[0], orange[1], orange[2]);
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(8.5);
-          pdf.text(categoryName.toUpperCase(), 19, y + 5.5);
-          pdf.setTextColor(muted[0], muted[1], muted[2]);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(7.5);
-          pdf.text(`${productsList.length} productos`, 191, y + 5.5, { align: 'right' });
-          pdf.setDrawColor(orange[0], orange[1], orange[2]);
-          pdf.setLineWidth(0.2);
-          pdf.line(15, y + 8, 195, y + 8);
-          y += 8;
-          isAlt = false;
-          for (const prod of productsList) {
-            const out = renderCompactRow(prod, y, pdf, ctx, isAlt);
-            y = out.y;
-            isAlt = out.isAlt;
-          }
-          y += 3;
-        });
-      } else {
-        // Modo completo: dispatcher per row.
-        drawLogoAndHeader(pdf, logoBase64);
-        let y = 30;
-        pdf.setTextColor(slate[0], slate[1], slate[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(13);
-        pdf.text(title.toUpperCase(), 15, y);
-        y += 5.5;
-        if (subtitle) {
-          pdf.setTextColor(muted[0], muted[1], muted[2]);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(8.5);
-          pdf.text(subtitle, 15, y);
-          y += 9;
-        } else {
-          y += 3;
-        }
-
-        let lastCategory = '';
-        let isAlt = false;
-        for (const row of pdfRows) {
-          const item = ctx.itemBySku.get(row.code);
-          const kind = item ? dispatchItemKind(item) : 'compact_row';
-
-          // Per-category QR badge (only when category changes and option is on).
-          if (opts.incluirQrPorCategoria && row.category !== lastCategory) {
-            drawCategoryQrBadge(pdf, row.category, ctx.whatsapp);
-            y += 8;
-            lastCategory = row.category;
-          }
-
-          if (kind === 'machinery') {
-            y = await renderMachinerySheet(row, y, pdf, ctx);
-            isAlt = false;
-          } else if (kind === 'service_card') {
-            y = renderServiceCard(row, y, pdf, ctx);
-            isAlt = false;
-          } else {
-            const out = renderCompactRow(row, y, pdf, ctx, isAlt);
-            y = out.y;
-            isAlt = out.isAlt;
-          }
-        }
-      }
-
-      if (opts.incluirContraportada) {
-        drawBackCoverPage(pdf, ctx.whatsapp);
-      }
-
-      const dateSlug = new Date().toISOString().slice(0, 10);
-      const filenameStem = `${title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')}-${dateSlug}`;
-      pdf.save(`${filenameStem}.pdf`);
-    }
-
-    // ---------------------------------------------------------------------
-    // Click contract: skip-if-saved, else open popup.
-    // ---------------------------------------------------------------------
-
-    pdfBtn.addEventListener('click', () => {
-      let opts: PdfOptions = defaultPdfOptions();
-      try {
-        const raw = localStorage.getItem(PDF_OPTIONS_STORAGE_KEY);
-        if (raw) opts = deserializePdfOptions(raw);
-      } catch {
-        opts = defaultPdfOptions();
-      }
-
-      if (rawPresent()) {
-        // Replay silently with the persisted choice.
-        void generatePDF(opts);
-      } else {
-        // First-ever click on this device: open the popup so the user
-        // can configure. The popup itself will persist the choice and
-        // dispatch pdf:options-confirmed for us.
-        document.dispatchEvent(
-          new CustomEvent('pdf:options-open', {
-            detail: { trigger: pdfBtn },
+    async function preResolveImages(
+      items: PdfItem[],
+      categoriesByLabel: Map<string, PdfCategory>
+    ): Promise<Map<string, string | null>> {
+      const cache = new Map<string, string | null>();
+      const tasks: Promise<void>[] = [];
+      for (const item of items) {
+        if (!item.sku) continue;
+        if (cache.has(item.sku)) continue;
+        const cat = item.category_label ? categoriesByLabel.get(item.category_label) : undefined;
+        tasks.push(
+          resolveItemImage(item, cat).then((b64) => {
+            cache.set(item.sku!, b64);
           })
         );
       }
-    });
-
-    function rawPresent(): boolean {
-      try {
-        return !!localStorage.getItem(PDF_OPTIONS_STORAGE_KEY);
-      } catch {
-        return false;
-      }
+      await Promise.all(tasks);
+      return cache;
     }
 
-    // When the popup confirms, run the generator with the supplied
-    // options. The popup has already persisted to localStorage.
-    document.addEventListener('pdf:options-confirmed', (event) => {
-      const ev = event as CustomEvent<PdfOptions>;
-      if (!ev.detail) return;
-      void generatePDF(ev.detail);
+    // -------------------------------------------------------------------
+    // Main generator
+    // -------------------------------------------------------------------
+
+    async function generatePDF(opts: PdfOptions): Promise<void> {
+      const payload = (window as any).__CATALOG_PAYLOAD__ as PdfCatalogPayload | undefined;
+      if (!payload || !Array.isArray(payload.items)) {
+        console.error('catalog payload missing; aborting PDF generation');
+        return;
+      }
+      const items: PdfItem[] = payload.items;
+      const categories: PdfCategory[] = payload.categories ?? [];
+      const categoriesByLabel = new Map<string, PdfCategory>();
+      for (const c of categories) if (c.label) categoriesByLabel.set(c.label, c);
+
+      // Group items by category label (preserve payload order).
+      const byCategory = new Map<string, PdfItem[]>();
+      for (const it of items) {
+        const key = it.category_label ?? '__none__';
+        const arr = byCategory.get(key) ?? [];
+        arr.push(it);
+        byCategory.set(key, arr);
+      }
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      pageNum = 1;
+
+      // ---- Cover pages (1: full-bleed cover-1, 2: full-bleed cover-2) ----
+      if (opts.incluirPortada) {
+        const cover1 = await loadAssetImage(payload.catalog_assets?.cover_image_1?.url);
+        addFullBleedPage(pdf, cover1);
+        const cover2 = await loadAssetImage(payload.catalog_assets?.cover_image_2?.url);
+        addFullBleedPage(pdf, cover2);
+      }
+
+      // Pre-resolve all images in parallel.
+      const imageCache = await preResolveImages(items, categoriesByLabel);
+
+      // ---- Category sections ----
+      for (const [label, catItems] of byCategory.entries()) {
+        const cat = categoriesByLabel.get(label);
+        const bannerBase64 = await loadAssetImage(cat?.assets?.banner?.url);
+
+        // Page header
+        pdf.addPage();
+        pageNum++;
+        let y = drawHeaderBand(pdf, title);
+        y = drawCategoryBanner(pdf, bannerBase64, label, y);
+        y = drawCategoryTitle(pdf, label, y + 2);
+        y = drawCategoryDescription(pdf, cat?.description, y);
+        y += 2;
+
+        // Render each item by density
+        for (const item of catItems) {
+          const density = classifyDensity(item);
+          const image = imageCache.get(item.sku ?? '') ?? null;
+          if (density === 'denso') {
+            y = await renderDenso(pdf, item, image, cat, y);
+          } else if (density === 'medio') {
+            y = await renderMedio(pdf, item, image, y);
+          } else {
+            y = renderCompacto(pdf, item, y);
+          }
+          y += 2;
+        }
+
+        drawFooter(pdf);
+      }
+
+      // ---- Back cover ----
+      if (opts.incluirContraportada) {
+        const back = await loadAssetImage(payload.catalog_assets?.back_cover?.url);
+        addFullBleedPage(pdf, back);
+      }
+
+      // ---- Filename ----
+      const dateSlug = new Date().toISOString().slice(0, 10);
+      const stem = title
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      pdf.save(`${stem}-${dateSlug}.pdf`);
+    }
+
+    // -------------------------------------------------------------------
+    // Click contract: skip-if-saved, else open popup.
+    // -------------------------------------------------------------------
+
+    pdfBtn.addEventListener('click', () => {
+      const saved = loadOptions();
+      if (saved) {
+        void generatePDF(saved);
+      } else {
+        document.dispatchEvent(
+          new CustomEvent(PDF_OPEN_EVENT, { detail: { trigger: pdfBtn } })
+        );
+      }
     });
 
-    // Pre-populate the trigger's data attribute with the persisted
-    // payload (useful for debug visibility; the click handler is the
-    // single source of truth).
-    try {
-      const raw = localStorage.getItem(PDF_OPTIONS_STORAGE_KEY);
-      if (raw) {
-        const opts = deserializePdfOptions(raw);
-        pdfBtn.dataset.pdfOptions = serializePdfOptions(opts);
+    document.addEventListener(PDF_CONFIRMED_EVENT, (event) => {
+      const ev = event as CustomEvent<PdfOptions>;
+      if (!ev.detail) return;
+      try {
+        localStorage.setItem(PDF_OPTIONS_KEY, JSON.stringify(ev.detail));
+      } catch {
+        // Ignore quota errors; we can still render.
       }
-    } catch {}
+      void generatePDF(ev.detail);
+    });
   }
 </script>
