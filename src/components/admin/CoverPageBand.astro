@@ -1,0 +1,26 @@
+---
+import type { CoverPageSlot } from '../../lib/admin-types';
+
+interface Props {
+  cover: CoverPageSlot;
+  index: number;
+}
+
+const { cover, index } = Astro.props;
+const data = (cover.data ?? {}) as Record<string, unknown>;
+const title = typeof data.title === 'string' && data.title ? data.title : cover.id;
+const subtitle = typeof data.subtitle === 'string' && data.subtitle ? data.subtitle : `Fuente: ${cover.source}`;
+---
+
+<article class:list={["canvas-band", "cover-band", { "is-disabled": !cover.enabled }]} tabindex="0" role="button" data-canvas-cover-index={index} aria-label={`Seleccionar portada ${index + 1}`}>
+  <div class="band-grip" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="cover-preview" aria-hidden="true">
+    <span>Cover</span>
+  </div>
+  <div class="band-copy">
+    <span class="admin-kicker">Portada {index + 1}</span>
+    <h3>{title}</h3>
+    <p>{subtitle} · Fuente: {cover.source}</p>
+  </div>
+  <span class="admin-chip">{cover.enabled ? 'Activa' : 'Desactivada'}</span>
+</article>

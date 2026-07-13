@@ -1,0 +1,198 @@
+---
+// src/pages/login.astro
+// Login UI for the mock auth flow. Demo credentials are rendered from the
+// single source of truth in src/lib/auth/demo-credentials.ts so the UI
+// and the runtime repository stay in sync automatically.
+//
+// The form posts JSON to /api/auth/login.json, then routes to
+// /admin (admin) or /vendor (vendor) based on the returned role.
+
+import { getDemoCredentials } from '../lib/auth/demo-credentials';
+
+const pathname = Astro.url.pathname;
+const redirectTo = (() => {
+  const raw = Astro.url.searchParams.get('next');
+  if (!raw) return '';
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '';
+  return raw;
+})();
+const hint = Astro.locals.user
+  ? `Ya estás autenticado como ${Astro.locals.user.displayName} (${Astro.locals.user.role}).`
+  : '';
+const demoUsers = getDemoCredentials();
+const sampleEmail = demoUsers[0]?.email ?? 'admin@todohuincha.cl';
+---
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Acceso · Todo Huincha</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="auth-shell">
+    <main class="auth-card" aria-labelledby="auth-title">
+      <header class="auth-head">
+        <span class="brand-mark" aria-hidden="true">TH</span>
+        <div>
+          <p class="kicker">Todo Huincha</p>
+          <h1 id="auth-title">Acceso al panel</h1>
+          <p class="copy">Demo del sitio. Las credenciales de abajo son visibles a propósito — son de prueba, no de producción.</p>
+        </div>
+      </header>
+
+      <p class="hint" data-auth-hint>{hint}</p>
+      <p class="hint" data-redirect data-next={redirectTo} hidden></p>
+
+      <form class="auth-form" data-auth-form novalidate>
+        <label class="form-field">
+          <span class="field-label">Email</span>
+          <input class="admin-input" type="email" name="email" autocomplete="username" required placeholder={sampleEmail} />
+        </label>
+        <label class="form-field">
+          <span class="field-label">Contraseña</span>
+          <input class="admin-input" type="password" name="password" autocomplete="current-password" required placeholder="Contraseña del demo" />
+        </label>
+        <button class="admin-button" type="submit">Ingresar</button>
+        <p class="status" role="status" aria-live="polite" data-auth-status></p>
+      </form>
+
+      <section class="seeded-users" aria-label="Usuarios de demo">
+        <h2>Usuarios de demo (no son credenciales reales)</h2>
+        <ul>
+          {demoUsers.map((cred) => (
+            <li>
+              <strong>{cred.email}</strong> · rol <code>{cred.role}</code> · contraseña <code>{cred.password}</code>
+            </li>
+          ))}
+        </ul>
+        <p class="footnote">
+          Solo demo: estas credenciales viven en <code>src/lib/auth/demo-credentials.ts</code> y se hashean en memoria al iniciar. Para probar otras, exporta <code>MOCK_ADMIN_EMAIL</code>, <code>MOCK_ADMIN_PASSWORD</code>, <code>MOCK_VENDOR_EMAIL</code> o <code>MOCK_VENDOR_PASSWORD</code> en tu <code>.env</code> local.
+        </p>
+      </section>
+    </main>
+
+    <script is:inline define:vars={{ pathname }}>
+      const form = document.querySelector('[data-auth-form]');
+      const status = document.querySelector('[data-auth-status]');
+      const redirectHolder = document.querySelector('[data-redirect]');
+      const nextTarget = redirectHolder?.getAttribute('data-next') || '';
+
+      function setStatus(message, tone = 'idle') {
+        if (!status) return;
+        status.dataset.tone = tone;
+        status.textContent = message;
+      }
+
+      form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!(form instanceof HTMLFormElement)) return;
+        const data = new FormData(form);
+        const payload = {
+          email: String(data.get('email') || '').trim(),
+          password: String(data.get('password') || ''),
+        };
+        if (!payload.email || !payload.password) {
+          setStatus('Email y contraseña son obligatorios.', 'error');
+          return;
+        }
+        setStatus('Verificando credenciales…', 'pending');
+        try {
+          const response = await fetch('/api/auth/login.json', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result?.ok) {
+            const reason = typeof result?.error === 'string' ? translateReason(result.error) : 'No se pudo ingresar.';
+            setStatus(reason, 'error');
+            return;
+          }
+          setStatus('Listo. Redirigiendo…', 'saved');
+          const role = result?.user?.role;
+          const fallback = role === 'vendor' ? '/vendor' : '/admin';
+          const target = nextTarget && nextTarget.startsWith('/') ? nextTarget : fallback;
+          window.location.href = target;
+        } catch (error) {
+          setStatus(error instanceof Error ? error.message : 'Error de red.', 'error');
+        }
+      });
+
+      function translateReason(reason) {
+        switch (reason) {
+          case 'bad_password':
+          case 'unknown_user':
+            return 'Email o contraseña incorrectos.';
+          case 'inactive_user':
+            return 'La cuenta está deshabilitada.';
+          case 'missing_credentials':
+            return 'Email y contraseña son obligatorios.';
+          case 'invalid_json':
+            return 'La solicitud vino mal formada.';
+          default:
+            return 'No se pudo ingresar.';
+        }
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  body.auth-shell {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at 30% 0%, rgba(251, 77, 8, 0.16), transparent 38rem),
+      radial-gradient(circle at 80% 20%, rgba(255, 138, 61, 0.08), transparent 28rem),
+      linear-gradient(135deg, #0c0e12 0%, #11151b 60%, #0b0d10 100%);
+    color: #f5f7fa;
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .auth-card {
+    width: min(440px, 92vw);
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 24px;
+    background: rgba(17, 21, 27, 0.85);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.45);
+  }
+  .auth-head { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
+  .brand-mark {
+    display: grid; place-items: center; width: 52px; height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--admin-accent, #ff8a3d), var(--admin-accent-deep, #fb4d08));
+    color: #16110d; font-weight: 900; letter-spacing: -0.05em; font-size: 1.1rem;
+  }
+  .kicker { margin: 0; font-size: 0.72rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; color: var(--admin-accent, #ff8a3d); }
+  .auth-card h1 { margin: 4px 0 6px; font-size: 1.4rem; letter-spacing: -0.02em; }
+  .copy, .hint { margin: 6px 0 0; color: #aab3c2; }
+  .auth-form { display: grid; gap: 14px; margin: 24px 0 18px; }
+  .form-field { display: grid; gap: 6px; }
+  .field-label { font-size: 0.78rem; font-weight: 800; color: #dce3ee; letter-spacing: 0.04em; }
+  .admin-input {
+    width: 100%; border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 12px; background: rgba(9, 11, 15, 0.78); color: #f5f7fa;
+    padding: 11px 12px; font: inherit;
+  }
+  .admin-button {
+    display: inline-flex; justify-content: center; align-items: center;
+    min-height: 42px; padding: 11px 14px; border-radius: 999px;
+    border: 1px solid rgba(255, 138, 61, 0.5);
+    background: var(--admin-accent, #ff8a3d); color: #211309;
+    font-weight: 850; cursor: pointer;
+  }
+  .admin-button:hover { filter: brightness(1.04); }
+  .status { margin: 0; min-height: 22px; font-size: 0.88rem; }
+  .status[data-tone="error"] { color: #fecaca; }
+  .status[data-tone="pending"] { color: #fbd38d; }
+  .status[data-tone="saved"] { color: #6ee7a8; }
+  .seeded-users { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .seeded-users h2 { margin: 0 0 8px; font-size: 0.92rem; letter-spacing: -0.01em; }
+  .seeded-users ul { margin: 0; padding-left: 18px; color: #aab3c2; font-size: 0.86rem; line-height: 1.5; }
+  .seeded-users code { color: var(--admin-accent, #ff8a3d); }
+  .footnote { margin: 12px 0 0; color: #768294; font-size: 0.78rem; }
+  .hint { display: block; }
+</style>

@@ -1,0 +1,277 @@
+---
+// src/pages/admin/products.astro
+// Products visibility editor for the admin.
+// Drafts are persisted to localStorage (`admin:draft:visibility`).
+// Save hits POST /api/admin/visibility.json (admin-only) which writes
+// the visibility block into catalog_generation.output_types.full_catalog_pdf.
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { adapter } from '../../lib/catalog';
+import {
+  readOutputVisibility,
+  resolveCategoryVisibility,
+  resolveProductVisibility,
+  type CatalogVisibility,
+  type VisibilityFlags,
+} from '../../lib/admin-visibility';
+
+const visibility: CatalogVisibility = await readOutputVisibility();
+const categories = adapter.categories.map((category) => ({
+  code: category.code,
+  label: category.label,
+  group: category.group,
+  products: category.items.map((item) => ({
+    sku: item.sku,
+    displayName: item.display_name,
+    formattedPrice: item.pricing?.formatted ?? '',
+  })),
+}));
+
+const visibilityJson = JSON.stringify(visibility);
+const categoriesJson = JSON.stringify(categories).replaceAll('<', '\u003c');
+const canPersistToRepo = import.meta.env.DEV;
+const saveEndpoint = '/api/admin/visibility.json';
+
+const visibleToAdminAlways = true;
+---
+<AdminLayout title="Productos visibles | Admin Todo Huincha" section="categories" autosaveStatus="Borrador local listo">
+  <span slot="title">Visibilidad por producto</span>
+
+  <section class="save-strip" aria-label="Guardar visibilidad por producto">
+    <div>
+      <strong>Visibilidad por producto</strong>
+      <p>
+        Dos toggles por SKU: <em>Visible para vendedor</em> y <em>Visible para público</em>. Si ambos quedan apagados, el producto es borrador.
+        El administrador siempre ve todo, sin importar las flags. El guardado escribe solo
+        <code>catalog_generation.output_types.full_catalog_pdf.visibility</code>.
+      </p>
+    </div>
+    <div class="save-actions">
+      <span class="admin-chip">admin ve siempre: {visibleToAdminAlways ? 'sí' : 'no'}</span>
+      <span class="status-pill" role="status" aria-live="polite" data-status><span aria-hidden="true"></span>Borrador local listo</span>
+      <button class="admin-button" type="button" data-save-visibility disabled={!canPersistToRepo}>Guardar visibilidad</button>
+    </div>
+  </section>
+
+  <section class="visibility-shell" aria-label="Editor de visibilidad por producto">
+    {categories.map((category) => (
+      <article class="admin-panel-frame category-block" data-category-block data-category-code={category.code}>
+        <header class="panel-head">
+          <div>
+            <span class="admin-kicker">{category.group || 'general'}</span>
+            <h2>{category.label}</h2>
+            <p class="selection-copy">{category.products.length} productos · código <code>{category.code}</code></p>
+          </div>
+        </header>
+        <div class="panel-body products-table" data-product-rows>
+          {category.products.length === 0 ? (
+            <p class="selection-copy">Esta categoría no tiene productos asociados.</p>
+          ) : (
+            <table data-product-table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Producto</th>
+                  <th>Vendedor</th>
+                  <th>Público</th>
+                </tr>
+              </thead>
+              <tbody>
+                {category.products.map((product) => {
+                  const flags = resolveProductVisibility(visibility, product.sku);
+                  return (
+                    <tr data-product-row data-product-sku={product.sku}>
+                      <td><code>{product.sku}</code></td>
+                      <td>
+                        <strong>{product.displayName}</strong>
+                        {product.formattedPrice ? <small>{product.formattedPrice}</small> : null}
+                      </td>
+                      <td>
+                        <label class="toggle-field">
+                          <input type="checkbox" data-toggle="vendor" data-sku={product.sku} checked={flags.visible_to_vendor} />
+                          <span>{flags.visible_to_vendor ? 'Visible' : 'Oculto'}</span>
+                        </label>
+                      </td>
+                      <td>
+                        <label class="toggle-field">
+                          <input type="checkbox" data-toggle="public" data-sku={product.sku} checked={flags.visible_to_public} />
+                          <span>{flags.visible_to_public ? 'Visible' : 'Oculto'}</span>
+                        </label>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </article>
+    ))}
+  </section>
+</AdminLayout>
+
+<script is:inline define:vars={{ visibilityJson, categoriesJson, canPersistToRepo, saveEndpoint }}>
+  const DRAFT_KEY = 'admin:draft:visibility';
+  const initialVisibility = JSON.parse(visibilityJson);
+  const categories = JSON.parse(categoriesJson);
+
+  function freshVisibility() {
+    return {
+      products: { default: { ...initialVisibility.products.default }, by_sku: {} },
+      categories: { default: { ...initialVisibility.categories.default }, by_code: {} },
+    };
+  }
+
+  const draft = readDraft() ?? freshVisibility();
+  const state = mergeDraftWithInitial(draft);
+
+  persistDraft(canPersistToRepo ? 'Borrador local listo' : 'Export estático: solo borrador local');
+
+  const statusEl = document.querySelector('[data-status]');
+  const saveButton = document.querySelector('[data-save-visibility]');
+
+  if (!canPersistToRepo && saveButton) {
+    saveButton.title = 'Disponible solo en admin local/dev con servidor Astro.';
+  }
+
+  document.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+    const toggle = target.dataset.toggle;
+    const sku = target.dataset.sku;
+    if (!toggle || !sku) return;
+    ensure(state.products.by_sku, sku, state.products.default);
+    state.products.by_sku[sku] = {
+      ...state.products.by_sku[sku],
+      [toggle === 'vendor' ? 'visible_to_vendor' : 'visible_to_public']: target.checked,
+    };
+    refreshRow(sku);
+    persistDraft('Borrador local actualizado');
+  });
+
+  saveButton?.addEventListener('click', async () => {
+    if (!canPersistToRepo) {
+      setStatus('Export estático: no puede guardar en el repositorio', 'error');
+      return;
+    }
+    setStatus('Guardando visibilidad…', 'pending');
+    saveButton.disabled = true;
+    try {
+      const payload = serialize();
+      const response = await fetch(saveEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(Array.isArray(result.errors) ? result.errors.join(' ') : 'No se pudo guardar.');
+      }
+      localStorage.removeItem(DRAFT_KEY);
+      setStatus('Visibilidad guardada en JSON', 'saved');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo guardar.', 'error');
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+
+  function ensure(map, key, fallback) {
+    if (!map[key]) map[key] = { ...fallback };
+    return map[key];
+  }
+
+  function mergeDraftWithInitial(draft) {
+    if (!draft || typeof draft !== 'object') return freshVisibility();
+    const next = freshVisibility();
+    if (draft.products?.default && typeof draft.products.default === 'object') {
+      next.products.default = { ...next.products.default, ...draft.products.default };
+    }
+    if (draft.products?.by_sku && typeof draft.products.by_sku === 'object') {
+      for (const [sku, flags] of Object.entries(draft.products.by_sku)) {
+        next.products.by_sku[sku] = { ...next.products.default, ...flags };
+      }
+    }
+    if (draft.categories?.default && typeof draft.categories.default === 'object') {
+      next.categories.default = { ...next.categories.default, ...draft.categories.default };
+    }
+    if (draft.categories?.by_code && typeof draft.categories.by_code === 'object') {
+      for (const [code, flags] of Object.entries(draft.categories.by_code)) {
+        next.categories.by_code[code] = { ...next.categories.default, ...flags };
+      }
+    }
+    return next;
+  }
+
+  function serialize() {
+    return {
+      products: {
+        default: { ...state.products.default },
+        by_sku: { ...state.products.by_sku },
+      },
+      categories: {
+        default: { ...state.categories.default },
+        by_code: { ...state.categories.by_code },
+      },
+    };
+  }
+
+  function persistDraft(message) {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(serialize()));
+    setStatus(message, 'draft');
+  }
+
+  function setStatus(message, tone) {
+    if (!statusEl) return;
+    statusEl.dataset.tone = tone;
+    statusEl.lastChild.textContent = message;
+  }
+
+  function refreshRow(sku) {
+    const row = document.querySelector(`[data-product-row][data-product-sku="${cssEscape(sku)}"]`);
+    if (!row) return;
+    row.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      const toggle = input.dataset.toggle;
+      const span = input.parentElement?.querySelector('span');
+      if (!toggle || !span) return;
+      const checked = input.checked;
+      span.textContent = checked ? 'Visible' : 'Oculto';
+    });
+  }
+
+  function cssEscape(value) {
+    return String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"');
+  }
+
+  function readDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+</script>
+
+<style>
+  .save-strip { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding: 16px; border: 1px solid var(--admin-line); border-radius: var(--admin-radius-lg); background: rgba(255,255,255,0.055); }
+  .save-strip p { margin: 6px 0 0; color: var(--admin-muted); max-width: 64ch; }
+  .save-strip code { color: var(--admin-accent); }
+  .save-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .status-pill[data-tone="error"] { color: #fecaca; border-color: rgba(248, 113, 113, 0.42); }
+  .status-pill[data-tone="error"] span { background: #f87171; box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.14); }
+  .status-pill[data-tone="pending"] span { background: var(--admin-accent); box-shadow: 0 0 0 4px rgba(255, 138, 61, 0.16); }
+  .visibility-shell { display: grid; gap: 16px; }
+  .category-block { padding: 0; overflow: hidden; }
+  .panel-head h2 { margin: 3px 0 0; font-size: 1.05rem; letter-spacing: -0.02em; }
+  .panel-head .selection-copy { margin: 4px 0 0; color: var(--admin-muted); font-size: 0.86rem; }
+  .products-table table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .products-table th, .products-table td { padding: 10px 12px; border-bottom: 1px solid var(--admin-line); text-align: left; }
+  .products-table th { font-weight: 800; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--admin-muted); background: rgba(255,255,255,0.04); }
+  .products-table td strong { display: block; }
+  .products-table td small { color: var(--admin-muted); }
+  .toggle-field { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+  .toggle-field input { width: 16px; height: 16px; accent-color: var(--admin-accent); }
+  .toggle-field span { color: var(--admin-muted); font-size: 0.78rem; font-weight: 700; }
+  @media (max-width: 720px) { .save-strip { align-items: flex-start; flex-direction: column; } }
+</style>

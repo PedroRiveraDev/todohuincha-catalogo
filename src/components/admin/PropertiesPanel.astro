@@ -1,0 +1,168 @@
+---
+import DataFieldToken from './DataFieldToken.astro';
+import type { DataFieldDef } from '../../lib/admin-types';
+import type { FullCatalogEditorState } from '../../lib/admin-full-catalog-editor';
+
+interface Props {
+  fields: DataFieldDef[];
+  editorState: FullCatalogEditorState;
+}
+
+const { fields, editorState } = Astro.props;
+---
+
+<aside class="admin-panel-frame properties-panel" aria-labelledby="properties-title">
+  <div class="panel-head">
+    <span class="admin-kicker">Propiedades</span>
+    <h2 id="properties-title">Propiedades del catálogo</h2>
+    <p class="selection-copy" data-selected-summary>Seleccioná una banda del canvas para ubicarla en esta lista.</p>
+  </div>
+  <div class="panel-body properties-stack">
+    <section aria-labelledby="selected-settings-title" class="editor-section">
+      <h3 id="selected-settings-title">Elemento seleccionado</h3>
+      <div class="selected-properties" data-selected-properties>
+        <p class="empty-note">Seleccioná una banda del canvas para editar sus propiedades concretas.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="sections-settings-title" class="editor-section">
+      <div class="section-title-row">
+        <h3 id="sections-settings-title">Secciones del PDF</h3>
+        <small>Reordenar, desactivar o quitar.</small>
+      </div>
+      <div class="editable-list" data-section-list>
+        {editorState.sections.map((section, index) => (
+          <article class="editable-card" data-section-index={index}>
+            <div class="editable-card__head">
+              <strong>{section.block}</strong>
+              <div class="mini-actions">
+                <button type="button" data-section-action="up" aria-label="Subir sección" disabled={index === 0}>↑</button>
+                <button type="button" data-section-action="down" aria-label="Bajar sección" disabled={index === editorState.sections.length - 1}>↓</button>
+                <button type="button" data-section-action="remove" aria-label="Quitar sección">Quitar</button>
+              </div>
+            </div>
+            <label class="toggle-field">
+              <input data-section-field="enabled" type="checkbox" checked={section.enabled} />
+              <span>Incluir sección</span>
+            </label>
+            <label class="form-field">
+              <span class="field-label">Título de bloque</span>
+              <input class="admin-input" data-section-field="title" type="text" value={section.title} />
+            </label>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section aria-labelledby="tokens-title">
+      <h3 id="tokens-title">Campos del JSON</h3>
+      <div class="token-grid">
+        {fields.slice(0, 8).map((field) => <DataFieldToken field={field} />)}
+      </div>
+      <small class="next-note">Click inserta el token en el último campo de texto enfocado.</small>
+    </section>
+
+    <section aria-labelledby="rules-title">
+      <div class="section-title-row">
+        <h3 id="rules-title">Reglas de render</h3>
+        <button class="ghost-button" type="button" data-add-rule>Agregar regla</button>
+      </div>
+      <div class="rules-stack" data-rule-list>
+        {editorState.rules.length === 0 && <p class="empty-note" data-empty-rules>No hay reglas configuradas todavía. Podés agregar una regla básica en esta etapa.</p>}
+        {editorState.rules.map((rule, index) => (
+          <article class="editable-card" data-rule-index={index}>
+            <div class="editable-card__head">
+              <strong>{rule.label || rule.id}</strong>
+              <button type="button" data-rule-action="remove" aria-label="Quitar regla">Quitar</button>
+            </div>
+            <label class="form-field">
+              <span class="field-label">Etiqueta</span>
+              <input class="admin-input" data-rule-field="label" type="text" value={rule.label} />
+            </label>
+            <label class="form-field">
+              <span class="field-label">Condición</span>
+              <input class="admin-input" data-rule-field="when" type="text" value={rule.when} />
+            </label>
+            <label class="form-field">
+              <span class="field-label">Plantilla</span>
+              <select class="admin-select" data-rule-field="block">
+                <option value="compacto" selected={rule.block === 'compacto'}>Compacta</option>
+                <option value="medio" selected={rule.block === 'medio'}>Media</option>
+                <option value="denso" selected={rule.block === 'denso'}>Densa</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span class="field-label">Nota</span>
+              <textarea class="admin-textarea" data-rule-field="note">{rule.note}</textarea>
+            </label>
+          </article>
+        ))}
+      </div>
+      <small class="next-note">Campos avanzados de tipografía, grilla y assets quedan para la próxima etapa.</small>
+    </section>
+
+    <section aria-labelledby="future-controls-title" class="future-controls">
+      <h3 id="future-controls-title">Próxima etapa .NET/storage</h3>
+      <div class="future-grid" aria-label="Controles avanzados no persistidos todavía">
+        <span>Coordenadas X/Y</span>
+        <span>Resize libre</span>
+        <span>Rotación</span>
+        <span>Capas / z-index</span>
+        <span>Thumbnails</span>
+        <span>Upload + crop</span>
+        <span>CSS por elemento</span>
+        <span>Drag de tokens</span>
+      </div>
+    </section>
+  </div>
+</aside>
+
+<style>
+  .properties-stack { display: grid; gap: 20px; }
+  .properties-stack h3 { margin: 0 0 12px; font-size: 0.96rem; }
+  .form-field small { color: var(--admin-muted); }
+  .token-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .rules-stack { display: grid; gap: 10px; max-height: 360px; overflow: auto; padding-right: 4px; }
+  .editor-section { padding-bottom: 4px; border-bottom: 1px solid var(--admin-line); }
+  .selected-properties { display: grid; gap: 10px; }
+  .field-hint { color: var(--admin-muted); font-size: 0.78rem; }
+  .range-field { display: grid; gap: 8px; margin-bottom: 14px; }
+  .range-field__meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .range-field output { color: var(--admin-ink); font-weight: 850; }
+  .segmented-control { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border: 1px solid var(--admin-line-strong); border-radius: 14px; background: rgba(9, 11, 15, 0.76); }
+  .segmented-control label { cursor: pointer; }
+  .segmented-control input { position: absolute; opacity: 0; pointer-events: none; }
+  .segmented-control span { display: grid; place-items: center; min-height: 34px; border-radius: 10px; color: var(--admin-muted); font-size: 0.82rem; font-weight: 850; }
+  .segmented-control input:checked + span { background: var(--admin-accent); color: #211309; }
+  .background-preview { min-height: 78px; border: 1px solid var(--admin-line); border-radius: 14px; background: linear-gradient(135deg, #1d2630, #11151b); background-size: cover; background-position: center; }
+  .future-controls { padding: 13px; border: 1px dashed var(--admin-line-strong); border-radius: 16px; background: rgba(255,255,255,0.035); }
+  .future-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+  .future-grid span { padding: 6px 9px; border: 1px solid var(--admin-line); border-radius: 999px; color: var(--admin-muted); background: rgba(255,255,255,0.04); font-size: 0.78rem; font-weight: 750; }
+  .section-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .section-title-row h3 { margin: 0; }
+  .section-title-row small, .next-note, .empty-note { color: var(--admin-muted); }
+  .selection-copy { margin: 6px 0 0; color: var(--admin-muted); font-size: 0.82rem; }
+  .toggle-field { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; color: var(--admin-ink); font-weight: 750; }
+  .editable-list { display: grid; gap: 10px; }
+  .editable-card { padding: 12px; border: 1px solid var(--admin-line); border-radius: 14px; background: rgba(255,255,255,0.045); }
+  .editable-card.is-selected { border-color: rgba(255, 138, 61, 0.56); background: rgba(255, 138, 61, 0.08); }
+  .editable-card__head, .mini-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .mini-actions { justify-content: flex-end; }
+  .mini-actions button, .editable-card__head button, .ghost-button {
+    border: 1px solid var(--admin-line-strong);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    color: var(--admin-ink);
+    padding: 6px 9px;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .ghost-button { color: var(--admin-accent); }
+  .mini-actions button:disabled, .editable-card__head button:disabled, .ghost-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+    transform: none;
+  }
+</style>

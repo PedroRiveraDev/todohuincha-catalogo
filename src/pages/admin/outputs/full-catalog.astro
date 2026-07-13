@@ -1,0 +1,645 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import CanvasPanel from '../../../components/admin/CanvasPanel.astro';
+import PalettePanel from '../../../components/admin/PalettePanel.astro';
+import PropertiesPanel from '../../../components/admin/PropertiesPanel.astro';
+import {
+  getCatalogMetrics,
+  getCategorySummaries,
+  getEditorDataFields,
+  getEditorPalette,
+  getFullCatalogLayout,
+  getFullCatalogRules,
+} from '../../../lib/admin-ui-data';
+import {
+  buildFullCatalogOutputConfig,
+  createDefaultFullCatalogEditorState,
+} from '../../../lib/admin-full-catalog-editor';
+import { getAdminPreviewCatalogCategories } from '../../../lib/admin-preview-data';
+
+const metrics = getCatalogMetrics();
+const layout = getFullCatalogLayout();
+const rules = getFullCatalogRules();
+const palette = getEditorPalette();
+const fields = getEditorDataFields();
+const categories = getCategorySummaries();
+const previewCategories = getAdminPreviewCatalogCategories();
+const editorState = createDefaultFullCatalogEditorState(layout, rules);
+const previewLayout = buildFullCatalogOutputConfig({}, editorState).layout;
+const editorStateJson = JSON.stringify(editorState).replaceAll('<', '\\u003c');
+const categoriesJson = JSON.stringify(previewCategories.map(({ code, label, productsCount, products }) => ({
+  code,
+  label,
+  productsCount,
+  sampleProducts: products.slice(0, 4).map(({ sku, displayName, formattedPrice }) => ({ sku, displayName, formattedPrice })),
+}))).replaceAll('<', '\u003c');
+const assetOptions = [
+  { value: 'asset:cover_image', label: 'Portada definida en JSON' },
+  ...categories.flatMap((category) => [
+    category.bannerUrl ? { value: category.bannerUrl, label: `Banner · ${category.label}` } : null,
+    category.backgroundUrl ? { value: category.backgroundUrl, label: `Fondo PDF · ${category.label}` } : null,
+  ]).filter(Boolean),
+].slice(0, 18);
+const assetOptionsJson = JSON.stringify(assetOptions).replaceAll('<', '\u003c');
+const canPersistToRepo = import.meta.env.DEV;
+const saveEndpoint = canPersistToRepo ? '/api/admin/full-catalog.json' : '';
+---
+
+<AdminLayout title="Editor de catálogo completo | Admin Todo Huincha" section="full-catalog" autosaveStatus="Borrador local listo">
+  <span slot="title">Editor del catálogo completo</span>
+
+  <section class="save-strip" aria-label="Guardar cambios del catálogo completo">
+    <div>
+      <strong>Edición funcional del catálogo completo</strong>
+      <p>
+        El botón de guardar escribe en <code>catalog_generation.output_types.full_catalog_pdf</code> solamente cuando este admin corre en modo local/dev con servidor Astro.
+        Las exportaciones estáticas no pueden persistir cambios en el repositorio.
+      </p>
+    </div>
+    <div class="save-actions">
+      <button class="admin-button secondary-button" type="button" data-use-doc-cover-preset>Usar portadas page_1/page_2</button>
+      <span class="status-pill" role="status" aria-live="polite" data-editor-status><span aria-hidden="true"></span>Borrador local listo</span>
+      <button class="admin-button" type="button" data-save-full-catalog disabled={!canPersistToRepo}>Guardar cambios</button>
+    </div>
+  </section>
+
+  <section class="editor-grid" aria-label="Editor visual de tres paneles">
+    <PalettePanel items={palette} />
+    <CanvasPanel layout={previewLayout} categoryCount={metrics.categories} productCount={metrics.products} />
+    <PropertiesPanel editorState={editorState} fields={fields} />
+  </section>
+</AdminLayout>
+
+<script is:inline define:vars={{ editorStateJson, categoriesJson, assetOptionsJson, canPersistToRepo, saveEndpoint }}>
+  const DRAFT_KEY = 'admin:draft:full_catalog_pdf';
+  const initialState = JSON.parse(editorStateJson);
+  const savedDraft = readDraft();
+  const state = savedDraft ?? structuredClone(initialState);
+  const categories = JSON.parse(categoriesJson);
+  const assetOptions = JSON.parse(assetOptionsJson);
+  const fontOptions = [
+    ['system-ui', 'Sistema / Inter-like'],
+    ['Arial, sans-serif', 'Arial'],
+    ['Georgia, serif', 'Georgia'],
+    ['Manrope, system-ui, sans-serif', 'Manrope'],
+    ['Geist, system-ui, sans-serif', 'Geist'],
+    ['IBM Plex Sans, system-ui, sans-serif', 'IBM Plex Sans'],
+  ];
+  const statusEl = document.querySelector('[data-editor-status]');
+  const saveButton = document.querySelector('[data-save-full-catalog]');
+  const coverPresetButton = document.querySelector('[data-use-doc-cover-preset]');
+  const sectionList = document.querySelector('[data-section-list]');
+  const ruleList = document.querySelector('[data-rule-list]');
+  const canvasDropzone = document.querySelector('[data-canvas-dropzone]');
+  const selectedSummary = document.querySelector('[data-selected-summary]');
+  const selectedProperties = document.querySelector('[data-selected-properties]');
+  let selectedBlock = { type: 'cover', index: 0 };
+  let lastTextTarget = null;
+
+  hydrateForm();
+  persistDraft(canPersistToRepo ? 'Borrador local listo' : 'Export estático: solo borrador local');
+  if (!canPersistToRepo && saveButton) {
+    saveButton.title = 'Disponible solo en admin local/dev con servidor Astro; los exports estáticos no pueden guardar en el repositorio.';
+  }
+
+  coverPresetButton?.addEventListener('click', () => {
+    state.cover_pages = [
+      createImageOnlyCover('cover_1', '/admin/assets/page_1.png'),
+      createImageOnlyCover('cover_2', '/admin/assets/page_2.png'),
+    ];
+    state.cover = state.cover_pages[0];
+    selectedBlock = { type: 'cover', index: 0 };
+    renderCanvas({ preserveProperties: false });
+    persistDraft('Portadas page_1/page_2 aplicadas al borrador local');
+  });
+
+  document.addEventListener('input', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+    if (isTextEntry(target)) lastTextTarget = target;
+    syncInput(target);
+    renderCanvas({ preserveProperties: true });
+    persistDraft('Borrador local actualizado');
+  });
+
+  document.addEventListener('focusin', (event) => {
+    const target = event.target;
+    if (isTextEntry(target)) lastTextTarget = target;
+  });
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const tokenButton = target.closest('[data-token]');
+    if (tokenButton instanceof HTMLElement) {
+      insertToken(tokenButton.dataset.token ?? '');
+      return;
+    }
+
+    const paletteButton = target.closest('[data-palette-kind]');
+    if (paletteButton instanceof HTMLElement) {
+      addPaletteItem(paletteButton.dataset.paletteKind ?? '');
+      return;
+    }
+
+    const canvasCover = target.closest('[data-canvas-cover-index]');
+    if (canvasCover instanceof HTMLElement) {
+      selectBlock('cover', Number(canvasCover.dataset.canvasCoverIndex ?? 0));
+      return;
+    }
+
+    const canvasSection = target.closest('[data-canvas-section-index]');
+    if (canvasSection instanceof HTMLElement) {
+      selectBlock('section', Number(canvasSection.dataset.canvasSectionIndex ?? 0));
+      return;
+    }
+
+    const sectionAction = target.closest('[data-section-action]');
+    if (sectionAction instanceof HTMLElement) {
+      const card = sectionAction.closest('[data-section-index]');
+      if (!(card instanceof HTMLElement)) return;
+      const index = Number(card.dataset.sectionIndex);
+      const action = sectionAction.dataset.sectionAction;
+      if (action === 'up' && index > 0) swap(state.sections, index, index - 1);
+      if (action === 'down' && index < state.sections.length - 1) swap(state.sections, index, index + 1);
+      if (action === 'remove') state.sections.splice(index, 1);
+      selectedBlock = { type: 'section', index: Math.min(index, Math.max(state.sections.length - 1, 0)) };
+      renderSections();
+      renderCanvas({ preserveProperties: false });
+      renderSelection();
+      persistDraft('Borrador local actualizado');
+      return;
+    }
+
+    const ruleAction = target.closest('[data-rule-action]');
+    if (ruleAction instanceof HTMLElement) {
+      const card = ruleAction.closest('[data-rule-index]');
+      if (!(card instanceof HTMLElement)) return;
+      state.rules.splice(Number(card.dataset.ruleIndex), 1);
+      renderRules();
+      persistDraft('Borrador local actualizado');
+      return;
+    }
+
+    if (target.closest('[data-add-rule]')) {
+      const next = state.rules.length + 1;
+      state.rules.push({
+        id: `rule-${Date.now()}`,
+        label: `Regla ${next}`,
+        when: 'true',
+        block: 'medio',
+        note: '',
+      });
+      renderRules();
+      persistDraft('Borrador local actualizado');
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const selectable = target.closest('[data-canvas-cover-index], [data-canvas-section-index]');
+    if (!(selectable instanceof HTMLElement)) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    selectable.click();
+  });
+
+  document.addEventListener('dragstart', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const paletteButton = target.closest('[data-palette-kind]');
+    if (!(paletteButton instanceof HTMLElement) || !event.dataTransfer) return;
+    event.dataTransfer.setData('text/plain', paletteButton.dataset.paletteKind ?? '');
+    event.dataTransfer.effectAllowed = 'copy';
+  });
+
+  canvasDropzone?.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    canvasDropzone.classList.add('is-drop-target');
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+  });
+
+  canvasDropzone?.addEventListener('dragleave', (event) => {
+    if (event.currentTarget === canvasDropzone) canvasDropzone.classList.remove('is-drop-target');
+  });
+
+  canvasDropzone?.addEventListener('drop', (event) => {
+    event.preventDefault();
+    canvasDropzone.classList.remove('is-drop-target');
+    addPaletteItem(event.dataTransfer?.getData('text/plain') ?? '');
+  });
+
+  saveButton?.addEventListener('click', async () => {
+    if (!canPersistToRepo) {
+      setStatus('Export estático: no puede guardar en el repositorio', 'error');
+      return;
+    }
+    setStatus('Guardando cambios…', 'pending');
+    saveButton.disabled = true;
+    try {
+      const response = await fetch(saveEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(state),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(Array.isArray(result.errors) ? result.errors.join(' ') : 'No se pudo guardar.');
+      }
+      localStorage.removeItem(DRAFT_KEY);
+      setStatus('Cambios guardados en JSON', 'saved');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo guardar.', 'error');
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+
+  function hydrateForm() {
+    state.cover_pages = normalizeCoverPages(state);
+    state.cover = state.cover_pages[0];
+    state.cover.year ||= String(new Date().getFullYear());
+    state.cover.font_family ||= 'system-ui';
+    renderSections();
+    renderRules();
+    renderCanvas();
+    renderSelection();
+  }
+
+  function syncInput(target) {
+    const value = target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : target.value;
+    const field = target.dataset.editorField;
+    if (field === 'cover.enabled') state.cover.enabled = Boolean(value);
+    if (field === 'cover.source') state.cover.source = String(value);
+    if (field === 'cover.title') state.cover.title = String(value);
+    if (field === 'cover.subtitle') state.cover.subtitle = String(value);
+    if (field === 'cover.year') state.cover.year = String(value);
+    if (field === 'cover.alignment') state.cover.alignment = String(value);
+    if (field === 'cover.height') state.cover.height = String(value);
+    if (field === 'cover.opacity') state.cover.opacity = String(value);
+    if (field === 'cover.background') state.cover.background = String(value);
+    if (field === 'cover.font_family') state.cover.font_family = String(value);
+
+    if (target.dataset.selectedField) {
+      applySelectedField(target.dataset.selectedField, value);
+    }
+
+    const sectionCard = target.closest('[data-section-index]');
+    if (sectionCard instanceof HTMLElement && target.dataset.sectionField) {
+      const section = state.sections[Number(sectionCard.dataset.sectionIndex)];
+      if (section) section[target.dataset.sectionField] = value;
+    }
+
+    const ruleCard = target.closest('[data-rule-index]');
+    if (ruleCard instanceof HTMLElement && target.dataset.ruleField) {
+      const rule = state.rules[Number(ruleCard.dataset.ruleIndex)];
+      if (rule) rule[target.dataset.ruleField] = value;
+    }
+  }
+
+  function renderSections() {
+    if (!sectionList) return;
+    sectionList.innerHTML = state.sections.map((section, index) => `
+      <article class="editable-card" data-section-index="${index}">
+        <div class="editable-card__head">
+          <strong>${escapeHtml(section.block)}</strong>
+          <div class="mini-actions">
+            <button type="button" data-section-action="up" aria-label="Subir sección" ${index === 0 ? 'disabled' : ''}>↑</button>
+            <button type="button" data-section-action="down" aria-label="Bajar sección" ${index === state.sections.length - 1 ? 'disabled' : ''}>↓</button>
+            <button type="button" data-section-action="remove" aria-label="Quitar sección">Quitar</button>
+          </div>
+        </div>
+        <label class="toggle-field"><input data-section-field="enabled" type="checkbox" ${section.enabled ? 'checked' : ''} /><span>Incluir sección</span></label>
+        <label class="form-field"><span class="field-label">Título de bloque</span><input class="admin-input" data-section-field="title" type="text" value="${escapeAttribute(section.title ?? '')}" /></label>
+      </article>`).join('');
+    renderSelection();
+  }
+
+  function renderRules() {
+    if (!ruleList) return;
+    if (state.rules.length === 0) {
+      ruleList.innerHTML = '<p class="empty-note" data-empty-rules>No hay reglas configuradas todavía. Podés agregar una regla básica en esta etapa.</p>';
+      return;
+    }
+    ruleList.innerHTML = state.rules.map((rule, index) => `
+      <article class="editable-card" data-rule-index="${index}">
+        <div class="editable-card__head"><strong>${escapeHtml(rule.label || rule.id)}</strong><button type="button" data-rule-action="remove" aria-label="Quitar regla">Quitar</button></div>
+        <label class="form-field"><span class="field-label">Etiqueta</span><input class="admin-input" data-rule-field="label" type="text" value="${escapeAttribute(rule.label ?? '')}" /></label>
+        <label class="form-field"><span class="field-label">Condición</span><input class="admin-input" data-rule-field="when" type="text" value="${escapeAttribute(rule.when ?? '')}" /></label>
+        <label class="form-field"><span class="field-label">Plantilla</span><select class="admin-select" data-rule-field="block"><option value="compacto" ${rule.block === 'compacto' ? 'selected' : ''}>Compacta</option><option value="medio" ${rule.block === 'medio' ? 'selected' : ''}>Media</option><option value="denso" ${rule.block === 'denso' ? 'selected' : ''}>Densa</option></select></label>
+        <label class="form-field"><span class="field-label">Nota</span><textarea class="admin-textarea" data-rule-field="note">${escapeHtml(rule.note ?? '')}</textarea></label>
+      </article>`).join('');
+  }
+
+  function persistDraft(message) {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(state));
+    setStatus(message, 'draft');
+  }
+
+  function addPaletteItem(kind) {
+    if (kind === 'cover_page') {
+      activeCover().enabled = true;
+      selectBlock('cover', 0);
+      renderCanvas({ preserveProperties: false });
+      persistDraft('Portada principal activada');
+      return;
+    }
+
+    const section = createSectionFromPalette(kind);
+    if (!section) {
+      setStatus('Componente no disponible para este editor', 'error');
+      return;
+    }
+    state.sections.push(section);
+    renderSections();
+    renderCanvas();
+    selectBlock('section', state.sections.length - 1);
+    persistDraft('Bloque agregado al borrador local');
+  }
+
+  function createSectionFromPalette(kind) {
+    const idSeed = Date.now();
+    if (kind === 'category_section') return createUniqueSection({ id: `category-products-${idSeed}`, type: 'variable', block: 'category_section', source: 'categories[*]', enabled: true, title: 'Productos por categoría', alignment: 'left', height: 'auto', background: '', opacity: '100', category_filter: 'all', show_prices: true, new_page: true });
+    if (kind === 'section_title') return createUniqueSection({ id: `section-title-${idSeed}`, type: 'fixed', block: 'title', enabled: true, title: 'Título de sección', alignment: 'left', height: '120', background: '', opacity: '100', show_prices: true, new_page: true });
+    if (kind === 'section_separator') return createUniqueSection({ id: `section-separator-${idSeed}`, type: 'fixed', block: 'title', enabled: true, title: 'Separador', alignment: 'center', height: '90', background: '', opacity: '100', show_prices: true, new_page: false });
+    if (kind === 'section_description') return createUniqueSection({ id: `section-description-${idSeed}`, type: 'fixed', block: 'description', enabled: true, title: 'Texto descriptivo', alignment: 'left', height: 'auto', background: '', opacity: '100', show_prices: true, new_page: false });
+    if (kind === 'legal_text') return createUniqueSection({ id: `legal-text-${idSeed}`, type: 'fixed', block: 'back_cover', enabled: true, title: 'Texto legal y contacto', alignment: 'left', height: 'auto', background: '', opacity: '100', show_prices: false, new_page: true });
+    return null;
+  }
+
+  function createUniqueSection(section) {
+    const existingIds = new Set(state.sections.map((item) => item.id));
+    const baseId = section.id;
+    let id = baseId;
+    let suffix = 2;
+    while (existingIds.has(id)) {
+      id = `${baseId}-${suffix}`;
+      suffix += 1;
+    }
+    return { ...section, id };
+  }
+
+  function renderCanvas(options = {}) {
+    if (!canvasDropzone) return;
+    canvasDropzone.innerHTML = `
+      ${normalizeCoverPages(state).map((cover, index) => renderCanvasCover(cover, index)).join('')}
+      ${state.sections.map((section, index) => renderCanvasSection(section, index)).join('')}`;
+    highlightSelection();
+    if (!options.preserveProperties) renderSelectedProperties();
+  }
+
+  function renderCanvasCover(cover, index) {
+    const coverHeight = cover.render_mode === 'full_page_image' ? 520 : clampNumber(cover.height, 220, 520, 320);
+    const coverOpacity = clampNumber(cover.opacity, 0, 100, 100) / 100;
+    const coverBackground = cover.background || cover.source || '';
+    const imageOnly = cover.render_mode === 'full_page_image';
+    return `<article class="pdf-mock-page pdf-cover-page ${imageOnly ? 'is-image-only' : ''} ${cover.enabled ? '' : 'is-disabled'}" style="--cover-height:${coverHeight}px; --cover-opacity:${coverOpacity}; --cover-align:${escapeAttribute(cover.alignment || 'left')}; --cover-font:${escapeAttribute(cover.font_family || 'system-ui')}; --cover-bg:${backgroundCss(coverBackground, 'linear-gradient(135deg, #1d2630, #11151b)')}" tabindex="0" role="button" data-canvas-cover-index="${index}" aria-label="Seleccionar portada ${index + 1}">
+        <div class="pdf-mock-grip" aria-hidden="true"><span></span><span></span><span></span></div>
+        ${imageOnly ? '' : `<div class="pdf-cover-art" aria-hidden="true"></div><div class="pdf-cover-copy"><span>${escapeHtml(cover.year || String(new Date().getFullYear()))}</span><h3>${escapeHtml(cover.title || cover.id || 'Catálogo Todo Huincha')}</h3><p>${escapeHtml(cover.subtitle || 'Maquinaria, servicios y productos')}</p></div><span class="admin-chip">${cover.enabled ? 'Portada activa' : 'Desactivada'}</span>`}
+      </article>`;
+  }
+
+  function renderCanvasSection(section, index) {
+    const labels = { title: 'Título de sección', description: 'Texto descriptivo', category_section: 'Productos por categoría', back_cover: 'Contraportada' };
+    const sampleCategory = categories.find((category) => section.category_filter && section.category_filter !== 'all' ? category.code === section.category_filter : true);
+    const sampleProducts = sampleCategory?.sampleProducts ?? [];
+    const height = normalizeHeight(section.height, section.block === 'title' ? 120 : 160);
+    const opacity = clampNumber(section.opacity, 20, 100, 100) / 100;
+    const background = backgroundCss(section.background, 'none');
+    return `<article class="pdf-mock-page pdf-section-page band-${escapeAttribute(section.block)} ${section.enabled ? '' : 'is-disabled'}" style="--section-align:${escapeAttribute(section.alignment || 'left')}; --section-height:${height}; --section-opacity:${opacity}; --section-bg:${background}" tabindex="0" role="button" data-canvas-section-index="${index}" aria-label="Seleccionar bloque ${index + 1}: ${escapeAttribute(labels[section.block] ?? section.block)}">
+      <div class="pdf-mock-grip" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="pdf-section-number" aria-hidden="true">${String(index + 1).padStart(2, '0')}</div>
+      <div class="pdf-section-copy"><span>${section.type === 'variable' ? 'Datos reales conectados' : 'Bloque fijo'} · ${section.new_page ? 'página nueva' : 'misma página'}</span><h3>${escapeHtml(section.title || labels[section.block] || section.block)}</h3><p>${escapeHtml(section.block === 'category_section' ? `${sampleCategory?.label ?? 'Todas las categorías'} · ${sampleCategory?.productsCount ?? 0} productos reales · ${section.show_prices === false ? 'precios ocultos' : 'precios visibles'}` : (section.background ? `Fondo aplicado: ${section.background}` : `ID: ${section.id}`))}</p></div>
+      ${section.block === 'category_section' ? `<div class="pdf-product-samples" aria-label="Productos reales de muestra">${sampleProducts.map((product) => `<span><strong>${escapeHtml(product.sku)}</strong>${escapeHtml(product.displayName)}<b>${escapeHtml(product.formattedPrice)}</b></span>`).join('')}</div>` : ''}
+      <span class="admin-chip">${section.enabled ? (section.template_rule ? `Regla: ${escapeHtml(section.template_rule)}` : 'Activo') : 'Desactivado'}</span>
+    </article>`;
+  }
+
+  function selectBlock(type, index) {
+    selectedBlock = { type, index };
+    renderSelection();
+  }
+
+  function renderSelection() {
+    highlightSelection();
+    renderSelectedProperties();
+  }
+
+  function highlightSelection() {
+    document.querySelectorAll('[data-canvas-cover-index], [data-canvas-section-index], [data-section-index]').forEach((item) => item.classList.remove('is-selected'));
+    if (selectedBlock.type === 'cover') {
+      document.querySelector(`[data-canvas-cover-index="${selectedBlock.index}"]`)?.classList.add('is-selected');
+      if (selectedSummary) selectedSummary.textContent = `Seleccionado: portada ${selectedBlock.index + 1}. Editá sus campos en este panel.`;
+      return;
+    }
+    const section = state.sections[selectedBlock.index];
+    document.querySelector(`[data-canvas-section-index="${selectedBlock.index}"]`)?.classList.add('is-selected');
+    document.querySelector(`[data-section-index="${selectedBlock.index}"]`)?.classList.add('is-selected');
+    if (selectedSummary) selectedSummary.textContent = section
+      ? `Seleccionado: ${section.title || section.block}. Editá sus controles concretos en este panel.`
+      : 'Seleccioná una banda del canvas para ubicarla en esta lista.';
+  }
+
+  function renderSelectedProperties() {
+    if (!selectedProperties) return;
+    if (selectedBlock.type === 'cover') {
+      const cover = activeCover();
+      const imageOnly = cover.render_mode === 'full_page_image';
+      selectedProperties.innerHTML = `
+        <label class="toggle-field"><input data-selected-field="enabled" type="checkbox" ${cover.enabled ? 'checked' : ''} /><span>Portada activa</span></label>
+        <label class="toggle-field"><input data-selected-field="render_mode" type="checkbox" ${imageOnly ? 'checked' : ''} /><span>Imagen a página completa, sin textos</span></label>
+        ${assetPickerField('background', 'Imagen de portada', cover.background || cover.source || '')}
+        ${imageOnly ? '' : `${textField('title', 'Título', cover.title)}${textField('subtitle', 'Subtítulo', cover.subtitle)}${numberField('year', 'Año', cover.year || String(new Date().getFullYear()), new Date().getFullYear() - 2, new Date().getFullYear() + 3)}${segmentedField('alignment', 'Alineación', cover.alignment || 'left')}${rangeField('height', 'Altura visual', cover.height || '320', 220, 520, 10, 'px')}${rangeField('opacity', 'Opacidad', cover.opacity || '100', 0, 100, 1, '%')}${selectField('font_family', 'Fuente', cover.font_family || 'system-ui', fontOptions)}`}
+        <p class="field-hint">El preset usa /admin/assets/page_1.png y /admin/assets/page_2.png desde docs/, sin copiar binarios al repo.</p>`;
+      return;
+    }
+    const section = state.sections[selectedBlock.index];
+    if (!section) {
+      selectedProperties.innerHTML = '<p class="empty-note">Seleccioná una banda del canvas para editar sus propiedades.</p>';
+      return;
+    }
+    selectedProperties.innerHTML = `
+      <label class="toggle-field"><input data-selected-field="enabled" type="checkbox" ${section.enabled ? 'checked' : ''} /><span>Incluir bloque</span></label>
+      ${textField('title', 'Título', section.title)}
+      ${segmentedField('alignment', 'Alineación', section.alignment || 'left')}
+      ${rangeField('height', 'Altura', numericHeight(section.height, 160), 80, 420, 10, 'px')}
+      ${assetPickerField('background', 'Fondo / imagen', section.background || '')}
+      ${rangeField('opacity', 'Opacidad', section.opacity || '100', 0, 100, 1, '%')}
+      ${section.block === 'category_section' ? selectField('category_filter', 'Filtro de categoría', section.category_filter || 'all', [['all','Todas'], ...categories.map((category) => [category.code, category.label])]) : ''}
+      ${section.block === 'category_section' ? `<label class="toggle-field"><input data-selected-field="show_prices" type="checkbox" ${section.show_prices === false ? '' : 'checked'} /><span>Mostrar precios</span></label>` : ''}
+      <label class="toggle-field"><input data-selected-field="new_page" type="checkbox" ${section.new_page ? 'checked' : ''} /><span>Nueva página</span></label>`;
+  }
+
+  function applySelectedField(field, value) {
+    const normalized = typeof value === 'boolean' ? value : String(value);
+    if (selectedBlock.type === 'cover') {
+      const cover = activeCover();
+      cover[field] = field === 'render_mode' ? (value === true ? 'full_page_image' : 'standard') : normalized;
+      if (field === 'background') cover.source = String(normalized || cover.source || 'asset:cover_image');
+      state.cover = state.cover_pages[0];
+      updateLiveControlValue(field, normalized);
+      return;
+    }
+    const section = state.sections[selectedBlock.index];
+    if (section) {
+      section[field] = normalized;
+      updateLiveControlValue(field, normalized);
+    }
+  }
+
+  function textField(field, label, value) {
+    return `<label class="form-field"><span class="field-label">${escapeHtml(label)}</span><input class="admin-input" data-selected-field="${escapeAttribute(field)}" type="text" value="${escapeAttribute(value ?? '')}" /></label>`;
+  }
+
+  function numberField(field, label, value, min, max) {
+    return `<label class="form-field"><span class="field-label">${escapeHtml(label)}</span><input class="admin-input" data-selected-field="${escapeAttribute(field)}" type="number" min="${min}" max="${max}" step="1" value="${escapeAttribute(value ?? '')}" /></label>`;
+  }
+
+  function rangeField(field, label, value, min, max, step, unit) {
+    const current = clampNumber(value, min, max, min);
+    return `<label class="range-field"><span class="range-field__meta"><span class="field-label">${escapeHtml(label)}</span><output data-range-output="${escapeAttribute(field)}">${current}${unit}</output></span><input class="admin-input" data-selected-field="${escapeAttribute(field)}" type="range" min="${min}" max="${max}" step="${step}" value="${current}" /></label>`;
+  }
+
+  function segmentedField(field, label, value) {
+    const options = [['left','Izquierda','◧'],['center','Centro','◫'],['right','Derecha','◨']];
+    return `<fieldset class="form-field"><legend class="field-label">${escapeHtml(label)}</legend><div class="segmented-control">${options.map(([optionValue, optionLabel, icon]) => `<label><input data-selected-field="${escapeAttribute(field)}" type="radio" name="selected-${escapeAttribute(field)}" value="${escapeAttribute(optionValue)}" ${optionValue === value ? 'checked' : ''} /><span>${icon} ${escapeHtml(optionLabel)}</span></label>`).join('')}</div></fieldset>`;
+  }
+
+  function assetPickerField(field, label, value) {
+    const listId = `asset-options-${field}`;
+    return `<div class="form-field"><span class="field-label">${escapeHtml(label)}</span><input class="admin-input" data-selected-field="${escapeAttribute(field)}" type="text" list="${escapeAttribute(listId)}" value="${escapeAttribute(value ?? '')}" placeholder="Sin fondo, asset:cover_image o /categories/.../background.svg" /><datalist id="${escapeAttribute(listId)}">${assetOptions.map((asset) => `<option value="${escapeAttribute(asset.value)}" label="${escapeAttribute(asset.label)}"></option>`).join('')}</datalist><small>Elegí una sugerencia o pegá una URL/path. Este campo único controla el valor guardado y el preview.</small><div class="background-preview" data-background-preview style="background-image:${backgroundCss(value, 'linear-gradient(135deg, #1d2630, #11151b)', true)}"></div></div>`;
+  }
+
+  function selectField(field, label, value, options) {
+    return `<label class="form-field"><span class="field-label">${escapeHtml(label)}</span><select class="admin-select" data-selected-field="${escapeAttribute(field)}">${options.map(([optionValue, optionLabel]) => `<option value="${escapeAttribute(optionValue)}" ${optionValue === value ? 'selected' : ''}>${escapeHtml(optionLabel)}</option>`).join('')}</select></label>`;
+  }
+
+  function insertToken(token) {
+    if (!token) return;
+    if (!(lastTextTarget instanceof HTMLInputElement || lastTextTarget instanceof HTMLTextAreaElement) || !document.contains(lastTextTarget)) {
+      setStatus('Enfocá un campo de texto antes de insertar un token', 'error');
+      return;
+    }
+    const start = lastTextTarget.selectionStart ?? lastTextTarget.value.length;
+    const end = lastTextTarget.selectionEnd ?? lastTextTarget.value.length;
+    lastTextTarget.value = `${lastTextTarget.value.slice(0, start)}${token}${lastTextTarget.value.slice(end)}`;
+    lastTextTarget.selectionStart = lastTextTarget.selectionEnd = start + token.length;
+    lastTextTarget.dispatchEvent(new Event('input', { bubbles: true }));
+    lastTextTarget.focus();
+  }
+
+  function isTextEntry(target) {
+    return target instanceof HTMLTextAreaElement || (target instanceof HTMLInputElement && ['text', 'search', 'url', 'email', 'tel', 'number'].includes(target.type));
+  }
+
+  function readDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function setInput(selector, value) {
+    const input = document.querySelector(selector);
+    if (input instanceof HTMLInputElement && input.type === 'checkbox') input.checked = Boolean(value);
+    else if (input instanceof HTMLInputElement) input.value = String(value ?? '');
+  }
+
+  function updateLiveControlValue(field, value) {
+    document.querySelectorAll(`[data-range-output="${field}"]`).forEach((output) => {
+      const unit = field === 'opacity' ? '%' : field === 'height' ? 'px' : '';
+      output.textContent = `${value}${unit}`;
+    });
+    if (field === 'background') {
+      document.querySelectorAll('[data-background-preview]').forEach((preview) => {
+        if (!(preview instanceof HTMLElement)) return;
+        preview.style.backgroundImage = backgroundCss(value, 'linear-gradient(135deg, #1d2630, #11151b)', true);
+      });
+    }
+  }
+
+  function numericHeight(value, fallback) {
+    if (value === 'auto' || value === undefined || value === null || value === '') return fallback;
+    return clampNumber(value, 80, 520, fallback);
+  }
+
+  function normalizeHeight(value, fallback) {
+    return `${numericHeight(value, fallback)}px`;
+  }
+
+  function clampNumber(value, min, max, fallback) {
+    const parsed = Number.parseInt(String(value ?? ''), 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.min(max, Math.max(min, parsed));
+  }
+
+  function cssUrl(value) {
+    return String(value ?? '').replace(/[\\'"()\n\r]/g, '');
+  }
+
+  function backgroundCss(value, fallback, withOverlay = false) {
+    const raw = String(value ?? '').trim();
+    if (!raw || raw.startsWith('asset:')) return fallback;
+    const image = `url('${cssUrl(raw)}')`;
+    return withOverlay ? `linear-gradient(135deg, rgba(17,21,27,0.38), rgba(17,21,27,0.72)), ${image}` : image;
+  }
+
+  function setStatus(message, tone) {
+    if (!statusEl) return;
+    statusEl.dataset.tone = tone;
+    statusEl.lastChild.textContent = message;
+  }
+
+  function swap(items, from, to) {
+    const item = items[from];
+    items[from] = items[to];
+    items[to] = item;
+  }
+
+  function normalizeCoverPages(editorState) {
+    if (Array.isArray(editorState.cover_pages) && editorState.cover_pages.length) return editorState.cover_pages;
+    editorState.cover_pages = [editorState.cover ?? createImageOnlyCover('cover_1', 'asset:cover_image')];
+    return editorState.cover_pages;
+  }
+
+  function activeCover() {
+    return normalizeCoverPages(state)[selectedBlock.index] ?? normalizeCoverPages(state)[0];
+  }
+
+  function createImageOnlyCover(id, imagePath) {
+    return { id, enabled: true, source: imagePath, title: '', subtitle: '', year: '', alignment: 'center', height: '520', opacity: '100', background: imagePath, font_family: 'system-ui', render_mode: 'full_page_image' };
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value).replace(/'/g, '&#39;');
+  }
+</script>
+
+<style>
+  .save-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius-lg);
+    background: rgba(255,255,255,0.055);
+  }
+  .save-strip p { margin: 4px 0 0; color: var(--admin-muted); }
+  .save-strip code { color: var(--admin-accent); }
+  .save-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .status-pill[data-tone="error"] { color: #fecaca; border-color: rgba(248, 113, 113, 0.42); }
+  .status-pill[data-tone="error"] span { background: #f87171; box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.14); }
+  .status-pill[data-tone="pending"] span { background: var(--admin-accent); box-shadow: 0 0 0 4px rgba(255, 138, 61, 0.16); }
+  @media (max-width: 720px) { .save-strip { align-items: flex-start; flex-direction: column; } }
+</style>

@@ -1,0 +1,179 @@
+---
+import CoverPageBand from './CoverPageBand.astro';
+import SectionBand from './SectionBand.astro';
+import type { CatalogConfigLayout } from '../../lib/admin-types';
+
+interface Props {
+  layout: CatalogConfigLayout;
+  categoryCount: number;
+  productCount: number;
+}
+
+const { layout, categoryCount, productCount } = Astro.props;
+const covers = layout.cover_pages ?? [];
+const sections = layout.sections ?? [];
+---
+
+<section class="admin-panel-frame canvas-panel" aria-labelledby="canvas-title">
+  <div class="panel-head canvas-toolbar">
+    <div>
+      <span class="admin-kicker">Canvas PDF</span>
+      <h2 id="canvas-title">Catálogo completo</h2>
+    </div>
+    <span class="admin-chip">{categoryCount} categorías · {productCount} productos</span>
+  </div>
+  <div class="panel-body canvas-wrap">
+    <div class="pdf-page" aria-label="Página de catálogo simulada">
+      <div class="pdf-ruler" aria-hidden="true"></div>
+      <div class="pdf-page-head">
+        <span>Todo Huincha</span>
+        <strong>Full catalog PDF</strong>
+      </div>
+      <div class="band-stack" data-canvas-dropzone aria-label="Bloques del catálogo: click para seleccionar o soltá componentes de la paleta para agregarlos">
+        {covers.map((cover, index) => <CoverPageBand cover={cover} index={index} />)}
+        {sections.map((section, index) => <SectionBand section={section} index={index} />)}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .canvas-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .canvas-wrap {
+    min-height: 680px;
+    background:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+      #10141a;
+    background-size: 28px 28px;
+    overflow: auto;
+  }
+  .pdf-page {
+    position: relative;
+    width: min(100%, 760px);
+    min-height: 920px;
+    margin: 0 auto;
+    padding: 28px;
+    border-radius: 20px;
+    background: #f6f3ee;
+    color: #19202a;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(0,0,0,0.08);
+  }
+  .pdf-ruler {
+    position: absolute;
+    inset: 12px;
+    border: 1px dashed rgba(25, 32, 42, 0.16);
+    border-radius: 14px;
+    pointer-events: none;
+  }
+  .pdf-page-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(25, 32, 42, 0.14);
+    color: #39414d;
+  }
+  .pdf-page-head span { color: #fb4d08; font-weight: 900; }
+  .pdf-page-head strong { font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .band-stack { position: relative; display: grid; gap: 14px; padding-top: 18px; }
+  .band-stack.is-drop-target::after {
+    content: "Soltar para agregar al final";
+    display: grid;
+    place-items: center;
+    min-height: 58px;
+    border: 1px dashed rgba(251, 77, 8, 0.58);
+    border-radius: 14px;
+    color: #92400e;
+    background: rgba(251, 77, 8, 0.08);
+    font-weight: 850;
+  }
+  .canvas-band {
+    display: grid;
+    grid-template-columns: 20px auto minmax(0, 1fr) auto;
+    gap: 13px;
+    align-items: center;
+    min-height: 96px;
+    padding: 14px;
+    border: 1px solid rgba(25, 32, 42, 0.14);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(24, 30, 38, 0.07);
+    cursor: pointer;
+  }
+  .canvas-band:hover { border-color: rgba(251, 77, 8, 0.42); }
+  .canvas-band.is-selected { border-color: rgba(251, 77, 8, 0.76); box-shadow: 0 0 0 3px rgba(251, 77, 8, 0.14), 0 8px 24px rgba(24, 30, 38, 0.07); }
+  .canvas-band.is-disabled { opacity: 0.54; filter: grayscale(0.35); }
+  .cover-band { min-height: 132px; background: linear-gradient(135deg, #1d2630, #11151b); color: #f5f7fa; }
+  .section-band.band-category_section { border-color: rgba(251, 77, 8, 0.24); background: linear-gradient(90deg, #ffffff, #fff4ec); }
+  .band-grip { display: grid; gap: 4px; justify-items: center; }
+  .band-grip span { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.3; }
+  .cover-preview, .section-index {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    background: rgba(251, 77, 8, 0.12);
+    color: #fb4d08;
+    font-weight: 900;
+    font-size: 0.74rem;
+  }
+  .cover-preview { background: rgba(255, 138, 61, 0.18); color: #ffb98a; }
+  .band-copy h3 { margin: 2px 0 3px; font-size: 1rem; }
+  .band-copy p { margin: 0; color: #657080; font-size: 0.84rem; }
+  .cover-band .band-copy p { color: #b9c2cf; }
+  .canvas-band .admin-kicker { color: #fb4d08; }
+  .canvas-band .admin-chip { background: rgba(251,77,8,0.1); border-color: rgba(251,77,8,0.2); color: #92400e; }
+  .cover-band .admin-chip { color: #ffcfad; }
+  .pdf-mock-page {
+    position: relative;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: stretch;
+    border: 1px solid rgba(25, 32, 42, 0.14);
+    border-radius: 18px;
+    background: #fff;
+    color: #19202a;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(24, 30, 38, 0.07);
+  }
+  .pdf-mock-page:hover { border-color: rgba(251, 77, 8, 0.42); }
+  .pdf-mock-page.is-selected { border-color: rgba(251, 77, 8, 0.76); box-shadow: 0 0 0 3px rgba(251, 77, 8, 0.14), 0 8px 24px rgba(24, 30, 38, 0.07); }
+  .pdf-mock-page.is-disabled { opacity: 0.54; filter: grayscale(0.35); }
+  .pdf-mock-grip { display: grid; align-content: center; gap: 4px; justify-items: center; padding-left: 14px; color: currentColor; }
+  .pdf-mock-grip span { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.28; }
+  .pdf-cover-page { min-height: var(--cover-height); color: #f5f7fa; font-family: var(--cover-font); text-align: var(--cover-align); background: #11151b; }
+  .pdf-cover-page::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(135deg, rgba(16,20,26,0.88), rgba(16,20,26,0.52)), var(--cover-bg); background-size: cover; background-position: center; opacity: var(--cover-opacity); }
+  .pdf-cover-page.is-image-only::before { background-image: var(--cover-bg); }
+  .pdf-cover-page.is-image-only { grid-template-columns: 20px minmax(0, 1fr); }
+  .pdf-cover-art, .pdf-cover-copy, .pdf-cover-page .admin-chip, .pdf-mock-grip { position: relative; z-index: 1; }
+  .pdf-cover-copy { align-self: end; padding: 32px 18px 32px 0; }
+  .pdf-cover-copy span { display: block; color: #ffb98a; font-weight: 900; letter-spacing: 0.08em; }
+  .pdf-cover-copy h3 { margin: 8px 0; font-size: clamp(2rem, 5vw, 3.7rem); line-height: 0.96; letter-spacing: -0.04em; text-wrap: balance; }
+  .pdf-cover-copy p { margin: 0; color: #dce3ee; font-size: 1.04rem; }
+  .pdf-cover-page .admin-chip { align-self: start; justify-self: end; margin: 14px; color: #ffcfad; }
+  .pdf-section-page { min-height: var(--section-height); grid-template-columns: 20px 54px minmax(0, 1fr) auto; align-items: center; padding: 14px; text-align: var(--section-align); background-image: linear-gradient(90deg, rgba(255,255,255,0.86), rgba(255,255,255,0.96)), var(--section-bg); background-size: cover; background-position: center; opacity: var(--section-opacity); }
+  .pdf-section-number { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 14px; background: rgba(251, 77, 8, 0.12); color: #fb4d08; font-weight: 900; }
+  .pdf-section-copy span { color: #fb4d08; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+  .pdf-section-copy h3 { margin: 3px 0; font-size: 1.25rem; letter-spacing: -0.02em; }
+  .pdf-section-copy p { margin: 0; color: #657080; font-size: 0.86rem; }
+  .pdf-product-grid { display: grid; grid-template-columns: repeat(2, 42px); gap: 7px; }
+  .pdf-product-grid i { display: block; width: 42px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, rgba(251,77,8,0.16), rgba(25,32,42,0.08)); }
+  .pdf-product-samples { display: grid; width: min(230px, 30vw); gap: 6px; }
+  .pdf-product-samples span { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 6px; align-items: center; padding: 6px 8px; border-radius: 8px; background: rgba(251,77,8,0.08); color: #39414d; font-size: 0.68rem; text-align: left; }
+  .pdf-product-samples strong { color: #fb4d08; }
+  .pdf-product-samples b { grid-column: 2; color: #657080; font-size: 0.64rem; font-weight: 800; }
+  @media (max-width: 720px) {
+    .canvas-wrap { min-height: 520px; padding: 10px; }
+    .pdf-page { min-height: 760px; padding: 18px; }
+    .canvas-band { grid-template-columns: 16px minmax(0, 1fr); }
+    .cover-preview, .section-index, .canvas-band > .admin-chip { display: none; }
+    .pdf-mock-page, .pdf-section-page { grid-template-columns: 16px minmax(0, 1fr); }
+    .pdf-section-number, .pdf-product-grid, .pdf-product-samples, .pdf-mock-page > .admin-chip { display: none; }
+    .pdf-cover-copy { padding: 24px 12px 24px 0; }
+  }
+</style>

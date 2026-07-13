@@ -1,0 +1,43 @@
+---
+import type { AdminRule } from '../../lib/admin-types';
+
+interface Props {
+  rule: AdminRule;
+}
+
+const { rule } = Astro.props;
+const action = 'block' in rule.then ? rule.then.block : JSON.stringify(rule.then);
+---
+
+<article class="rule-row" aria-label={`Regla ${rule.id}`}>
+  <div>
+    <span class="admin-kicker">IF</span>
+    <code>{rule.when}</code>
+  </div>
+  <div>
+    <span class="admin-kicker">THEN</span>
+    <strong>{action}</strong>
+  </div>
+  {rule.note && <p>{rule.note}</p>}
+</article>
+
+<style>
+  .rule-row {
+    display: grid;
+    gap: 10px;
+    padding: 13px;
+    border: 1px solid var(--admin-line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+  .rule-row code {
+    display: block;
+    margin-top: 4px;
+    color: #f0f3f7;
+    white-space: normal;
+    word-break: break-word;
+    font-size: 0.78rem;
+  }
+  .rule-row strong { display: block; margin-top: 4px; color: var(--admin-accent); }
+  .rule-row p { margin: 0; color: var(--admin-muted); font-size: 0.82rem; }
+</style>

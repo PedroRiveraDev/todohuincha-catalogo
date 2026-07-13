@@ -1,0 +1,31 @@
+---
+import type { DataFieldDef } from '../../lib/admin-types';
+
+interface Props {
+  field: DataFieldDef;
+}
+
+const { field } = Astro.props;
+---
+
+<button class="data-token" type="button" data-token={field.token} aria-label={`Insertar campo ${field.label}`} title="Insertar token en el último campo de texto enfocado">
+  <strong>{field.label}</strong>
+  <code>{field.token}</code>
+</button>
+
+<style>
+  .data-token {
+    display: inline-grid;
+    gap: 2px;
+    min-width: 0;
+    padding: 9px 10px;
+    border: 1px solid rgba(255, 138, 61, 0.24);
+    border-radius: 12px;
+    background: rgba(255, 138, 61, 0.09);
+    color: var(--admin-ink);
+    text-align: left;
+    cursor: pointer;
+  }
+  .data-token strong { font-size: 0.78rem; }
+  .data-token code { color: var(--admin-accent); font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>

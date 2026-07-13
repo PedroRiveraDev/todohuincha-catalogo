@@ -1,0 +1,358 @@
+---
+// src/pages/vendor/index.astro
+// Vendor dashboard.
+//
+// Renders products + categories filtered by `visible_to_vendor` in the
+// visibility block. The vendor can pick a whole category or individual
+// products, choose how detailed the resulting ficha should be, and
+// decide whether to show prices. They CANNOT edit layout, colors or
+// photos.
+//
+// Drafts live in localStorage (`vendor:draft:<vendorId>`) and the final
+// "Save" hits an endpoint that the vendor route can use to record their
+// selection (mocked below — vendor selections are not yet persisted to
+// JSON; the field exists so the UI is real and the contract is in place).
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { adapter } from '../../lib/catalog';
+import {
+  readOutputVisibility,
+  resolveCategoryVisibility,
+  resolveProductVisibility,
+  type CatalogVisibility,
+} from '../../lib/admin-visibility';
+
+const visibility: CatalogVisibility = await readOutputVisibility();
+
+const vendorContext = Astro.locals.user;
+const sessionRole = Astro.locals.role;
+
+const vendorCategories = adapter.categories
+  .filter((category) => resolveCategoryVisibility(visibility, category.code).visible_to_vendor)
+  .map((category) => ({
+    code: category.code,
+    label: category.label,
+    slug: category.slug,
+    group: category.group,
+    products: category.items
+      .filter((item) => resolveProductVisibility(visibility, item.sku).visible_to_vendor)
+      .map((item) => ({
+        sku: item.sku,
+        displayName: item.display_name,
+        formattedPrice: item.pricing?.formatted ?? '',
+        itemType: item.item_type,
+      })),
+  }))
+  .filter((category) => category.products.length > 0);
+
+const visibilityJson = JSON.stringify(visibility);
+const categoriesJson = JSON.stringify(vendorCategories).replaceAll('<', '\u003c');
+const currentUserJson = vendorContext ? JSON.stringify({
+  id: vendorContext.id,
+  email: vendorContext.email,
+  displayName: vendorContext.displayName,
+  role: vendorContext.role,
+}) : 'null';
+---
+<AdminLayout title="Vendedor | Todo Huincha" section="vendor" autosaveStatus="Borrador local listo">
+  <span slot="title">Vista del vendedor</span>
+
+  <section class="vendor-strip" aria-label="Resumen del vendedor">
+    <div>
+      <strong>Bienvenido, {vendorContext?.displayName ?? 'vendedor'}.</strong>
+      <p>
+        Esta página sólo muestra productos y categorías marcados como
+        <code>visible_to_vendor</code>. Podés armar tu selección completa o por categoría,
+        elegir el formato y guardar localmente. No podés editar el layout, fotos ni páginas extra.
+      </p>
+    </div>
+    <div class="vendor-actions">
+      <span class="admin-chip">rol: <code>{sessionRole ?? 'anon'}</code></span>
+      <span class="status-pill" role="status" aria-live="polite" data-vendor-status><span aria-hidden="true"></span>Borrador local listo</span>
+    </div>
+  </section>
+
+  {vendorCategories.length === 0 ? (
+    <article class="admin-card empty-state">
+      <h2>Aún no hay productos visibles para el vendedor</h2>
+      <p>
+        Pedile al administrador que active la visibilidad
+        <code>visible_to_vendor</code> en
+        <a href="/admin/products">/admin/products</a> o
+        <a href="/admin/categories">/admin/categories</a>.
+      </p>
+    </article>
+  ) : (
+    <section class="vendor-controls" aria-label="Formato y resumen">
+      <article class="admin-panel-frame">
+        <div class="panel-head">
+          <span class="admin-kicker">Configuración de la pieza</span>
+          <h2>Formato de tu catálogo</h2>
+          <p class="selection-copy">Elegís cómo se arma tu selección. Estos valores se guardan localmente y se aplican a la vista previa.</p>
+        </div>
+        <div class="panel-body vendor-options">
+          <label class="toggle-field">
+            <input type="checkbox" data-vendor-option="includePrice" checked />
+            <span>Incluir precios</span>
+          </label>
+          <label class="toggle-field">
+            <input type="checkbox" data-vendor-option="detailedFicha" checked />
+            <span>Ficha detallada (no lista simple)</span>
+          </label>
+          <label class="toggle-field">
+            <input type="checkbox" data-vendor-option="includeMaquinaria" checked />
+            <span>Incluir maquinaria</span>
+          </label>
+        </div>
+      </article>
+
+      <article class="admin-panel-frame">
+        <div class="panel-head">
+          <span class="admin-kicker">Selección</span>
+          <h2 data-vendor-summary>0 productos seleccionados</h2>
+          <p class="selection-copy" data-vendor-summary-meta>Aplicá los cambios al borrador local para que se actualice el resumen.</p>
+        </div>
+        <div class="panel-body vendor-actions-row">
+          <button class="admin-button secondary-button" type="button" data-vendor-action="select-all">Seleccionar todas las categorías</button>
+          <button class="admin-button secondary-button" type="button" data-vendor-action="select-none">Limpiar selección</button>
+        </div>
+      </article>
+    </section>
+  )}
+
+  {vendorCategories.length > 0 && (
+    <section class="vendor-categories" aria-label="Categorías visibles para el vendedor">
+      {vendorCategories.map((category) => (
+        <article class="admin-panel-frame vendor-category" data-vendor-category data-category-code={category.code}>
+          <header class="panel-head">
+            <div class="vendor-category-head">
+              <label class="toggle-field">
+                <input type="checkbox" data-vendor-category-toggle value={category.code} />
+                <span>Categoría completa</span>
+              </label>
+              <div>
+                <span class="admin-kicker">{category.group || 'general'}</span>
+                <h2>{category.label}</h2>
+                <p class="selection-copy">{category.products.length} productos visibles · código <code>{category.code}</code></p>
+              </div>
+            </div>
+          </header>
+          <div class="panel-body">
+            <ul class="vendor-products" role="list">
+              {category.products.map((product) => (
+                <li class="vendor-product" data-vendor-product data-product-sku={product.sku}>
+                  <label class="toggle-field">
+                    <input type="checkbox" data-vendor-product-toggle value={product.sku} />
+                    <span>
+                      <strong>{product.displayName}</strong>
+                      <small><code>{product.sku}</code> · {product.itemType}</small>
+                      {product.formattedPrice ? <b data-product-price>{product.formattedPrice}</b> : null}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      ))}
+    </section>
+  )}
+</AdminLayout>
+
+<script is:inline define:vars={{ visibilityJson, categoriesJson, currentUserJson, vendorContext }}>
+  const visibility = JSON.parse(visibilityJson);
+  const categories = JSON.parse(categoriesJson);
+  const currentUser = JSON.parse(currentUserJson);
+
+  const DRAFT_KEY = `vendor:draft:${currentUser?.id ?? 'anonymous'}`;
+  const draft = readDraft() ?? createDefault();
+  const state = hydrateDraft();
+
+  persist('Borrador local listo');
+
+  const summaryEl = document.querySelector('[data-vendor-summary]');
+  const summaryMetaEl = document.querySelector('[data-vendor-summary-meta]');
+  const statusEl = document.querySelector('[data-vendor-status]');
+
+  function createDefault() {
+    return {
+      options: { includePrice: true, detailedFicha: true, includeMaquinaria: true },
+      selection: { categories: {}, skus: {} },
+    };
+  }
+
+  function hydrateDraft() {
+    if (!draft || typeof draft !== 'object') return createDefault();
+    const opts = { ...createDefault().options, ...(draft.options || {}) };
+    const selection = {
+      categories: { ...(draft.selection?.categories || {}) },
+      skus: { ...(draft.selection?.skus || {}) },
+    };
+    return { options: opts, selection };
+  }
+
+  document.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+
+    if (target.dataset.vendorOption) {
+      state.options[target.dataset.vendorOption] = target.checked;
+      persist('Preferencias actualizadas');
+      return;
+    }
+
+    if (target.dataset.vendorCategoryToggle) {
+      const code = target.dataset.vendorCategoryToggle || target.value;
+      state.selection.categories[code] = target.checked;
+      // toggling a category flips all its SKUs to match
+      if (!target.checked) delete state.selection.categories[code];
+      Object.entries(state.selection.skus).forEach(([sku, _value]) => {
+        const skuCategory = categories.find((category) => category.products.some((product) => product.sku === sku));
+        if (skuCategory && skuCategory.code === code) {
+          state.selection.skus[sku] = target.checked;
+        }
+      });
+      syncCategoryChildren(code, target.checked);
+      persist('Selección de categoría actualizada');
+      updateSummary();
+      return;
+    }
+
+    if (target.dataset.vendorProductToggle) {
+      const sku = target.dataset.vendorProductToggle || target.value;
+      state.selection.skus[sku] = target.checked;
+      // propagate up: category fully checked iff all its SKUs checked
+      const category = categories.find((category) => category.products.some((product) => product.sku === sku));
+      if (category) {
+        const allSelected = category.products.every((product) => state.selection.skus[product.sku] === true);
+        state.selection.categories[category.code] = allSelected;
+        syncCategoryToggle(category.code, allSelected);
+      }
+      persist('Selección de producto actualizada');
+      updateSummary();
+      return;
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const action = target.dataset.vendorAction;
+    if (!action) return;
+    if (action === 'select-all') {
+      for (const category of categories) {
+        state.selection.categories[category.code] = true;
+        for (const product of category.products) state.selection.skus[product.sku] = true;
+        syncCategoryChildren(category.code, true);
+      }
+      persist('Todas las categorías seleccionadas');
+      updateSummary();
+      return;
+    }
+    if (action === 'select-none') {
+      state.selection.categories = {};
+      state.selection.skus = {};
+      for (const category of categories) {
+        syncCategoryChildren(category.code, false);
+      }
+      persist('Selección vaciada');
+      updateSummary();
+    }
+  });
+
+  function syncCategoryChildren(code, checked) {
+    const category = categories.find((entry) => entry.code === code);
+    if (!category) return;
+    for (const product of category.products) {
+      const input = document.querySelector(`[data-vendor-product-toggle][value="${cssEscape(product.sku)}"]`);
+      if (input instanceof HTMLInputElement) input.checked = checked;
+    }
+  }
+
+  function syncCategoryToggle(code, checked) {
+    const categoryEl = document.querySelector(`[data-vendor-category][data-category-code="${cssEscape(code)}"]`);
+    if (!categoryEl) return;
+    const toggle = categoryEl.querySelector('[data-vendor-category-toggle]');
+    if (toggle instanceof HTMLInputElement) toggle.checked = checked;
+  }
+
+  function updateSummary() {
+    const skuCount = Object.values(state.selection.skus).filter(Boolean).length;
+    const categoryCount = Object.values(state.selection.categories).filter(Boolean).length;
+    if (summaryEl) summaryEl.textContent = `${skuCount} productos seleccionados en ${categoryCount} categorías`;
+    if (summaryMetaEl) summaryMetaEl.textContent = describeOptions();
+  }
+
+  function describeOptions() {
+    const opts = state.options;
+    const parts = [];
+    parts.push(opts.includePrice ? 'precios visibles' : 'precios ocultos');
+    parts.push(opts.detailedFicha ? 'ficha detallada' : 'lista simple');
+    if (!opts.includeMaquinaria) parts.push('maquinaria excluida');
+    return parts.join(' · ');
+  }
+
+  function persist(message) {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(state));
+    if (statusEl) {
+      statusEl.dataset.tone = 'draft';
+      statusEl.lastChild.textContent = message;
+    }
+    updateSummary();
+  }
+
+  function readDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function cssEscape(value) {
+    return String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"');
+  }
+
+  // Apply persisted selection to the inputs on first paint.
+  for (const [code, selected] of Object.entries(state.selection.categories)) {
+    syncCategoryToggle(code, Boolean(selected));
+    if (selected) syncCategoryChildren(code, true);
+  }
+  for (const [sku, selected] of Object.entries(state.selection.skus)) {
+    const input = document.querySelector(`[data-vendor-product-toggle][value="${cssEscape(sku)}"]`);
+    if (input instanceof HTMLInputElement) input.checked = Boolean(selected);
+  }
+  for (const option of document.querySelectorAll('[data-vendor-option]')) {
+    if (option instanceof HTMLInputElement) {
+      option.checked = Boolean(state.options[option.dataset.vendorOption]);
+    }
+  }
+  updateSummary();
+</script>
+
+<style>
+  .vendor-strip { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding: 16px; border: 1px solid var(--admin-line); border-radius: var(--admin-radius-lg); background: rgba(255,255,255,0.055); }
+  .vendor-strip p { margin: 6px 0 0; color: var(--admin-muted); max-width: 64ch; }
+  .vendor-strip code { color: var(--admin-accent); }
+  .vendor-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .status-pill[data-tone="error"] { color: #fecaca; border-color: rgba(248, 113, 113, 0.42); }
+  .status-pill[data-tone="error"] span { background: #f87171; box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.14); }
+  .status-pill[data-tone="pending"] span { background: var(--admin-accent); box-shadow: 0 0 0 4px rgba(255, 138, 61, 0.16); }
+  .admin-chip code { color: var(--admin-accent); }
+  .vendor-controls { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(220px, 0.7fr); gap: 16px; margin-bottom: 16px; }
+  .vendor-options { display: grid; gap: 12px; }
+  .vendor-actions-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .secondary-button { background: rgba(255,255,255,0.06); color: var(--admin-ink); border-color: var(--admin-line-strong); }
+  .vendor-categories { display: grid; gap: 14px; }
+  .vendor-category-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; }
+  .vendor-products { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .vendor-product label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 10px 12px; border: 1px solid var(--admin-line); border-radius: 12px; background: rgba(255,255,255,0.045); cursor: pointer; }
+  .vendor-product input { margin-top: 4px; accent-color: var(--admin-accent); }
+  .vendor-product strong { display: block; }
+  .vendor-product small { display: block; color: var(--admin-muted); }
+  .vendor-product b { color: var(--admin-ink); margin-top: 4px; display: inline-block; }
+  .empty-state { display: grid; gap: 8px; padding: 32px; }
+  .empty-state a { color: var(--admin-accent); text-decoration: underline; }
+  @media (max-width: 980px) { .vendor-controls { grid-template-columns: 1fr; } .vendor-strip { align-items: flex-start; flex-direction: column; } }
+</style>

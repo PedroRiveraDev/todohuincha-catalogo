@@ -1,0 +1,374 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getFullCatalogLayout, getFullCatalogRules } from '../../lib/admin-ui-data';
+import { createDefaultFullCatalogEditorState } from '../../lib/admin-full-catalog-editor';
+import { buildAdminPreviewData, getAdminPreviewCatalogCategories } from '../../lib/admin-preview-data';
+
+const editorState = createDefaultFullCatalogEditorState(getFullCatalogLayout(), getFullCatalogRules());
+const catalogCategories = getAdminPreviewCatalogCategories();
+const previewData = buildAdminPreviewData({ state: editorState, categories: catalogCategories });
+const editorStateJson = JSON.stringify(editorState).replaceAll('<', '\u003c');
+const catalogCategoriesJson = JSON.stringify(catalogCategories).replaceAll('<', '\u003c');
+const previewDataJson = JSON.stringify(previewData).replaceAll('<', '\u003c');
+---
+
+<AdminLayout title="Vista previa | Admin Todo Huincha" section="preview" autosaveStatus="Preview desde borrador local">
+  <span slot="title">Vista previa del PDF</span>
+
+  <section class="preview-shell" aria-labelledby="preview-title">
+    <article class="admin-card preview-copy">
+      <span class="admin-kicker">Salida con datos reales</span>
+      <h2 id="preview-title">Preview conectado al catálogo JSON real.</h2>
+      <p data-preview-summary>Renderiza categorías y productos reales desde el JSON canónico, más los borradores locales del admin.</p>
+      <div class="row-meta">
+        <span class="admin-chip">Sin escritura en JSON</span>
+        <span class="admin-chip" data-count-categories>{previewData.counts.categoriesRendered} categorías renderizadas</span>
+        <span class="admin-chip" data-count-products>{previewData.counts.productRowsRendered} filas de producto</span>
+        <span class="admin-chip" data-count-pages>{previewData.counts.pages} páginas visuales</span>
+      </div>
+      <div class="preview-actions" aria-label="Acciones de preview">
+        <a class="admin-button" href="/admin/outputs/full-catalog">Volver al editor</a>
+        <button class="admin-button secondary-button" type="button" data-refresh-preview>Refrescar draft</button>
+        <button class="admin-button disabled-button" type="button" disabled title="La descarga real del PDF todavía no está conectada; este preview valida borradores de admin.">Descarga no conectada</button>
+      </div>
+      <nav class="preview-page-nav" aria-label="Índice de páginas del PDF" data-page-nav></nav>
+    </article>
+
+    <div class="preview-pages" aria-label="Páginas PDF de ejemplo" data-preview-pages></div>
+  </section>
+</AdminLayout>
+
+<script is:inline define:vars={{ editorStateJson, catalogCategoriesJson, previewDataJson }}>
+  const FULL_DRAFT_KEY = 'admin:draft:full_catalog_pdf';
+  const CATEGORY_DRAFT_KEY = 'admin:draft:categories';
+  const ROWS_PER_PAGE = 20;
+  const CATEGORY_SECTION_CHROME_ROW_COST = 5;
+  const FIXED_SECTION_ROW_COST = 4;
+  const fallbackState = JSON.parse(editorStateJson);
+  const fallbackCatalogCategories = JSON.parse(catalogCategoriesJson);
+  const initialPreviewData = JSON.parse(previewDataJson);
+  const summaryEl = document.querySelector('[data-preview-summary]');
+  const categoriesCountEl = document.querySelector('[data-count-categories]');
+  const productsCountEl = document.querySelector('[data-count-products]');
+  const pagesCountEl = document.querySelector('[data-count-pages]');
+
+  renderPreview();
+  document.querySelector('[data-refresh-preview]')?.addEventListener('click', renderPreview);
+
+  function renderPreview() {
+    const state = readDraft(FULL_DRAFT_KEY) ?? fallbackState;
+    const categoryDraft = readDraft(CATEGORY_DRAFT_KEY);
+    const categories = applyCategoryDrafts(fallbackCatalogCategories, categoryDraft);
+    const preview = buildPreviewData(state, categories);
+    renderPageStack(preview);
+    updateCounts(preview.counts);
+    if (summaryEl) summaryEl.textContent = `Preview usando ${readDraft(FULL_DRAFT_KEY) ? 'borrador local del editor' : 'layout base'} y ${readDraft(CATEGORY_DRAFT_KEY) ? 'borrador local de categorías' : 'categorías/productos reales del JSON base'}.`;
+  }
+
+  function renderPageStack(preview) {
+    const pagesEl = document.querySelector('[data-preview-pages]');
+    if (!pagesEl) return;
+
+    pagesEl.replaceChildren();
+    const navEl = document.querySelector('[data-page-nav]');
+    navEl?.replaceChildren();
+    for (const pageData of preview.pages) {
+      navEl?.append(createPageNavButton(pageData.number, pageData.label));
+      if (pageData.kind === 'cover') {
+        pagesEl.append(createCoverPage(preview.coverPages?.[pageData.coverIndex ?? 0] ?? preview.cover, pageData.number));
+        continue;
+      }
+      const page = createContentPage(pageData.number, pageData.label);
+      const sectionsEl = page.querySelector('[data-preview-sections]');
+      if (pageData.sections.length) {
+        sectionsEl?.append(...pageData.sections.map(renderSectionChunk));
+      } else {
+        sectionsEl?.append(createEmptySection());
+      }
+      pagesEl.append(page);
+    }
+  }
+
+  function createPageNavButton(pageNumber, label) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'preview-page-pill';
+    button.textContent = `Página ${pageNumber}`;
+    button.title = label;
+    button.addEventListener('click', () => {
+      document.getElementById(`preview-page-${pageNumber}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return button;
+  }
+
+  function createCoverPage(cover, pageNumber) {
+    const imageOnly = cover.render_mode === 'full_page_image';
+    const page = createPreviewPage(pageNumber, `Portada ${pageNumber}`, `Página PDF de portada ${pageNumber}`, imageOnly);
+    if (imageOnly) page.classList.add('preview-page--image-cover');
+    const coverEl = document.createElement('div');
+    coverEl.className = 'preview-cover';
+    if (imageOnly) coverEl.classList.add('preview-cover--image-only');
+    coverEl.style.textAlign = cover.alignment || 'left';
+    coverEl.style.minHeight = imageOnly ? '100%' : normalizeHeight(cover.height, 260);
+    coverEl.style.opacity = normalizeOpacity(cover.opacity);
+    coverEl.style.backgroundImage = cover.background ? `${imageOnly ? '' : 'linear-gradient(135deg, rgba(24,32,42,0.9), rgba(16,20,26,0.72)), '}url(${JSON.stringify(cover.background).slice(1, -1)})` : '';
+
+    if (imageOnly) {
+      page.append(coverEl);
+      return page;
+    }
+
+    const yearEl = document.createElement('span');
+    yearEl.textContent = cover.year || 'Todo Huincha';
+    const titleEl = document.createElement('h3');
+    titleEl.textContent = cover.title || 'Catálogo Industrial';
+    const subtitleEl = document.createElement('p');
+    subtitleEl.textContent = cover.subtitle || 'Vista previa conectada al borrador local.';
+
+    coverEl.append(yearEl, titleEl, subtitleEl);
+    page.append(coverEl);
+    return page;
+  }
+
+  function createContentPage(pageNumber, label) {
+    const page = createPreviewPage(pageNumber, label, `Página PDF ${pageNumber}: ${label}`);
+    const sectionsEl = document.createElement('div');
+    sectionsEl.className = 'preview-sections';
+    sectionsEl.dataset.previewSections = '';
+    page.append(sectionsEl);
+    return page;
+  }
+
+  function createEmptyContentPage(pageNumber) {
+    const page = createContentPage(pageNumber, 'Contenido vacío');
+    const sectionsEl = page.querySelector('[data-preview-sections]');
+    sectionsEl?.append(createEmptySection());
+    return page;
+  }
+
+  function createEmptySection() {
+    const emptyEl = document.createElement('section');
+    emptyEl.className = 'preview-section preview-empty-state';
+    const titleEl = document.createElement('h4');
+    titleEl.textContent = 'Sin secciones activas';
+    const copyEl = document.createElement('p');
+    copyEl.textContent = 'Agregá o activá secciones en el editor para previsualizar páginas de contenido.';
+    emptyEl.append(titleEl, copyEl);
+    return emptyEl;
+  }
+
+  function createPreviewPage(pageNumber, label, ariaLabel, omitLabel = false) {
+    const page = document.createElement('article');
+    page.className = 'preview-page';
+    page.id = `preview-page-${pageNumber}`;
+    page.setAttribute('aria-label', ariaLabel);
+
+    if (!omitLabel) {
+      const labelEl = document.createElement('div');
+      labelEl.className = 'preview-page-label';
+      labelEl.innerHTML = `<span>Página ${pageNumber}</span><strong>${escapeHtml(label)}</strong>`;
+      page.append(labelEl);
+    }
+    return page;
+  }
+
+  function renderSectionChunk(chunk) {
+    const sectionEl = document.createElement('section');
+    sectionEl.className = chunk.block === 'category_section' ? 'preview-section preview-category-section' : 'preview-section';
+    sectionEl.style.textAlign = chunk.alignment || 'left';
+    if (chunk.block !== 'category_section') {
+      sectionEl.style.opacity = normalizeOpacity(chunk.opacity);
+      if (chunk.background) sectionEl.style.backgroundImage = `linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0.98)), url(${JSON.stringify(chunk.background).slice(1, -1)})`;
+    }
+
+    const titleEl = document.createElement('h4');
+    titleEl.textContent = chunk.title || chunk.block;
+    const metaEl = document.createElement('p');
+
+    if (chunk.block === 'category_section' && chunk.category) {
+      titleEl.textContent = `${chunk.category.label}${chunk.continuation ? ' · continuación' : ''}`;
+      metaEl.textContent = `${chunk.products.length} de ${chunk.totalProducts} productos · ${chunk.showPrices ? 'precios visibles' : 'precios ocultos'} · ${chunk.category.code}`;
+      const categoryIntro = renderCategoryIntro(chunk.category);
+      const tableEl = document.createElement('div');
+      tableEl.className = 'preview-product-table';
+      tableEl.append(...chunk.products.map((product) => renderProductRow(product, chunk.showPrices)));
+      sectionEl.append(titleEl, metaEl, categoryIntro, tableEl);
+      return sectionEl;
+    }
+    metaEl.textContent = chunk.newPage ? 'Comienza en nueva página.' : 'Continúa en la página actual.';
+    sectionEl.append(titleEl, metaEl);
+    return sectionEl;
+  }
+
+  function renderCategoryIntro(category) {
+    const categoryEl = document.createElement('article');
+    categoryEl.className = 'preview-category-intro';
+    const labelEl = document.createElement('strong');
+    labelEl.textContent = `${category.productsCount} productos reales`;
+    const descriptionEl = document.createElement('span');
+    descriptionEl.textContent = category.description || 'Sin descripción.';
+    categoryEl.append(labelEl, descriptionEl);
+    return categoryEl;
+  }
+
+  function renderProductRow(product, showPrices) {
+    const row = document.createElement('article');
+    row.className = 'preview-product-row';
+    const skuEl = document.createElement('strong');
+    skuEl.textContent = product.sku;
+    const nameEl = document.createElement('span');
+    nameEl.textContent = product.displayName;
+    const typeEl = document.createElement('small');
+    typeEl.textContent = `${product.itemType} · ${product.density}`;
+    const priceEl = document.createElement('b');
+    priceEl.textContent = showPrices ? product.formattedPrice : 'Precio oculto';
+    row.append(skuEl, nameEl, typeEl, priceEl);
+    return row;
+  }
+
+  function buildPreviewData(state, categories) {
+    const coverPages = Array.isArray(state.cover_pages) && state.cover_pages.length ? state.cover_pages : [state.cover];
+    const pages = coverPages.map((_, index) => ({ number: index + 1, kind: 'cover', label: `Portada ${index + 1}`, sections: [], usedRows: 0, coverIndex: index }));
+    const renderedCategoryCodes = new Set();
+    let productRowsRendered = 0;
+    let currentPage = null;
+
+    const startContentPage = (label = 'Contenido') => {
+      const page = { number: pages.length + 1, kind: 'content', label, sections: [], usedRows: 0 };
+      pages.push(page);
+      currentPage = page;
+      return page;
+    };
+    const ensurePage = (requiredRows, forceNew = false) => {
+      if (!currentPage || forceNew || currentPage.usedRows + requiredRows > ROWS_PER_PAGE) return startContentPage();
+      return currentPage;
+    };
+
+    for (const section of (state.sections ?? []).filter((item) => item.enabled !== false)) {
+      if (section.block !== 'category_section') {
+        const page = ensurePage(FIXED_SECTION_ROW_COST, section.new_page === true);
+        page.sections.push(toFixedChunk(section));
+        page.usedRows += FIXED_SECTION_ROW_COST;
+        continue;
+      }
+      if (section.new_page === true || !currentPage) startContentPage('Productos');
+      const selectedCategories = section.category_filter && section.category_filter !== 'all'
+        ? categories.filter((category) => category.code === section.category_filter)
+        : categories;
+      for (const category of selectedCategories) {
+        renderedCategoryCodes.add(category.code);
+        const productRowsPerCategoryPage = Math.max(1, ROWS_PER_PAGE - CATEGORY_SECTION_CHROME_ROW_COST);
+        const chunks = chunkProducts(category.products, productRowsPerCategoryPage);
+        if (!chunks.length) chunks.push([]);
+        chunks.forEach((products, index) => {
+          const requiredRows = CATEGORY_SECTION_CHROME_ROW_COST + Math.max(1, products.length);
+          const page = ensurePage(requiredRows, index > 0);
+          page.sections.push(toCategoryChunk(section, category, products, index > 0));
+          page.usedRows += requiredRows;
+          productRowsRendered += products.length;
+        });
+      }
+    }
+    if (pages.length === 1) startContentPage('Contenido vacío');
+    return { cover: state.cover ?? initialPreviewData.cover, coverPages, categories, pages, counts: { categoriesRendered: renderedCategoryCodes.size, productRowsRendered, pages: pages.length } };
+  }
+
+  function toFixedChunk(section) {
+    return { id: section.id, block: section.block, title: section.title || section.block, alignment: section.alignment || 'left', background: section.background || '', opacity: section.opacity || '100', showPrices: section.show_prices !== false, newPage: section.new_page === true, products: [], continuation: false, totalProducts: 0 };
+  }
+
+  function toCategoryChunk(section, category, products, continuation) {
+    return { id: section.id, block: section.block, title: section.title || 'Productos por categoría', alignment: section.alignment || 'left', background: section.background || category.backgroundUrl || '', opacity: section.opacity || '100', showPrices: section.show_prices !== false, newPage: section.new_page === true, category, products, continuation, totalProducts: category.products.length };
+  }
+
+  function chunkProducts(products, size) {
+    const chunks = [];
+    for (let index = 0; index < products.length; index += size) chunks.push(products.slice(index, index + size));
+    return chunks;
+  }
+
+  function applyCategoryDrafts(categories, draft) {
+    if (!Array.isArray(draft)) return categories;
+    const byCode = new Map(draft.map((category) => [category.code, category]));
+    return categories.map((category) => {
+      const overlay = byCode.get(category.code);
+      if (!overlay) return category;
+      return {
+        ...category,
+        description: overlay.description || category.description,
+        bannerUrl: overlay.bannerUrl || category.bannerUrl,
+        backgroundUrl: overlay.backgroundUrl || category.backgroundUrl,
+      };
+    });
+  }
+
+  function updateCounts(counts) {
+    if (categoriesCountEl) categoriesCountEl.textContent = `${counts.categoriesRendered} categorías renderizadas`;
+    if (productsCountEl) productsCountEl.textContent = `${counts.productRowsRendered} filas de producto`;
+    if (pagesCountEl) pagesCountEl.textContent = `${counts.pages} páginas visuales`;
+  }
+
+  function readDraft(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function normalizeHeight(value, fallback) {
+    if (!value || value === 'auto') return `${fallback}px`;
+    return /^\d+$/.test(String(value)) ? `${value}px` : String(value);
+  }
+
+  function normalizeOpacity(value) {
+    const numeric = Number(value ?? 100);
+    if (!Number.isFinite(numeric)) return '1';
+    return String(Math.min(100, Math.max(20, numeric)) / 100);
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+  }
+
+</script>
+
+<style is:global>
+  .preview-shell { display: grid; grid-template-columns: minmax(260px, 0.45fr) minmax(520px, 1fr); gap: 22px; align-items: start; }
+  .preview-copy { position: sticky; top: 104px; max-height: calc(100vh - 124px); overflow: auto; }
+  .preview-copy h2 { font-size: 1.45rem; }
+  .preview-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .secondary-button { background: rgba(255,255,255,0.06); color: var(--admin-ink); border-color: var(--admin-line-strong); }
+  .disabled-button:disabled { cursor: not-allowed; opacity: 0.56; transform: none; filter: none; }
+  .preview-page-nav { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--admin-line); }
+  .preview-page-pill { min-height: 30px; padding: 6px 10px; border: 1px solid var(--admin-line-strong); border-radius: 999px; background: rgba(255,255,255,0.055); color: var(--admin-ink); font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+  .preview-page-pill:hover, .preview-page-pill:focus-visible { background: var(--admin-accent); color: #211309; }
+  .preview-pages { display: grid; justify-items: center; gap: 34px; }
+  .preview-page { width: min(100%, 794px); min-height: 1123px; padding: 28px 34px 34px; border: 1px solid #c9d1dc; border-radius: 8px; background: #ffffff; color: #18202a; box-shadow: 0 3px 0 rgba(255,255,255,0.74), 0 22px 50px rgba(0, 0, 0, 0.32); overflow: hidden; scroll-margin-top: 104px; }
+  .preview-page--image-cover { display: grid; padding: 0; }
+  .preview-page-label { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 18px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 0.78rem; font-weight: 850; letter-spacing: 0.03em; text-transform: uppercase; }
+  .preview-page-label strong { min-width: 0; color: #18202a; overflow-wrap: anywhere; text-align: right; }
+  .preview-cover { min-height: 260px; padding: 28px; border-radius: 18px; background: linear-gradient(135deg, #18202a, #10141a); background-size: cover; background-position: center; color: #f6f3ee; }
+  .preview-cover--image-only { min-height: 1123px; padding: 0; border-radius: 0; background-size: cover; background-position: center; }
+  .preview-cover span { color: var(--admin-accent); font-weight: 900; }
+  .preview-cover h3 { margin: 42px 0 8px; font-size: 2.5rem; letter-spacing: -0.04em; }
+  .preview-cover p { max-width: 420px; color: #dce3ee; }
+  .preview-sections { display: grid; gap: 16px; margin-top: 0; }
+  .preview-section { min-width: 0; padding: 18px; border-radius: 14px; background: #fff; border: 1px solid #dbe3ed; background-size: cover; background-position: center; }
+  .preview-category-section { display: grid; gap: 10px; background: #ffffff; opacity: 1 !important; }
+  .preview-section h4 { margin: 0; color: #111827; font-size: 1.08rem; line-height: 1.18; overflow-wrap: anywhere; text-wrap: balance; }
+  .preview-section p { margin: 0; color: #425168; font-size: 0.82rem; font-weight: 700; }
+  .preview-empty-state { display: grid; place-content: center; min-height: 300px; text-align: center; border-style: dashed; background: rgba(255, 255, 255, 0.72); }
+  .preview-category-intro { display: grid; gap: 3px; margin: 0; padding: 10px 12px; border-radius: 10px; background: #fff4ec; border: 1px solid #fed7aa; color: #1f2937; text-align: left; }
+  .preview-category-intro strong, .preview-category-intro span { display: block; }
+  .preview-category-intro span { color: #374151; font-size: 0.82rem; line-height: 1.35; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .preview-product-table { display: grid; gap: 5px; text-align: left; }
+  .preview-product-row { display: grid; grid-template-columns: 82px minmax(0, 1fr) 118px 104px; gap: 10px; align-items: start; min-width: 0; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #18202a; font-size: 0.76rem; line-height: 1.25; }
+  .preview-product-row strong { color: #c2410c; font-size: 0.74rem; overflow-wrap: anywhere; }
+  .preview-product-row span { min-width: 0; color: #111827; font-weight: 800; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .preview-product-row small { min-width: 0; color: #475569; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .preview-product-row b { justify-self: end; color: #111827; font-size: 0.74rem; white-space: nowrap; }
+  @media (max-width: 620px) { .preview-product-row { grid-template-columns: 64px minmax(0, 1fr); } .preview-product-row small, .preview-product-row b { display: none; } }
+  @media (max-width: 920px) { .preview-shell { grid-template-columns: 1fr; } .preview-copy { position: static; max-height: none; } .preview-page { min-height: 980px; padding: 22px 18px; } }
+</style>

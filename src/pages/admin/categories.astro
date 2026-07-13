@@ -1,0 +1,388 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getCategorySummaries } from '../../lib/admin-ui-data';
+import {
+  readOutputVisibility,
+  resolveCategoryVisibility,
+  type CatalogVisibility,
+} from '../../lib/admin-visibility';
+
+const categories = getCategorySummaries();
+const visibility: CatalogVisibility = await readOutputVisibility();
+const categoriesWithVisibility = categories.map((category) => ({
+  ...category,
+  visibility: resolveCategoryVisibility(visibility, category.code),
+}));
+const categoriesJson = JSON.stringify(categoriesWithVisibility).replaceAll('<', '\u003c');
+const visibilityJson = JSON.stringify(visibility);
+const canPersistToRepo = import.meta.env.DEV;
+const saveEndpoint = canPersistToRepo ? '/api/admin/categories.json' : '';
+const visibilityEndpoint = '/api/admin/visibility.json';
+---
+
+<AdminLayout title="Categorías | Admin Todo Huincha" section="categories" autosaveStatus="Borrador local listo">
+  <span slot="title">Categorías</span>
+
+  <section class="save-strip" aria-label="Guardar categorías">
+    <div>
+      <strong>Editor funcional de categorías</strong>
+      <p>Edita solo campos existentes: <code>description</code>, <code>assets.banner.url</code> y <code>assets.background.url</code>. La visibilidad se guarda aparte y nunca toca las keys top-level.</p>
+    </div>
+    <div class="save-actions">
+      <span class="status-pill" role="status" aria-live="polite" data-category-status><span aria-hidden="true"></span>Borrador local listo</span>
+      <button class="admin-button" type="button" data-save-visibility disabled={!canPersistToRepo}>Guardar visibilidad</button>
+      <button class="admin-button" type="button" data-save-categories disabled={!canPersistToRepo}>Guardar categorías</button>
+    </div>
+  </section>
+
+  <section class="categories-editor" aria-label="Editor de datos por categoría">
+    <aside class="admin-panel-frame categories-list-panel" aria-labelledby="categories-list-title">
+      <div class="panel-head">
+        <span class="admin-kicker">Categorías</span>
+        <h2 id="categories-list-title">Seleccioná una categoría</h2>
+      </div>
+      <div class="panel-body categories-pick-list" data-category-list></div>
+    </aside>
+
+    <article class="admin-panel-frame category-form-panel" aria-labelledby="category-form-title">
+      <div class="panel-head">
+        <span class="admin-kicker">Propiedades</span>
+        <h2 id="category-form-title" data-category-title>Descripción y assets</h2>
+        <p class="selection-copy" data-category-summary>Seleccioná una categoría para editar sus campos existentes.</p>
+      </div>
+      <div class="panel-body">
+        <label class="form-field">
+          <span class="field-label">Descripción</span>
+          <textarea class="admin-textarea tall-textarea" data-category-field="description"></textarea>
+        </label>
+        <label class="form-field">
+          <span class="field-label">Banner URL existente</span>
+          <input class="admin-input" data-category-field="bannerUrl" type="text" />
+          <small>Path actual del JSON. Upload/crop queda para .NET/storage.</small>
+        </label>
+        <label class="form-field">
+          <span class="field-label">Background PDF URL existente</span>
+          <input class="admin-input" data-category-field="backgroundUrl" type="text" />
+          <small>Se refleja en el preview sin crear campos nuevos.</small>
+        </label>
+
+        <fieldset class="visibility-block" data-category-visibility>
+          <legend class="field-label">Visibilidad</legend>
+          <p class="form-hint">El administrador siempre ve todo, sin importar las flags. Las dos columnas son <em>Visible para vendedor</em> y <em>Visible para público</em>. Si ambas quedan apagadas, es borrador.</p>
+          <label class="toggle-field">
+            <input type="checkbox" data-visibility-toggle="vendor" />
+            <span>Visible para vendedor</span>
+          </label>
+          <label class="toggle-field">
+            <input type="checkbox" data-visibility-toggle="public" />
+            <span>Visible para público</span>
+          </label>
+          <p class="form-hint" data-visibility-hint>Elegí una categoría para editar su visibilidad.</p>
+        </fieldset>
+      </div>
+    </article>
+
+    <article class="admin-panel-frame category-preview-panel" aria-labelledby="category-preview-title">
+      <div class="panel-head">
+        <span class="admin-kicker">Preview</span>
+        <h2 id="category-preview-title">Cómo queda en el catálogo</h2>
+      </div>
+      <div class="panel-body">
+        <div class="category-preview-card" data-category-preview>
+          <span class="admin-chip">Sin selección</span>
+          <h3>Elegí una categoría</h3>
+          <p>Los cambios se guardan como borrador local y se reflejan acá al instante.</p>
+        </div>
+      </div>
+    </article>
+  </section>
+</AdminLayout>
+
+<script is:inline define:vars={{ categoriesJson, visibilityJson, canPersistToRepo, saveEndpoint, visibilityEndpoint }}>
+  const CATEGORIES_DRAFT_KEY = 'admin:draft:categories';
+  const VISIBILITY_DRAFT_KEY = 'admin:draft:visibility';
+  const initialCategories = JSON.parse(categoriesJson);
+  // Persisted visibility block from the server. Used to:
+  //  - build `products.by_sku` correctly (preserve existing per-SKU overrides)
+  //  - resolve the real `categories.default` (NOT the first category's flags)
+  //  - initialise `products.default` (which is unrelated to any category entry)
+  const initialVisibility = JSON.parse(visibilityJson);
+  const categoryState = readDraft(CATEGORIES_DRAFT_KEY) ?? initialCategories.map((category) => ({
+    code: category.code,
+    label: category.label,
+    group: category.group,
+    productsCount: category.productsCount,
+    description: category.description,
+    bannerUrl: category.bannerUrl ?? '',
+    backgroundUrl: category.backgroundUrl ?? '',
+  }));
+
+  const initialVisibilityMap = Object.fromEntries(
+    initialCategories.map((category) => [category.code, { ...category.visibility }])
+  );
+  const visibilityDraft = readDraft(VISIBILITY_DRAFT_KEY) ?? freshVisibilityDraft();
+  const visibilityByCode = { ...initialVisibilityMap };
+  for (const [code, flags] of Object.entries(visibilityDraft.by_code ?? {})) {
+    visibilityByCode[code] = mergeFlags(visibilityByCode[code], flags);
+  }
+  // FIX B3: the default for categories MUST come from the persisted
+  // categories.default, NOT from the first category's resolved visibility
+  // (which is per-category and may include an override).
+  const visibilityDefault = mergeFlags(initialVisibility.categories?.default, visibilityDraft.default);
+
+  let selectedCode = categoryState[0]?.code ?? '';
+  const listEl = document.querySelector('[data-category-list]');
+  const titleEl = document.querySelector('[data-category-title]');
+  const summaryEl = document.querySelector('[data-category-summary]');
+  const previewEl = document.querySelector('[data-category-preview]');
+  const statusEl = document.querySelector('[data-category-status]');
+  const saveCategoriesButton = document.querySelector('[data-save-categories]');
+  const saveVisibilityButton = document.querySelector('[data-save-visibility]');
+  const visibilityFieldset = document.querySelector('[data-category-visibility]');
+  const visibilityHint = document.querySelector('[data-visibility-hint]');
+  const vendorToggle = visibilityFieldset?.querySelector('[data-visibility-toggle="vendor"]');
+  const publicToggle = visibilityFieldset?.querySelector('[data-visibility-toggle="public"]');
+
+  renderList();
+  renderSelection();
+  renderVisibilityField();
+  persistDraft('Borrador local listo');
+  if (!canPersistToRepo && saveCategoriesButton) saveCategoriesButton.title = 'Disponible solo en admin local/dev con servidor Astro.';
+  if (!canPersistToRepo && saveVisibilityButton) saveVisibilityButton.title = 'Disponible solo en admin local/dev con servidor Astro.';
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const button = target.closest('[data-category-code]');
+    if (!(button instanceof HTMLElement)) return;
+    selectedCode = button.dataset.categoryCode ?? selectedCode;
+    renderSelection();
+    renderVisibilityField();
+  });
+
+  document.addEventListener('input', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+    const field = target.dataset.categoryField;
+    if (!field) return;
+    const category = getSelectedCategory();
+    if (!category) return;
+    category[field] = target.value;
+    renderList();
+    renderPreview(category);
+    persistDraft('Borrador local actualizado');
+  });
+
+  document.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+    const which = target.dataset.visibilityToggle;
+    if (!which) return;
+    const category = getSelectedCategory();
+    if (!category) return;
+    const current = visibilityByCode[category.code] ?? { ...visibilityDefault };
+    const next = {
+      visible_to_vendor: which === 'vendor' ? target.checked : current.visible_to_vendor,
+      visible_to_public: which === 'public' ? target.checked : current.visible_to_public,
+    };
+    visibilityByCode[category.code] = next;
+    visibilityDraft.by_code = visibilityByCode;
+    persistDraft('Visibilidad local actualizada');
+    renderPreview(category);
+  });
+
+  saveCategoriesButton?.addEventListener('click', async () => {
+    if (!canPersistToRepo) {
+      setStatus('Export estático: no puede guardar en el repositorio', 'error');
+      return;
+    }
+    setStatus('Guardando categorías…', 'pending');
+    saveCategoriesButton.disabled = true;
+    try {
+      const response = await fetch(saveEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ categories: categoryState }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(' ') : 'No se pudo guardar.');
+      localStorage.removeItem(CATEGORIES_DRAFT_KEY);
+      setStatus('Categorías guardadas en JSON', 'saved');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo guardar.', 'error');
+    } finally {
+      saveCategoriesButton.disabled = false;
+    }
+  });
+
+  saveVisibilityButton?.addEventListener('click', async () => {
+    if (!canPersistToRepo) {
+      setStatus('Export estático: no puede guardar en el repositorio', 'error');
+      return;
+    }
+    setStatus('Guardando visibilidad…', 'pending');
+    saveVisibilityButton.disabled = true;
+    try {
+      // FIX B2 + B3: do NOT send an empty products.by_sku (that would wipe
+      // per-SKU overrides the user never touched in this editor). Merge
+      // with the persisted products.by_sku. And do NOT use the first
+      // category's flags as products.default — read it from
+      // initialVisibility.products.default.
+      const existingProductsBySku = (initialVisibility.products && initialVisibility.products.by_sku) || {};
+      const payload = {
+        products: {
+          default: { ...(initialVisibility.products?.default ?? { visible_to_vendor: true, visible_to_public: false }) },
+          by_sku: { ...existingProductsBySku },
+        },
+        categories: {
+          default: visibilityDefault,
+          by_code: { ...visibilityByCode },
+        },
+      };
+      const response = await fetch(visibilityEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(Array.isArray(result.errors) ? result.errors.join(' ') : 'No se pudo guardar.');
+      }
+      persistDraft('Visibilidad guardada en JSON');
+      localStorage.removeItem(VISIBILITY_DRAFT_KEY);
+      setStatus('Visibilidad guardada en JSON', 'saved');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'No se pudo guardar.', 'error');
+    } finally {
+      saveVisibilityButton.disabled = false;
+    }
+  });
+
+  function freshVisibilityDraft() {
+    return { default: undefined, by_code: {} };
+  }
+
+  function mergeFlags(base, override) {
+    return {
+      visible_to_vendor: typeof override?.visible_to_vendor === 'boolean' ? override.visible_to_vendor : (base?.visible_to_vendor ?? true),
+      visible_to_public: typeof override?.visible_to_public === 'boolean' ? override.visible_to_public : (base?.visible_to_public ?? false),
+    };
+  }
+
+  function renderList() {
+    if (!listEl) return;
+    listEl.innerHTML = categoryState.map((category) => {
+      const flags = visibilityByCode[category.code] ?? visibilityDefault;
+      const visibilityLabel = describeFlags(flags);
+      return `<button type="button" class="category-pick ${category.code === selectedCode ? 'is-selected' : ''}" data-category-code="${escapeAttribute(category.code)}"><strong>${escapeHtml(category.label)}</strong><small>${escapeHtml(category.code)} · ${category.productsCount} productos</small><small class="badge">${escapeHtml(visibilityLabel)}</small></button>`;
+    }).join('');
+  }
+
+  function renderSelection() {
+    const category = getSelectedCategory();
+    if (!category) return;
+    if (titleEl) titleEl.textContent = category.label;
+    if (summaryEl) summaryEl.textContent = `${category.code} · ${category.group} · ${category.productsCount} productos`;
+    setInput('description', category.description);
+    setInput('bannerUrl', category.bannerUrl);
+    setInput('backgroundUrl', category.backgroundUrl);
+    renderList();
+    renderPreview(category);
+  }
+
+  function renderVisibilityField() {
+    const category = getSelectedCategory();
+    if (!category) return;
+    const flags = visibilityByCode[category.code] ?? visibilityDefault;
+    if (vendorToggle instanceof HTMLInputElement) vendorToggle.checked = Boolean(flags.visible_to_vendor);
+    if (publicToggle instanceof HTMLInputElement) publicToggle.checked = Boolean(flags.visible_to_public);
+    if (visibilityHint) {
+      visibilityHint.textContent = describeFlags(flags) + (bothOff(flags) ? ' · borrador (no publicado)' : '');
+    }
+  }
+
+  function renderPreview(category) {
+    if (!previewEl) return;
+    const background = category.backgroundUrl || category.bannerUrl || '';
+    const flags = visibilityByCode[category.code] ?? visibilityDefault;
+    previewEl.style.backgroundImage = background ? `linear-gradient(135deg, rgba(17,21,27,0.88), rgba(17,21,27,0.58)), url(${JSON.stringify(background).slice(1, -1)})` : '';
+    previewEl.innerHTML = `<span class="admin-chip">${escapeHtml(category.code)}</span><h3>${escapeHtml(category.label)}</h3><p>${escapeHtml(category.description || 'Sin descripción.')}</p><small>Banner: ${escapeHtml(category.bannerUrl || 'sin URL')}<br/>Background: ${escapeHtml(category.backgroundUrl || 'sin URL')}<br/>Visibilidad: ${escapeHtml(describeFlags(flags))}</small>`;
+  }
+
+  function describeFlags(flags) {
+    if (!flags) return 'vendedor sí · público no';
+    const parts = [`vendedor ${flags.visible_to_vendor ? 'sí' : 'no'}`, `público ${flags.visible_to_public ? 'sí' : 'no'}`];
+    return parts.join(' · ');
+  }
+
+  function bothOff(flags) {
+    return !flags.visible_to_vendor && !flags.visible_to_public;
+  }
+
+  function persistDraft(message) {
+    localStorage.setItem(VISIBILITY_DRAFT_KEY, JSON.stringify({ default: visibilityDraft.default, by_code: visibilityByCode }));
+    setStatus(message, 'draft');
+  }
+
+  function getSelectedCategory() {
+    return categoryState.find((category) => category.code === selectedCode) ?? categoryState[0];
+  }
+
+  function setInput(field, value) {
+    const input = document.querySelector(`[data-category-field="${field}"]`);
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.value = String(value ?? '');
+  }
+
+  function readDraft(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function setStatus(message, tone) {
+    if (!statusEl) return;
+    statusEl.dataset.tone = tone;
+    statusEl.lastChild.textContent = message;
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value).replace(/'/g, '&#39;');
+  }
+</script>
+
+<style>
+  code { color: var(--admin-accent); }
+  .save-strip { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding: 16px; border: 1px solid var(--admin-line); border-radius: var(--admin-radius-lg); background: rgba(255,255,255,0.055); }
+  .save-strip p { margin: 4px 0 0; color: var(--admin-muted); }
+  .save-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .status-pill[data-tone="error"] { color: #fecaca; border-color: rgba(248, 113, 113, 0.42); }
+  .status-pill[data-tone="error"] span { background: #f87171; box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.14); }
+  .status-pill[data-tone="pending"] span { background: var(--admin-accent); box-shadow: 0 0 0 4px rgba(255, 138, 61, 0.16); }
+  .categories-editor { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(380px, 1.2fr) minmax(320px, 1fr); gap: 16px; align-items: start; }
+  .categories-pick-list { display: grid; gap: 8px; max-height: 720px; overflow: auto; }
+  .category-pick { width: 100%; padding: 12px; border: 1px solid var(--admin-line); border-radius: 14px; background: rgba(255,255,255,0.045); color: var(--admin-ink); text-align: left; cursor: pointer; font: inherit; }
+  .category-pick.is-selected { border-color: rgba(255, 138, 61, 0.64); background: rgba(255, 138, 61, 0.1); }
+  .category-pick strong, .category-pick small { display: block; }
+  .category-pick small, .selection-copy { color: var(--admin-muted); }
+  .category-pick .badge { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(255, 138, 61, 0.16); color: var(--admin-accent); font-size: 0.72rem; font-weight: 800; }
+  .form-field small { color: var(--admin-muted); }
+  .tall-textarea { min-height: 200px; }
+  .visibility-block { width: 100%; border: 1px solid var(--admin-line); border-radius: 14px; padding: 14px; margin-top: 18px; background: rgba(255,255,255,0.04); }
+  .visibility-block legend { padding: 0 8px; }
+  .visibility-block .form-hint { margin: 0 0 12px; color: var(--admin-muted); font-size: 0.78rem; }
+  .visibility-block .toggle-field { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .toggle-field input { width: 16px; height: 16px; accent-color: var(--admin-accent); }
+  .category-preview-card { min-height: 430px; padding: 22px; border-radius: 18px; background-color: #11151b; background-size: cover; background-position: center; color: var(--admin-ink); display: flex; flex-direction: column; justify-content: flex-end; }
+  .category-preview-card h3 { margin: 14px 0 8px; font-size: 1.7rem; }
+  .category-preview-card p { color: #dce3ee; }
+  .category-preview-card small { color: #b8c1cf; overflow-wrap: anywhere; }
+  @media (max-width: 1180px) { .categories-editor { grid-template-columns: 1fr; } }
+  @media (max-width: 720px) { .save-strip { align-items: flex-start; flex-direction: column; } }
+</style>

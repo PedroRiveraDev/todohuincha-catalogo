@@ -1,0 +1,30 @@
+---
+import type { CatalogSection } from '../../lib/admin-types';
+
+interface Props {
+  section: CatalogSection;
+  index: number;
+}
+
+const { section, index } = Astro.props;
+const blockLabels: Record<string, string> = {
+  title: 'Título',
+  description: 'Descripción',
+  category_section: 'Sección de categoría',
+  back_cover: 'Contraportada',
+};
+const data = (section.data ?? {}) as Record<string, unknown>;
+const title = typeof data.title === 'string' && data.title ? data.title : blockLabels[section.block] ?? section.block;
+const enabled = typeof data.enabled === 'boolean' ? data.enabled : true;
+---
+
+<article class:list={["canvas-band", "section-band", `band-${section.block}`, { "is-disabled": !enabled }]} tabindex="0" role="button" data-canvas-section-index={index} aria-label={`Seleccionar bloque ${index + 1}: ${blockLabels[section.block] ?? section.block}`}>
+  <div class="band-grip" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="section-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
+  <div class="band-copy">
+    <span class="admin-kicker">{section.type === 'variable' ? 'Datos del JSON' : 'Bloque fijo'}</span>
+    <h3>{title}</h3>
+    <p>{section.source ? `Origen: ${section.source}` : `ID: ${section.id}`}</p>
+  </div>
+  <span class="admin-chip">{enabled ? (section.template_rule ? `Regla: ${section.template_rule}` : 'Activo') : 'Desactivado'}</span>
+</article>

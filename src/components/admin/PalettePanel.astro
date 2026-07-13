@@ -1,0 +1,82 @@
+---
+import type { PaletteItem } from '../../lib/admin-types';
+
+interface Props {
+  items: PaletteItem[];
+}
+
+const { items } = Astro.props;
+const descriptions: Record<PaletteItem['kind'], string> = {
+  cover_page: 'Página inicial con imagen, marca y datos comerciales.',
+  section_title: 'Encabezado editable para abrir una parte del catálogo.',
+  section_separator: 'Corte visual simple para separar bloques sin inventar datos.',
+  section_description: 'Texto breve para explicar una categoría o familia.',
+  category_section: 'Tabla o grilla conectada a las categorías del JSON.',
+  legal_text: 'Cierre con condiciones comerciales y datos de contacto.',
+};
+const glyphs: Record<PaletteItem['kind'], string> = {
+  cover_page: '▧',
+  section_title: 'T',
+  section_separator: '—',
+  section_description: '¶',
+  category_section: '▦',
+  legal_text: '§',
+};
+---
+
+<section class="admin-panel-frame palette-panel" aria-labelledby="palette-title">
+  <div class="panel-head">
+    <span class="admin-kicker">Paleta</span>
+    <h2 id="palette-title">Componentes disponibles</h2>
+    <p>Click para agregar o arrastrá una tarjeta al preview.</p>
+  </div>
+  <div class="panel-body palette-list">
+    {items.map((item) => (
+      <button class="palette-item" type="button" draggable="true" data-palette-kind={item.kind} aria-label={`Agregar ${item.label}`} title="Click para agregar; también podés arrastrarlo al canvas.">
+        <span class="palette-glyph" aria-hidden="true">{glyphs[item.kind]}</span>
+        <span>
+          <strong>{item.label}</strong>
+          <small>{descriptions[item.kind]}</small>
+        </span>
+      </button>
+    ))}
+  </div>
+</section>
+
+<style>
+  .palette-list { display: grid; gap: 10px; }
+  .panel-head p { margin: 6px 0 0; color: var(--admin-muted); font-size: 0.82rem; }
+  .palette-item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 13px;
+    border: 1px solid var(--admin-line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.045);
+    color: var(--admin-ink);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .palette-item:hover { transform: translateY(-1px); border-color: rgba(255, 138, 61, 0.42); background: rgba(255, 138, 61, 0.08); }
+  .palette-item:active { cursor: grabbing; transform: translateY(0) scale(0.995); }
+  .palette-item:focus-visible { outline: 3px solid rgba(255, 138, 61, 0.42); outline-offset: 2px; }
+  .palette-item strong { display: block; font-size: 0.91rem; }
+  .palette-item small { display: block; margin-top: 2px; color: var(--admin-muted); font-size: 0.78rem; line-height: 1.35; }
+  .palette-glyph {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 138, 61, 0.28);
+    background: var(--admin-accent-soft);
+    color: var(--admin-accent);
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+  }
+</style>

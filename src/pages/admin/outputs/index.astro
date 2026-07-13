@@ -1,0 +1,48 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getOutputSummaries } from '../../../lib/admin-ui-data';
+
+const outputs = getOutputSummaries();
+---
+
+<AdminLayout title="Salidas PDF | Admin Todo Huincha" section="outputs">
+  <span slot="title">Salidas PDF</span>
+
+  <section class="admin-card" aria-labelledby="outputs-title">
+    <span class="admin-kicker">Configuración</span>
+    <h2 id="outputs-title">Tipos de documento definidos en el JSON</h2>
+    <p>El estado se muestra como lectura. La única salida editable en este slice es el catálogo completo.</p>
+
+    <div class="outputs-grid">
+      {outputs.map((output) => (
+        <article class:list={["output-row", { "is-readonly": output.key !== 'full_catalog_pdf' }]}>
+          <div>
+            <h3>{output.label}</h3>
+            <p>{output.description}</p>
+            <div class="row-meta">
+              <span class="admin-chip">{output.templateKey}</span>
+              <span class="admin-chip">Layout: {output.layoutStatus}</span>
+              <span class="admin-chip">{output.ruleCount} reglas</span>
+            </div>
+          </div>
+          <div class="output-actions">
+            <span class="status-pill" aria-label={`Estado de ${output.label}`}><span aria-hidden="true"></span>{output.enabled ? 'Activo' : 'Inactivo'}</span>
+            {output.key === 'full_catalog_pdf'
+              ? <a class="admin-button" href="/admin/outputs/full-catalog">Editar catálogo completo</a>
+              : <span class="readonly-pill" aria-disabled="true">Próxima etapa · solo lectura</span>}
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+</AdminLayout>
+
+<style>
+  .admin-card > p { max-width: 720px; }
+  .outputs-grid { margin-top: 18px; }
+  .output-row.is-readonly { opacity: 0.72; }
+  .output-row.is-readonly h3::after { content: "Solo lectura"; margin-left: 8px; padding: 4px 8px; border: 1px solid var(--admin-line); border-radius: 999px; color: var(--admin-muted); font-size: 0.72rem; font-weight: 750; vertical-align: middle; }
+  .output-actions { display: flex; align-items: center; gap: 12px; }
+  .readonly-pill { display: inline-flex; align-items: center; min-height: 36px; padding: 8px 12px; border: 1px dashed var(--admin-line-strong); border-radius: 999px; color: var(--admin-muted); background: rgba(255,255,255,0.035); font-weight: 800; font-size: 0.82rem; cursor: not-allowed; }
+  @media (max-width: 720px) { .output-actions { justify-content: space-between; } }
+</style>

@@ -1,0 +1,416 @@
+---
+const {
+  title = 'Admin Todo Huincha',
+  description = 'Panel administrativo para configurar la generación del catálogo PDF.',
+  section = 'admin',
+  autosaveStatus = 'Borrador local listo',
+} = Astro.props;
+
+const pathname = Astro.url.pathname;
+const navItems = [
+  { href: '/admin', label: 'Inicio', match: /^\/admin\/?$/ },
+  { href: '/admin/outputs', label: 'Salidas PDF', match: /^\/admin\/outputs/ },
+  { href: '/admin/categories', label: 'Categorías', match: /^\/admin\/categories/ },
+  { href: '/admin/products', label: 'Productos', match: /^\/admin\/products/ },
+  { href: '/admin/preview', label: 'Vista previa', match: /^\/admin\/preview/ },
+  { href: '/vendor', label: 'Vendedor', match: /^\/vendor/ },
+];
+
+const currentUser = Astro.locals.user;
+const currentRole = Astro.locals.role ?? currentUser?.role ?? null;
+const userLabel = currentUser ? currentUser.displayName : 'Sin sesión';
+const roleLabel = currentRole ?? 'invitado';
+const isAdminSection = pathname.startsWith('/admin');
+const isVendorSection = pathname.startsWith('/vendor');
+const meEndpoint = '/api/auth/me.json';
+const loginEndpoint = '/login';
+const logoutEndpoint = '/api/auth/logout.json';
+const meJson = JSON.stringify(currentUser ? {
+  id: currentUser.id,
+  email: currentUser.email,
+  displayName: currentUser.displayName,
+  role: currentUser.role,
+} : null);
+---
+
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="admin-shell" data-section={section}>
+    <a class="skip-link" href="#admin-content">Saltar al contenido principal</a>
+    <aside class="admin-sidebar" aria-label="Navegación administrativa">
+      <a class="admin-brand" href="/admin" aria-label="Ir al inicio del admin">
+        <span class="brand-mark" aria-hidden="true">TH</span>
+        <span>
+          <strong>Todo Huincha</strong>
+          <small>Editor de catálogo</small>
+        </span>
+      </a>
+
+      <nav class="admin-nav" aria-label="Secciones del admin">
+        {navItems.map((item) => (
+          <a href={item.href} class:list={{ 'is-active': item.match.test(pathname) }}>
+            <span aria-hidden="true"></span>
+            {item.label}
+          </a>
+        ))}
+      </nav>
+
+      <div class="sidebar-card" aria-label="Estado de seguridad">
+        <span class="sidebar-card__label">Sesión activa</span>
+        <strong>{userLabel}</strong>
+        <p>
+          {currentUser
+            ? `Rol: ${roleLabel}. Los cambios se guardan solo al usar Guardar cambios.`
+            : 'Iniciá sesión desde /login para usar la persistencia del editor.'}
+        </p>
+        <p class="session-actions" data-session-actions>
+          <a class="session-link" href={currentUser ? '#' : loginEndpoint} data-session-action={currentUser ? 'logout' : 'login'}>{currentUser ? 'Cerrar sesión' : 'Iniciar sesión'}</a>
+        </p>
+      </div>
+    </aside>
+
+    <div class="admin-main-shell">
+      <header class="admin-topbar">
+        <div>
+          <p class="admin-kicker">Panel administrativo</p>
+          <h1><slot name="title" /></h1>
+        </div>
+        <div class="topbar-actions" aria-label="Acciones del editor">
+          <span class="autosave-pill" role="status" aria-live="polite">
+            <span aria-hidden="true"></span>
+            {autosaveStatus}
+          </span>
+          {isAdminSection ? (
+            <a class="topbar-button" href="/admin/preview">Preview PDF</a>
+          ) : null}
+          {isVendorSection ? (
+            <span class="admin-chip">modo vendedor</span>
+          ) : null}
+        </div>
+      </header>
+
+      <main id="admin-content" class="admin-content">
+        <slot />
+      </main>
+    </div>
+
+    <script is:inline define:vars={{ meEndpoint, loginEndpoint, logoutEndpoint, meJson, isAdminSection, isVendorSection, userLabel, roleLabel, currentUser: meJson }}>
+      try { window.__AUTH__ = currentUser ? { user: JSON.parse(currentUser) } : null; } catch { window.__AUTH__ = null; }
+      try { if (currentUser) window.localStorage.setItem('th:auth:user', currentUser); else window.localStorage.removeItem('th:auth:user'); } catch {}
+
+      const actionLink = document.querySelector('[data-session-action]');
+      if (actionLink instanceof HTMLElement) {
+        actionLink.addEventListener('click', async (event) => {
+          event.preventDefault();
+          if (actionLink.dataset.sessionAction === 'logout') {
+            try { await fetch(logoutEndpoint, { method: 'POST' }); } catch {}
+            try { window.localStorage.removeItem('th:auth:user'); } catch {}
+            window.location.href = loginEndpoint;
+          } else {
+            window.location.href = loginEndpoint;
+          }
+        });
+      }
+
+      // Soft guard: prerendered admin/vendor pages ping /api/auth/me.json on
+      // load. SSR-rendered pages already have locals.role from middleware.
+      if (document.body.dataset.section !== 'login' && (isAdminSection || isVendorSection)) {
+        fetch(meEndpoint, { credentials: 'same-origin' })
+          .then((response) => {
+            if (response.status === 401) {
+              const target = (window.location.pathname.startsWith('/vendor') ? '/vendor' : '/admin') + '?next=' + encodeURIComponent(window.location.pathname);
+              window.location.href = `${loginEndpoint}?next=${encodeURIComponent(target)}`;
+            }
+            return response.json().catch(() => null);
+          })
+          .then((payload) => {
+            if (!payload || !payload.ok) return;
+            const role = payload?.user?.role;
+            if (isAdminSection && role !== 'admin') {
+              window.location.href = (role === 'vendor') ? '/vendor' : loginEndpoint;
+            }
+            if (isVendorSection && role !== 'vendor' && role !== 'admin') {
+              window.location.href = loginEndpoint;
+            }
+          })
+          .catch(() => {});
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --admin-bg: #0c0e12;
+    --admin-rail: #11151b;
+    --admin-panel: #171c24;
+    --admin-panel-2: #1f2630;
+    --admin-panel-3: #252d38;
+    --admin-ink: #f5f7fa;
+    --admin-muted: #aab3c2;
+    --admin-soft: #768294;
+    --admin-line: rgba(255, 255, 255, 0.11);
+    --admin-line-strong: rgba(255, 255, 255, 0.18);
+    --admin-accent: #ff8a3d;
+    --admin-accent-deep: #fb4d08;
+    --admin-accent-soft: rgba(255, 138, 61, 0.14);
+    --admin-green: #6ee7a8;
+    --admin-radius: 18px;
+    --admin-radius-lg: 24px;
+    --admin-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--admin-bg); }
+  body.admin-shell {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    background:
+      radial-gradient(circle at 28% -10%, rgba(251, 77, 8, 0.18), transparent 32rem),
+      radial-gradient(circle at 82% 8%, rgba(255, 138, 61, 0.08), transparent 26rem),
+      linear-gradient(135deg, #0c0e12 0%, #11151b 54%, #0b0d10 100%);
+    color: var(--admin-ink);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    transform: translateY(-150%);
+    background: var(--admin-accent);
+    color: #11151b;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 800;
+  }
+  .skip-link:focus { transform: translateY(0); outline: 3px solid rgba(255, 255, 255, 0.8); }
+
+  .admin-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    background: rgba(17, 21, 27, 0.88);
+    border-right: 1px solid var(--admin-line);
+  }
+
+  .admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    color: #16110d;
+    background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-deep));
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+  .admin-brand strong { display: block; font-size: 0.98rem; }
+  .admin-brand small { display: block; color: var(--admin-muted); font-size: 0.78rem; }
+
+  .admin-nav { display: grid; gap: 6px; }
+  .admin-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: var(--admin-muted);
+    text-decoration: none;
+    font-weight: 700;
+    transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .admin-nav a span {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.44;
+  }
+  .admin-nav a:hover, .admin-nav a:focus-visible, .admin-nav a.is-active {
+    color: var(--admin-ink);
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateX(2px);
+    outline: none;
+  }
+  .admin-nav a.is-active span { color: var(--admin-accent); opacity: 1; }
+
+  .sidebar-card {
+    margin-top: auto;
+    padding: 16px;
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius);
+    background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+  }
+  .sidebar-card__label, .admin-kicker, .field-label {
+    display: block;
+    color: var(--admin-accent);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sidebar-card strong { display: block; margin-top: 6px; }
+  .sidebar-card p { margin: 8px 0 0; color: var(--admin-muted); font-size: 0.86rem; }
+  .session-actions { margin-top: 10px; }
+  .session-link { display: inline-flex; min-height: 32px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--admin-line-strong); background: rgba(255,255,255,0.06); color: var(--admin-ink); font-weight: 800; font-size: 0.78rem; text-decoration: none; }
+  .session-link:hover { background: var(--admin-accent); color: #211309; border-color: var(--admin-accent); }
+
+  .admin-main-shell { min-width: 0; }
+  .admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    min-height: 84px;
+    padding: 18px clamp(18px, 3vw, 34px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    background: rgba(12, 14, 18, 0.82);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--admin-line);
+  }
+  .admin-topbar h1 { margin: 3px 0 0; font-size: 1.22rem; letter-spacing: -0.02em; }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .autosave-pill, .status-pill, .admin-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--admin-line);
+    color: var(--admin-muted);
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+  .autosave-pill span, .status-pill span {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--admin-green);
+    box-shadow: 0 0 0 4px rgba(110, 231, 168, 0.12);
+  }
+  .topbar-button, .admin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 138, 61, 0.44);
+    background: var(--admin-accent);
+    color: #211309;
+    text-decoration: none;
+    font-weight: 850;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), filter 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .topbar-button:hover, .admin-button:hover { transform: translateY(-1px); filter: brightness(1.03); }
+  .topbar-button:focus-visible, .admin-button:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 3px solid rgba(255, 138, 61, 0.42);
+    outline-offset: 2px;
+  }
+  .admin-content { padding: clamp(18px, 3vw, 34px); }
+
+  .admin-page-grid { display: grid; gap: 18px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .metric-card, .admin-card, .admin-panel-frame {
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius-lg);
+    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035));
+    box-shadow: var(--admin-shadow);
+  }
+  .metric-card { padding: 18px; }
+  .metric-card span { color: var(--admin-muted); font-size: 0.82rem; font-weight: 700; }
+  .metric-card strong { display: block; margin-top: 8px; font-size: 2rem; letter-spacing: -0.04em; }
+  .admin-card { padding: 20px; }
+  .admin-card h2, .admin-card h3 { margin: 0; letter-spacing: -0.02em; }
+  .admin-card p { color: var(--admin-muted); }
+  .admin-muted { color: var(--admin-muted); }
+
+  .outputs-grid, .categories-grid { display: grid; gap: 12px; }
+  .output-row, .category-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid var(--admin-line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+  .output-row h3, .category-row h3 { margin: 0 0 4px; font-size: 1rem; }
+  .output-row p, .category-row p { margin: 0; color: var(--admin-muted); }
+  .row-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .editor-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.75fr) minmax(440px, 1.65fr) minmax(270px, 0.95fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .admin-panel-frame { overflow: hidden; }
+  .panel-head {
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--admin-line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .panel-head h2 { margin: 3px 0 0; font-size: 0.98rem; }
+  .panel-body { padding: 16px; }
+
+  .form-field { display: grid; gap: 7px; margin-bottom: 14px; }
+  .admin-input, .admin-textarea, .admin-select {
+    width: 100%;
+    border: 1px solid var(--admin-line-strong);
+    border-radius: 12px;
+    background: rgba(9, 11, 15, 0.76);
+    color: var(--admin-ink);
+    padding: 10px 11px;
+    font: inherit;
+  }
+  .admin-textarea { min-height: 94px; resize: vertical; }
+
+  @media (max-width: 1180px) {
+    body.admin-shell { grid-template-columns: 1fr; }
+    .admin-sidebar { position: static; height: auto; padding: 16px; }
+    .admin-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .sidebar-card { display: none; }
+    .editor-grid { grid-template-columns: 1fr; }
+    .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 720px) {
+    .admin-topbar { align-items: flex-start; flex-direction: column; }
+    .admin-nav { grid-template-columns: 1fr 1fr; }
+    .metric-grid { grid-template-columns: 1fr; }
+    .output-row, .category-row { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+</style>
