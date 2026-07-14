@@ -3,6 +3,25 @@ import Base from '../../layouts/Base.astro';
 import { categories, products } from '../../data/catalog';
 ---
 <Base title="Catálogo | Todo Huincha" description="Catálogo completo de productos Todo Huincha, disponible por cotización.">
+  <!-- Buscador Flotante Sticky (se activa al hacer scroll) -->
+  <div class="sticky-search-bar" id="sticky-search-bar">
+    <div class="sticky-search-container" style="max-width: 1280px; margin: auto; padding: 0 clamp(20px, 5vw, 40px); width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div class="sticky-logo-placeholder" style="display: flex; align-items: center; gap: 8px;">
+        <span id="cat-count-sticky" style="color: #a3a8ad; font-size: 0.88rem; font-weight: 700; white-space: nowrap;">{products.length} productos</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: flex-end; margin-top: 2px;">
+        <div class="search-wrapper" style="margin: 0; max-width: 280px; width: 100%;">
+          <input id="cat-search-sticky" class="catalog-search-dark catalog-search-sticky-compact" type="search" placeholder="Buscar por producto o código…" aria-label="Buscar productos sticky" autocomplete="off" />
+          <svg class="search-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
+        <button class="pdf-btn-dark pdf-btn-sticky-compact" id="cat-pdf-btn-sticky" style="padding: 7px 14px; font-size: 0.82rem; height: 34px; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;" data-title="Catálogo Todo Huincha" data-subtitle={`${products.length} productos en ${categories.length} categorías`} data-rows={JSON.stringify(products.map(p => `${p.internal_reference} | ${p.name} | ${p.category.title}`))}>
+          <svg class="download-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Descargar PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="catalog-hero-dark">
     <div class="catalog-hero-inner wrap">
       <div class="hero-left">
@@ -32,14 +51,16 @@ import { categories, products } from '../../data/catalog';
       </div>
       <ul class="cat-sidebar-list">
         <li>
-          <button class="cat-sidebar-item is-active" data-slug="__all__" id="cat-btn-all">
+          <button class="cat-sidebar-item is-active" data-slug="__all__" id="cat-btn-all" style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="check-cat-all" checked style="cursor:pointer;" aria-label="Todas las categorías" />
             <span class="cat-sidebar-name">Todos los productos</span>
             <span class="cat-sidebar-count">{products.length}</span>
           </button>
         </li>
         {categories.map((cat) => (
           <li>
-            <button class="cat-sidebar-item" data-slug={cat.slug} id={`cat-btn-${cat.slug}`}>
+            <button class="cat-sidebar-item is-active" data-slug={cat.slug} id={`cat-btn-${cat.slug}`} style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" class="category-select-check" checked data-slug={cat.slug} style="cursor:pointer;" aria-label={`Categoría ${cat.title}`} />
               <span class="cat-sidebar-name">{cat.title}</span>
               <span class="cat-sidebar-count">{cat.products_count}</span>
             </button>
@@ -51,6 +72,7 @@ import { categories, products } from '../../data/catalog';
     <!-- Área de productos -->
     <div class="catalog-content">
       <div class="cat-table-header">
+        <span style="display: flex; align-items: center; justify-content: center;"><input type="checkbox" id="select-all-visible" checked style="cursor:pointer;" aria-label="Seleccionar todos los visibles" /></span>
         <span>PRODUCTO</span>
         <span>CATEGORÍA</span>
         <span>CÓDIGO</span>
@@ -64,6 +86,9 @@ import { categories, products } from '../../data/catalog';
             data-slug={product.category.slug}
             data-search={`${product.name} ${product.internal_reference} ${product.category.title}`.toLowerCase()}
           >
+            <span class="cat-row-select" style="display: flex; align-items: center; justify-content: center;">
+              <input type="checkbox" class="product-select-check" checked data-code={product.internal_reference} style="cursor:pointer;" aria-label={`Seleccionar ${product.name}`} />
+            </span>
             <span class="cat-row-name">{product.name}</span>
             <span class="cat-row-tag">{product.category.title}</span>
             <span class="cat-row-code">Cód. {product.internal_reference}</span>
@@ -85,313 +110,500 @@ import { categories, products } from '../../data/catalog';
 import { jsPDF } from 'jspdf';
 
 // ── Estado ───────────────────────────────────────────────
-let activeSlug = '__all__';
+const categoryElements = [...document.querySelectorAll<HTMLElement>('.category-select-check')];
+const categorySlugs = categoryElements.map(el => el.getAttribute('data-slug') || '');
+let selectedCategories = new Set<string>(categorySlugs); // por defecto todas las categorías
+let isAllCategoriesSelected = true;
 let searchTerm = '';
+
+// Set para registrar códigos de productos que el usuario desmarcó explícitamente (descartados de categorías marcadas)
+const unselectedProducts = new Set<string>();
+// Set para registrar códigos de productos que el usuario marcó explícitamente (adicionados de categorías desmarcadas)
+const explicitlySelectedProducts = new Set<string>();
 
 // ── Elementos ────────────────────────────────────────────
 const rows = [...document.querySelectorAll<HTMLElement>('.cat-row')];
 const buttons = [...document.querySelectorAll<HTMLButtonElement>('.cat-sidebar-item')];
 const searchInput = document.querySelector<HTMLInputElement>('#cat-search');
+const searchInputSticky = document.querySelector<HTMLInputElement>('#cat-search-sticky');
+const stickyBar = document.querySelector<HTMLElement>('#sticky-search-bar');
 const countEl = document.querySelector<HTMLElement>('#cat-count');
 const labelEl = document.querySelector<HTMLElement>('#cat-label');
 const emptyEl = document.querySelector<HTMLElement>('#cat-empty');
 const pdfBtn = document.querySelector<HTMLButtonElement>('#cat-pdf-btn');
+const pdfBtnSticky = document.querySelector<HTMLButtonElement>('#cat-pdf-btn-sticky');
+const selectAllVisibleCheck = document.querySelector<HTMLInputElement>('#select-all-visible');
+const productChecks = [...document.querySelectorAll<HTMLInputElement>('.product-select-check')];
+const checkCatAll = document.querySelector<HTMLInputElement>('#check-cat-all');
+const categoryChecks = [...document.querySelectorAll<HTMLInputElement>('.category-select-check')];
+const countElSticky = document.querySelector<HTMLElement>('#cat-count-sticky');
 
 // ── Render ───────────────────────────────────────────────
 function render() {
   let visible = 0;
   rows.forEach((row) => {
-    const slugMatch = activeSlug === '__all__' || row.dataset.slug === activeSlug;
+    const slug = row.dataset.slug ?? '';
+    const categoryMatch = isAllCategoriesSelected || selectedCategories.has(slug);
     const searchMatch = !searchTerm || (row.dataset.search ?? '').includes(searchTerm);
-    const show = slugMatch && searchMatch;
+    
+    // Si hay una búsqueda activa, se muestran todos los productos que coincidan.
+    // Si no hay búsqueda, se muestran según las categorías seleccionadas a la izquierda.
+    const show = searchTerm ? searchMatch : categoryMatch;
     row.classList.toggle('is-hidden', !show);
-    if (show) visible++;
+    
+    if (show) {
+      visible++;
+      const chk = row.querySelector<HTMLInputElement>('.product-select-check');
+      if (chk) {
+        const code = chk.dataset.code ?? '';
+        
+        let isChecked = false;
+        if (categoryMatch) {
+          isChecked = !unselectedProducts.has(code);
+        } else {
+          isChecked = explicitlySelectedProducts.has(code);
+        }
+        
+        chk.checked = isChecked;
+        row.classList.toggle('is-unselected', !isChecked);
+      }
+    }
   });
 
   if (countEl) countEl.textContent = String(visible);
+  if (countElSticky) countElSticky.textContent = `${visible} productos`;
   if (emptyEl) emptyEl.style.display = visible > 0 ? 'none' : 'block';
 
+  // Sync state of the select-all checkbox
+  updateSelectAllCheckboxState();
+
   // Synchronize PDF data with current visible/filtered list
-  const activeBtn = buttons.find((b) => b.dataset.slug === activeSlug);
-  updatePdf(activeSlug, activeBtn);
+  updatePdf();
 }
 
-// ── Activar categoría ────────────────────────────────────
-function activateCategory(slug: string) {
-  activeSlug = slug;
-  buttons.forEach((btn) => btn.classList.toggle('is-active', btn.dataset.slug === slug));
-  const activeBtn = buttons.find((b) => b.dataset.slug === slug);
-  if (labelEl && activeBtn) {
-    labelEl.textContent = activeBtn.querySelector('.cat-sidebar-name')?.textContent ?? '';
+function updateSelectAllCheckboxState() {
+  if (!selectAllVisibleCheck) return;
+  const visibleChecks = productChecks.filter(chk => {
+    const row = chk.closest('.cat-row');
+    return row && !row.classList.contains('is-hidden');
+  });
+  
+  if (visibleChecks.length === 0) {
+    selectAllVisibleCheck.checked = false;
+    selectAllVisibleCheck.disabled = true;
+    return;
   }
-  // Limpiar búsqueda al cambiar categoría
-  if (searchInput) {
-    searchInput.value = '';
-    searchTerm = '';
-  }
-  render(); // render now calls updatePdf automatically
+  
+  selectAllVisibleCheck.disabled = false;
+  const allChecked = visibleChecks.every(chk => chk.checked);
+  selectAllVisibleCheck.checked = allChecked;
+}
+
+function updateCategoryChecksState() {
+  if (!checkCatAll) return;
+  const allChecked = categoryChecks.every(chk => chk.checked);
+  checkCatAll.checked = allChecked;
+  isAllCategoriesSelected = allChecked;
+  
+  selectedCategories.clear();
+  categoryChecks.forEach(chk => {
+    if (chk.checked) {
+      selectedCategories.add(chk.dataset.slug ?? '');
+    }
+  });
 }
 
 // ── PDF dinámico ─────────────────────────────────────────
-function updatePdf(slug: string, btn: HTMLButtonElement | undefined) {
+function updatePdf() {
   if (!pdfBtn) return;
-  const visibleRows = rows.filter((r) => !r.classList.contains('is-hidden'));
-  const pdfRows = visibleRows.map((r) => {
+  
+  // Filter products based on selected categories and marked state, ignoring search visibility
+  const selectedRows = rows.filter((r) => {
+    const slug = r.dataset.slug ?? '';
+    const categorySelected = isAllCategoriesSelected || selectedCategories.has(slug);
+    
+    const chk = r.querySelector<HTMLInputElement>('.product-select-check');
+    const code = chk?.dataset.code ?? '';
+    
+    if (categorySelected) {
+      return !unselectedProducts.has(code);
+    } else {
+      return explicitlySelectedProducts.has(code);
+    }
+  });
+  
+  const pdfRows = selectedRows.map((r) => {
     const code = r.querySelector('.cat-row-code')?.textContent ?? '';
     const name = r.querySelector('.cat-row-name')?.textContent ?? '';
     const category = r.querySelector('.cat-row-tag')?.textContent ?? '';
     return `${code} | ${name} | ${category}`;
   });
-
-  const searchActive = searchInput && searchInput.value.trim().length > 0;
-  if (slug === '__all__') {
-    pdfBtn.dataset.title = 'Catálogo Todo Huincha';
-    if (searchActive) {
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos encontrados para la búsqueda`;
-    } else {
-      const catCount = buttons.length - 1;
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos en ${catCount} categorías`;
-    }
+  
+  // Dynamic title based on selected categories
+  const activeCats = categoryChecks.filter(c => c.checked);
+  let titleVal = 'Catálogo Todo Huincha';
+  if (isAllCategoriesSelected || activeCats.length === categoryChecks.length) {
+    titleVal = 'Catálogo Todo Huincha';
+  } else if (activeCats.length === 1) {
+    const catName = activeCats[0].closest('.cat-sidebar-item')?.querySelector('.cat-sidebar-name')?.textContent ?? 'Categoría';
+    titleVal = `Todo Huincha — ${catName}`;
   } else {
-    const catName = btn?.querySelector('.cat-sidebar-name')?.textContent ?? slug;
-    pdfBtn.dataset.title = `Todo Huincha — ${catName}`;
-    if (searchActive) {
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos filtrados en esta categoría`;
-    } else {
-      pdfBtn.dataset.subtitle = `${visibleRows.length} productos en esta categoría`;
-    }
+    titleVal = `Catálogo Personalizado Todo Huincha`;
   }
+
+  // Count total products matching the selected categories
+  const totalInCategory = rows.filter(r => {
+    const slug = r.dataset.slug ?? '';
+    return isAllCategoriesSelected || selectedCategories.has(slug);
+  }).length;
+
+  let subtitle = '';
+  if (isAllCategoriesSelected) {
+    const catCount = categoryChecks.length;
+    subtitle = `${selectedRows.length} de ${totalInCategory} productos seleccionados en ${catCount} categorías`;
+  } else {
+    const selectedCatsCount = activeCats.length;
+    subtitle = `${selectedRows.length} de ${totalInCategory} productos seleccionados en ${selectedCatsCount} categorías`;
+  }
+
+  pdfBtn.dataset.title = titleVal;
+  pdfBtn.dataset.subtitle = subtitle;
   pdfBtn.dataset.rows = JSON.stringify(pdfRows);
+
+  if (pdfBtnSticky) {
+    pdfBtnSticky.dataset.title = titleVal;
+    pdfBtnSticky.dataset.subtitle = subtitle;
+    pdfBtnSticky.dataset.rows = JSON.stringify(pdfRows);
+  }
 }
 
 // ── Eventos sidebar ──────────────────────────────────────
-buttons.forEach((btn) => {
-  btn.addEventListener('click', () => activateCategory(btn.dataset.slug ?? '__all__'));
+checkCatAll?.addEventListener('change', () => {
+  const isChecked = checkCatAll.checked;
+  isAllCategoriesSelected = isChecked;
+  categoryChecks.forEach(chk => {
+    chk.checked = isChecked;
+    if (isChecked) {
+      selectedCategories.add(chk.dataset.slug ?? '');
+    } else {
+      selectedCategories.delete(chk.dataset.slug ?? '');
+    }
+    const item = chk.closest('.cat-sidebar-item');
+    if (item) item.classList.toggle('is-active', isChecked);
+  });
+  
+  const allBtn = checkCatAll.closest('.cat-sidebar-item');
+  if (allBtn) allBtn.classList.toggle('is-active', isChecked);
+  render();
+});
+
+categoryChecks.forEach(chk => {
+  chk.addEventListener('change', () => {
+    updateCategoryChecksState();
+    const item = chk.closest('.cat-sidebar-item');
+    if (item) item.classList.toggle('is-active', chk.checked);
+    render();
+  });
+  
+  // Allow clicking the list item/button area to toggle the check
+  const btn = chk.closest('.cat-sidebar-item');
+  btn?.addEventListener('click', (e) => {
+    if (e.target === chk) return;
+    chk.checked = !chk.checked;
+    updateCategoryChecksState();
+    btn.classList.toggle('is-active', chk.checked);
+    render();
+  });
+});
+
+// Also handle the general 'All Products' list item container click
+checkCatAll?.closest('.cat-sidebar-item')?.addEventListener('click', (e) => {
+  if (e.target === checkCatAll) return;
+  checkCatAll.checked = !checkCatAll.checked;
+  checkCatAll.dispatchEvent(new Event('change'));
 });
 
 // ── Eventos búsqueda ─────────────────────────────────────
-searchInput?.addEventListener('input', () => {
-  searchTerm = searchInput.value.toLowerCase().trim();
+function handleSearchInput(value: string) {
+  searchTerm = value.toLowerCase().trim();
+  
+  if (searchInput && searchInput.value !== value) {
+    searchInput.value = value;
+  }
+  if (searchInputSticky && searchInputSticky.value !== value) {
+    searchInputSticky.value = value;
+  }
+  
   render();
+}
+
+searchInput?.addEventListener('input', (e) => {
+  handleSearchInput((e.target as HTMLInputElement).value);
+});
+
+searchInputSticky?.addEventListener('input', (e) => {
+  handleSearchInput((e.target as HTMLInputElement).value);
+});
+
+// ── Intersection Observer para Búsqueda Sticky ───────────
+if (searchInput && stickyBar) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const isVisible = entry.isIntersecting;
+      stickyBar.classList.toggle('is-sticky-active', !isVisible);
+    });
+  }, {
+    root: null,
+    threshold: 0
+  });
+  
+  observer.observe(searchInput);
+}
+
+// ── Eventos Checkboxes ───────────────────────────────────
+selectAllVisibleCheck?.addEventListener('change', () => {
+  const isChecked = selectAllVisibleCheck.checked;
+  rows.forEach(row => {
+    if (!row.classList.contains('is-hidden')) {
+      const chk = row.querySelector<HTMLInputElement>('.product-select-check');
+      if (chk) {
+        chk.checked = isChecked;
+        row.classList.toggle('is-unselected', !isChecked);
+        
+        const code = chk.dataset.code ?? '';
+        const slug = row.dataset.slug ?? '';
+        const categorySelected = isAllCategoriesSelected || selectedCategories.has(slug);
+        
+        if (isChecked) {
+          if (categorySelected) {
+            unselectedProducts.delete(code);
+          } else {
+            explicitlySelectedProducts.add(code);
+          }
+        } else {
+          if (categorySelected) {
+            unselectedProducts.add(code);
+          } else {
+            explicitlySelectedProducts.delete(code);
+          }
+        }
+      }
+    }
+  });
+  render();
+});
+
+productChecks.forEach(chk => {
+  chk.addEventListener('change', () => {
+    const row = chk.closest('.cat-row');
+    const code = chk.dataset.code ?? '';
+    const slug = row?.dataset.slug ?? '';
+    const categorySelected = isAllCategoriesSelected || selectedCategories.has(slug);
+    
+    if (chk.checked) {
+      if (categorySelected) {
+        unselectedProducts.delete(code);
+      } else {
+        explicitlySelectedProducts.add(code);
+      }
+    } else {
+      if (categorySelected) {
+        unselectedProducts.add(code);
+      } else {
+        explicitlySelectedProducts.delete(code);
+      }
+    }
+    
+    if (row) {
+      row.classList.toggle('is-unselected', !chk.checked);
+    }
+    render();
+  });
 });
 
 // ── PDF click ────────────────────────────────────────────
 pdfBtn?.addEventListener('click', async () => {
-  const title = pdfBtn.dataset.title ?? 'Todo Huincha';
-  const subtitle = pdfBtn.dataset.subtitle ?? '';
-  const pdfRows: string[] = JSON.parse(pdfBtn.dataset.rows ?? '[]');
+  if (pdfBtn.disabled) return;
   
-  const orange = [251, 77, 8];
-  const slate = [49, 62, 72];
-  const muted = [108, 107, 101];
-  const borderCol = [234, 223, 216];
-  const bgHeader = [244, 246, 248];
-  const bgRowAlt = [250, 251, 252];
+  const originalHtml = pdfBtn.innerHTML;
+  const originalHtmlSticky = pdfBtnSticky ? pdfBtnSticky.innerHTML : '';
   
-  // Helper to load logo from DOM or fetch it
-  const getLogoBase64 = (): Promise<string | null> => {
-    return new Promise((resolve) => {
-      const logoImg = document.querySelector<HTMLImageElement>('.brand img');
-      if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = logoImg.naturalWidth;
-          canvas.height = logoImg.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(logoImg, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-            return;
+  pdfBtn.disabled = true;
+  pdfBtn.style.opacity = '0.7';
+  pdfBtn.style.cursor = 'not-allowed';
+  pdfBtn.innerHTML = `
+    <svg class="spinner-icon-svg" style="animation: spin 1s linear infinite; width: 16px; height: 16px; margin-right: 8px; display: inline-block; vertical-align: middle;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    Generando PDF...
+  `;
+  
+  if (pdfBtnSticky) {
+    pdfBtnSticky.disabled = true;
+    pdfBtnSticky.style.opacity = '0.7';
+    pdfBtnSticky.style.cursor = 'not-allowed';
+    pdfBtnSticky.innerHTML = `
+      <svg class="spinner-icon-svg" style="animation: spin 1s linear infinite; width: 13px; height: 13px; margin-right: 6px; display: inline-block; vertical-align: middle;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Generando...
+    `;
+  }
+
+  try {
+    const title = pdfBtn.dataset.title ?? 'Todo Huincha';
+    const subtitle = pdfBtn.dataset.subtitle ?? '';
+    const pdfRows: string[] = JSON.parse(pdfBtn.dataset.rows ?? '[]');
+    
+    const orange = [251, 77, 8];
+    const slate = [49, 62, 72];
+    const muted = [108, 107, 101];
+    const borderCol = [234, 223, 216];
+    const bgHeader = [244, 246, 248];
+    const bgRowAlt = [250, 251, 252];
+    
+    // Helper to load logo from DOM or fetch it
+    const getLogoBase64 = (): Promise<string | null> => {
+      return new Promise((resolve) => {
+        const logoImg = document.querySelector<HTMLImageElement>('.brand img');
+        if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = logoImg.naturalWidth;
+            canvas.height = logoImg.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(logoImg, 0, 0);
+              resolve(canvas.toDataURL('image/png'));
+              return;
+            }
+          } catch (e) {
+            console.warn('Failed to extract logo from DOM image, trying fetch...', e);
           }
-        } catch (e) {
-          console.warn('Failed to extract logo from DOM image, trying fetch...', e);
         }
-      }
-      
-      const img = new Image();
-      img.src = '/logo-todohuincha.svg';
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || 324;
-          canvas.height = img.naturalHeight || 92;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-          } else {
+        
+        const img = new Image();
+        img.src = '/logo-todohuincha.svg';
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || 324;
+            canvas.height = img.naturalHeight || 92;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              resolve(canvas.toDataURL('image/png'));
+            } else {
+              resolve(null);
+            }
+          } catch (e) {
             resolve(null);
           }
-        } catch (e) {
-          resolve(null);
-        }
-      };
-      img.onerror = () => resolve(null);
-    });
-  };
+        };
+        img.onerror = () => resolve(null);
+      });
+    };
 
-  const logoBase64 = await getLogoBase64();
-  
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-  
-  let pageNum = 1;
-  
-  const drawPageDecorations = (currentPg: number) => {
-    // Thin top orange bar
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(0, 0, 210, 3.5, 'F');
+    const logoBase64 = await getLogoBase64();
     
-    // Draw Logo on the left
-    if (logoBase64) {
-      pdf.addImage(logoBase64, 'PNG', 15, 8, 36, 10.3);
-    } else {
-      // Vector fallback logo
-      pdf.setDrawColor(orange[0], orange[1], orange[2]);
-      pdf.setLineWidth(0.5);
-      pdf.circle(20, 13.5, 4);
-      pdf.circle(20, 13.5, 1.2);
-      for (let angle = 0; angle < 360; angle += 30) {
-        const rad = (angle * Math.PI) / 180;
-        pdf.line(20 + 4 * Math.cos(rad), 13.5 + 4 * Math.sin(rad), 20 + 5.2 * Math.cos(rad + 0.1), 13.5 + 5.2 * Math.sin(rad + 0.1));
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    let pageNum = 1;
+    
+    const drawPageDecorations = (pNum: number) => {
+      // Header
+      if (logoBase64) {
+        pdf.addImage(logoBase64, 'PNG', 15, 8, 38, 10.8);
       }
+      
+      pdf.setTextColor(orange[0], orange[1], orange[2]);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.text('CATÁLOGO DE PRODUCTOS', 195, 12, { align: 'right' });
+      
+      pdf.setTextColor(muted[0], muted[1], muted[2]);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.text('Pedro Rivera y Cía. Ltda. — Todo Huincha', 195, 16, { align: 'right' });
+      
+      pdf.setDrawColor(orange[0], orange[1], orange[2]);
+      pdf.setLineWidth(0.4);
+      pdf.line(15, 19, 195, 19);
+      
+      // Footer
+      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
+      pdf.setLineWidth(0.2);
+      pdf.line(15, 276, 195, 276);
+      
+      pdf.setTextColor(muted[0], muted[1], muted[2]);
+      pdf.setFontSize(7.5);
+      pdf.text('Fonos: +56 45 221 1611 | email: ventas@todohuincha.cl | web: www.todohuincha.cl', 15, 281);
+      pdf.text(`Página ${pNum}`, 195, 281, { align: 'right' });
+    };
+    
+    const drawTableHeader = (currentY: number) => {
+      pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
+      pdf.rect(15, currentY, 180, 8, 'F');
+      
+      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
+      pdf.setLineWidth(0.25);
+      pdf.line(15, currentY, 195, currentY);
+      pdf.line(15, currentY + 8, 195, currentY + 8);
+      
       pdf.setTextColor(slate[0], slate[1], slate[2]);
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      pdf.text('TODO', 27, 13.5);
-      pdf.setTextColor(orange[0], orange[1], orange[2]);
-      pdf.text('HUINCHA', 41, 13.5);
-    }
-    
-    // Right-aligned header texts
-    pdf.setTextColor(slate[0], slate[1], slate[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('CATÁLOGO DE PRODUCTOS', 195, 12.5, { align: 'right' });
-    
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7.5);
-    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 195, 16.5, { align: 'right' });
-    
-    // Thin separator line
-    pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-    pdf.setLineWidth(0.25);
-    pdf.line(15, 22, 195, 22);
-    
-    // Footer line and contact info
-    pdf.line(15, 276, 195, 276);
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFontSize(7.5);
-    pdf.text('Comercializadora Todo Huincha Ltda. · Longitudinal Sur 4277, Padre Las Casas · info@todohuincha.com · (45) 240 0000', 105, 281.5, { align: 'center' });
-    pdf.text(`Página ${currentPg}`, 195, 281.5, { align: 'right' });
-  };
-  
-  drawPageDecorations(pageNum);
-  
-  let y = 30;
-  
-  // Title
-  pdf.setTextColor(slate[0], slate[1], slate[2]);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(13);
-  pdf.text(title.toUpperCase(), 15, y);
-  y += 5.5;
-  
-  // Subtitle
-  if (subtitle) {
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8.5);
-    pdf.text(subtitle, 15, y);
-    y += 9;
-  } else {
-    y += 3;
-  }
-  
-  const drawTableHeader = (posY: number) => {
-    pdf.setFillColor(bgHeader[0], bgHeader[1], bgHeader[2]);
-    pdf.rect(15, posY, 180, 8, 'F');
-    
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(15, posY, 1.5, 8, 'F');
-    
-    pdf.setTextColor(slate[0], slate[1], slate[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CÓDIGO', 18, posY + 5.5);
-    pdf.text('PRODUCTO', 50, posY + 5.5);
-  };
-  
-  drawTableHeader(y);
-  y += 8;
-  
-  // Group the visible products by category
-  const categoriesMap = new Map<string, { code: string, name: string }[]>();
-  
-  pdfRows.forEach((row) => {
-    // row format: "code | name | category"
-    const parts = row.split(' | ');
-    const code = parts[0] ? parts[0].replace('Cód. ', '').trim() : '';
-    const name = parts[1] ? parts[1].trim() : row;
-    const category = parts[2] ? parts[2].trim() : 'General';
-    
-    if (!categoriesMap.has(category)) {
-      categoriesMap.set(category, []);
-    }
-    categoriesMap.get(category)!.push({ code, name });
-  });
-
-  let isAlt = false;
-  pdf.setFontSize(8.5);
-  
-  categoriesMap.forEach((productsList, categoryName) => {
-    // Check if we need a page break for the category header (need at least 20mm)
-    if (y + 18 > 268) {
-      pdf.addPage();
-      pageNum++;
-      drawPageDecorations(pageNum);
-      y = 26;
-      drawTableHeader(y);
-      y += 8;
-      isAlt = false;
-    }
-    
-    // Draw Category Section Header Row
-    pdf.setFillColor(253, 246, 242); // very light soft orange background
-    pdf.rect(15, y, 180, 8, 'F');
-    
-    pdf.setFillColor(orange[0], orange[1], orange[2]);
-    pdf.rect(15, y, 1.5, 8, 'F');
-    
-    pdf.setTextColor(orange[0], orange[1], orange[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8.5);
-    pdf.text(categoryName.toUpperCase(), 19, y + 5.5);
-    
-    pdf.setTextColor(muted[0], muted[1], muted[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7.5);
-    pdf.text(`${productsList.length} productos`, 191, y + 5.5, { align: 'right' });
-    
-    pdf.setDrawColor(orange[0], orange[1], orange[2]);
-    pdf.setLineWidth(0.2);
-    pdf.line(15, y + 8, 195, y + 8);
-    
-    y += 8;
-    isAlt = false; // Reset alternation for a new category
-    
-    // Draw products under this category
-    productsList.forEach((prod) => {
-      const nameLines = pdf.splitTextToSize(prod.name, 140);
-      const rowHeight = Math.max(7.5, nameLines.length * 4.5 + 3);
+      pdf.setFontSize(8);
       
-      // Page break check
-      if (y + rowHeight > 268) {
+      pdf.text('CÓDIGO', 18, currentY + 5.2);
+      pdf.text('DESCRIPCIÓN DEL PRODUCTO', 50, currentY + 5.2);
+    };
+
+    drawPageDecorations(pageNum);
+    
+    // Page Title and Info
+    pdf.setTextColor(slate[0], slate[1], slate[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(13);
+    pdf.text(title.toUpperCase(), 15, 26);
+    
+    if (subtitle) {
+      pdf.setTextColor(muted[0], muted[1], muted[2]);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.5);
+      pdf.text(subtitle, 15, 31);
+    }
+    
+    let y = 36;
+    drawTableHeader(y);
+    y += 8;
+    
+    // Group rows by category
+    const categoriesMap = new Map<string, Array<{ code: string; name: string }>>();
+    pdfRows.forEach((rowStr) => {
+      const parts = rowStr.split('|');
+      const code = parts[0] ? parts[0].trim() : '';
+      const name = parts[1] ? parts[1].trim() : '';
+      const category = parts[2] ? parts[2].trim() : 'General';
+      
+      if (!categoriesMap.has(category)) {
+        categoriesMap.set(category, []);
+      }
+      categoriesMap.get(category)!.push({ code, name });
+    });
+
+    let isAlt = false;
+    pdf.setFontSize(8.5);
+    
+    categoriesMap.forEach((productsList, categoryName) => {
+      // Check if we need a page break for the category header (need at least 20mm)
+      if (y + 18 > 268) {
         pdf.addPage();
         pageNum++;
         drawPageDecorations(pageNum);
@@ -399,49 +611,267 @@ pdfBtn?.addEventListener('click', async () => {
         drawTableHeader(y);
         y += 8;
         isAlt = false;
-        
-        // Redraw category header on new page so user knows category is continuing
-        pdf.setFillColor(253, 246, 242);
-        pdf.rect(15, y, 180, 6, 'F');
-        pdf.setFillColor(orange[0], orange[1], orange[2]);
-        pdf.rect(15, y, 1.5, 6, 'F');
-        pdf.setTextColor(orange[0], orange[1], orange[2]);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(8);
-        pdf.text(`${categoryName.toUpperCase()} (continuación)`, 19, y + 4.2);
-        pdf.line(15, y + 6, 195, y + 6);
-        y += 6;
       }
       
-      if (isAlt) {
-        pdf.setFillColor(bgRowAlt[0], bgRowAlt[1], bgRowAlt[2]);
-        pdf.rect(15, y, 180, rowHeight, 'F');
-      }
+      // Draw Category Section Header Row
+      pdf.setFillColor(253, 246, 242); // very light soft orange background
+      pdf.rect(15, y, 180, 8, 'F');
       
-      pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
-      pdf.setLineWidth(0.15);
-      pdf.line(15, y + rowHeight, 195, y + rowHeight);
+      pdf.setFillColor(orange[0], orange[1], orange[2]);
+      pdf.rect(15, y, 1.5, 8, 'F');
       
-      pdf.setTextColor(slate[0], slate[1], slate[2]);
+      pdf.setTextColor(orange[0], orange[1], orange[2]);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(prod.code, 18, y + 4.8);
+      pdf.setFontSize(8.5);
+      pdf.text(categoryName.toUpperCase(), 19, y + 5.5);
       
-      pdf.setTextColor(30, 30, 30);
+      pdf.setTextColor(muted[0], muted[1], muted[2]);
       pdf.setFont('helvetica', 'normal');
-      let lineY = y + 4.8;
-      nameLines.forEach((line: string) => {
-        pdf.text(line, 50, lineY);
-        lineY += 4.5;
+      pdf.setFontSize(7.5);
+      pdf.text(`${productsList.length} productos`, 191, y + 5.5, { align: 'right' });
+      
+      pdf.setDrawColor(orange[0], orange[1], orange[2]);
+      pdf.setLineWidth(0.2);
+      pdf.line(15, y + 8, 195, y + 8);
+      
+      y += 8;
+      isAlt = false; // Reset alternation for a new category
+      
+      // Draw products under this category
+      productsList.forEach((prod) => {
+        const nameLines = pdf.splitTextToSize(prod.name, 140);
+        const rowHeight = Math.max(7.5, nameLines.length * 4.5 + 3);
+        
+        // Page break check
+        if (y + rowHeight > 268) {
+          pdf.addPage();
+          pageNum++;
+          drawPageDecorations(pageNum);
+          y = 26;
+          drawTableHeader(y);
+          y += 8;
+          isAlt = false;
+          
+          // Redraw category header on new page so user knows category is continuing
+          pdf.setFillColor(253, 246, 242);
+          pdf.rect(15, y, 180, 6, 'F');
+          pdf.setFillColor(orange[0], orange[1], orange[2]);
+          pdf.rect(15, y, 1.5, 6, 'F');
+          pdf.setTextColor(orange[0], orange[1], orange[2]);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(8);
+          pdf.text(`${categoryName.toUpperCase()} (continuación)`, 19, y + 4.2);
+          pdf.line(15, y + 6, 195, y + 6);
+          y += 6;
+        }
+        
+        if (isAlt) {
+          pdf.setFillColor(bgRowAlt[0], bgRowAlt[1], bgRowAlt[2]);
+          pdf.rect(15, y, 180, rowHeight, 'F');
+        }
+        
+        pdf.setDrawColor(borderCol[0], borderCol[1], borderCol[2]);
+        pdf.setLineWidth(0.15);
+        pdf.line(15, y + rowHeight, 195, y + rowHeight);
+        
+        pdf.setTextColor(slate[0], slate[1], slate[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(prod.code, 18, y + 4.8);
+      
+        pdf.setTextColor(30, 30, 30);
+        pdf.setFont('helvetica', 'normal');
+        let lineY = y + 4.8;
+        nameLines.forEach((line: string) => {
+          pdf.text(line, 50, lineY);
+          lineY += 4.5;
+        });
+        
+        y += rowHeight;
+        isAlt = !isAlt;
       });
       
-      y += rowHeight;
-      isAlt = !isAlt;
+      // Add small space between categories
+      y += 3;
     });
     
-    // Add small space between categories
-    y += 3;
-  });
-  
-  pdf.save(`${title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.pdf`);
+    pdf.save(`${title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.pdf`);
+  } catch (error) {
+    console.error('Error al generar el PDF:', error);
+  } finally {
+    pdfBtn.disabled = false;
+    pdfBtn.style.opacity = '';
+    pdfBtn.style.cursor = '';
+    pdfBtn.innerHTML = originalHtml;
+    
+    if (pdfBtnSticky) {
+      pdfBtnSticky.disabled = false;
+      pdfBtnSticky.style.opacity = '';
+      pdfBtnSticky.style.cursor = '';
+      pdfBtnSticky.innerHTML = originalHtmlSticky;
+    }
+  }
 });
+
+// Sincronizar el click del botón sticky al original
+pdfBtnSticky?.addEventListener('click', () => {
+  pdfBtn?.click();
+});
+
+// Run render on startup to synchronize checkbox DOM state with initial JavaScript state
+render();
 </script>
+
+<style>
+/* CSS overrides to enable layout grid with checkboxes, scroll in sidebar, and mobile horizontal category list */
+.cat-sidebar {
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+}
+
+.cat-table-header {
+  grid-template-columns: 40px 1fr minmax(180px,auto) minmax(120px,auto) 116px !important;
+}
+
+.cat-row {
+  grid-template-columns: 40px 1fr minmax(180px,auto) minmax(120px,auto) auto !important;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.cat-row.is-unselected {
+  opacity: 0.45;
+  background-color: rgba(49, 62, 72, 0.03);
+}
+
+.cat-row-select input[type="checkbox"],
+#select-all-visible {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--orange);
+  cursor: pointer;
+}
+
+@media(max-width:900px){
+  .cat-table-header {
+    grid-template-columns: 40px 1fr minmax(90px,auto) 116px !important;
+  }
+  .cat-row {
+    grid-template-columns: 40px 1fr minmax(90px,auto) auto !important;
+  }
+}
+
+@media(max-width:700px){
+  .cat-sidebar {
+    max-height: none;
+    overflow-y: visible;
+  }
+  .cat-sidebar-list {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cat-sidebar-list::-webkit-scrollbar {
+    display: none;
+  }
+  .cat-sidebar-list li {
+    flex-shrink: 0;
+  }
+  .cat-sidebar-item {
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    border: 1px solid var(--line) !important;
+    background: var(--surface) !important;
+    font-size: 0.82rem !important;
+    min-height: auto !important;
+  }
+  .cat-sidebar-item.is-active {
+    border-color: var(--orange) !important;
+    background: var(--soft) !important;
+    color: var(--orange) !important;
+  }
+  .cat-table-header {
+    display: none !important;
+  }
+  .cat-row {
+    grid-template-columns: 40px 1fr auto !important;
+    padding: 12px 16px;
+  }
+}
+
+.category-select-check,
+#check-cat-all {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--orange);
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Sticky Search Bar Styles */
+.sticky-search-bar {
+  position: fixed;
+  top: 80px; /* justo debajo del site-header de 80px */
+  left: 0;
+  width: 100%;
+  height: 52px; /* Altura fija ultra compacta */
+  z-index: 95;
+  background: #313E48; /* mismo color oscuro que catalog-hero-dark */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.sticky-search-bar.is-sticky-active {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sticky-search-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+}
+
+.catalog-search-sticky-compact {
+  height: 34px !important;
+  padding: 6px 36px 6px 12px !important;
+  font-size: 0.84rem !important;
+  border-radius: 6px !important;
+}
+
+.sticky-search-bar .search-icon-svg {
+  right: 12px !important;
+  width: 15px !important;
+  height: 15px !important;
+}
+
+@media(max-width:700px){
+  .sticky-search-bar {
+    top: 70px; /* en mobile el header suele ser ligeramente menor */
+    height: 48px;
+  }
+  .sticky-search-bar .sticky-logo-placeholder {
+    display: none; /* ocultar texto en pantallas muy chicas para dar espacio */
+  }
+  .sticky-search-bar .search-wrapper {
+    max-width: 100% !important;
+  }
+}
+</style>

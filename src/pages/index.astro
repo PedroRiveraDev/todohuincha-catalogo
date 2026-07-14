@@ -105,6 +105,30 @@ const machineImages: Record<string, string> = {
 
     <a class="button" href="/maquinaria">Ver toda la maquinaria</a>
   </section>
+
+  <section class="wrap" data-institutional-cards>
+    <span class="eyebrow">Conozca Todo Huincha</span>
+    <h2>Empresa, sucursales y representacion de marcas</h2>
+    <p class="lede" style="max-width: 70ch; color: var(--muted); font-size: 1.02rem;">Comercializadora Todo Huincha Ltda. provee maquinaria, consumibles y servicio tecnico para industria, agricultura y faenas forestales en Chile.</p>
+    <div class="institutional-grid" style="margin-top: 28px;">
+      <a class="institutional-card" href="/empresa/">
+        <h3>Empresa</h3>
+        <p>Quien somos, equipo directivo y trayectoria desde 1995.</p>
+      </a>
+      <a class="institutional-card" href="/sucursales/">
+        <h3>Sucursales</h3>
+        <p>Temuco, Constitucion y Puerto Montt con horario y mapa.</p>
+      </a>
+      <a class="institutional-card" href="/marcas/" data-marcas-pending>
+        <h3>Marcas</h3>
+        <p>Proximamente publicaremos las representaciones vigentes.</p>
+      </a>
+      <a class="institutional-card" href="/contacto/">
+        <h3>Contacto</h3>
+        <p>Cotiza por producto, telefono, correo y WhatsApp institucional.</p>
+      </a>
+    </div>
+  </section>
 </Base>
 
 <style>
@@ -366,6 +390,50 @@ const machineImages: Record<string, string> = {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-50%) scale(0.8);
+  }
+
+  /* Institutional section cards styling */
+  .institutional-card {
+    display: block;
+    background: #fff;
+    border: 1px solid rgba(49, 62, 72, 0.08);
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 6px rgba(49, 62, 72, 0.02);
+    text-decoration: none;
+    color: inherit;
+  }
+  .institutional-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--orange);
+    box-shadow: 0 12px 28px rgba(49, 62, 72, 0.07);
+  }
+  .institutional-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    color: var(--charcoal);
+  }
+  .institutional-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .institutional-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+  }
+  @media (max-width: 900px) {
+    .institutional-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 540px) {
+    .institutional-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 

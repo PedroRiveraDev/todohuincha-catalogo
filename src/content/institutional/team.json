@@ -1,0 +1,4 @@
+[
+  { "name": "Sebastian Munoz", "role": "Direccion General", "responsibilities": ["Direccion estrategica", "Relaciones comerciales"], "sameAs": [] },
+  { "name": "Martin Munoz", "role": "Direccion de Operaciones", "responsibilities": ["Operaciones", "Servicio tecnico"], "sameAs": [] }
+]

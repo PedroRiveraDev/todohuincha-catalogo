@@ -1,0 +1,5 @@
+[
+  { "id": "maquinaria", "name": "Maquinaria", "description": "Tractores, motocultivadores, partidores, trozadores y cortadoras para faenas forestales, agricolas y de jardin." },
+  { "id": "consumibles", "name": "Consumibles", "description": "Sierras huincha, cepilladoras, lijadoras y herramientas de corte para madera e industria." },
+  { "id": "servicio-tecnico", "name": "Servicio tecnico", "description": "Diagnostico, mantenciones y soporte postventa para maquinaria comercializada." }
+]

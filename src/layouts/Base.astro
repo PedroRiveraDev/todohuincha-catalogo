@@ -1,12 +1,50 @@
 ---
-const { title = 'Todo Huincha', description = 'Soluciones de corte, maquinaria y servicio técnico especializado.' } = Astro.props;
+import {
+  loadBranchesJson,
+  loadCompanyJson,
+  loadServicesJson,
+  loadTeamJson,
+} from '../lib/seo/loadCompanyJson.ts';
+import { buildOrganizationGraph } from '../lib/seo/organization-graph.ts';
+
+const {
+  title = 'Todo Huincha',
+  description = 'Soluciones de corte, maquinaria y servicio técnico especializado.',
+  pageLevelJsonLd = [],
+  canonical,
+  noIndex = false,
+} = Astro.props;
 const pathname = Astro.url.pathname;
+const extraNodes: Array<Record<string, unknown>> = Array.isArray(pageLevelJsonLd) ? pageLevelJsonLd : [];
+
+const company = loadCompanyJson();
+const branches = loadBranchesJson();
+const services = loadServicesJson();
+const team = loadTeamJson();
+const graph = buildOrganizationGraph({
+  company,
+  branches,
+  services,
+  team,
+  siteUrl: company.url,
+});
+const canonicalHref = canonical ?? new URL(pathname, company.url).toString();
 ---
 <!doctype html>
 <html lang="es-CL">
   <head>
-    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width" /><link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="description" content={description} /><title>{title}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalHref} />
+    <meta name="description" content={description} />
+    {noIndex && <meta name="robots" content="noindex,nofollow" />}
+    <title>{title}</title>
+    <slot name="head" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(graph)} />
+    {extraNodes.map((node) => (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(node)} />
+    ))}
   </head>
   <body>
     <header class="site-header">
@@ -24,11 +62,16 @@ const pathname = Astro.url.pathname;
         <a href="/" class={pathname === '/' ? 'active' : ''}>Inicio</a>
         <a href="/catalogo" class={pathname.startsWith('/catalogo') ? 'active' : ''}>Productos</a>
         <a href="/maquinaria" class={pathname.startsWith('/maquinaria') ? 'active' : ''}>Maquinaria</a>
+        <a href="/empresa/" class={pathname.startsWith('/empresa') ? 'active' : ''}>Empresa</a>
+        <a href="/sucursales/" class={pathname.startsWith('/sucursales') ? 'active' : ''}>Sucursales</a>
         <a href="/contacto" class={pathname.startsWith('/contacto') ? 'active' : ''}>Contacto</a>
       </nav>
     </header>
     <main><slot /></main>
-    <footer><strong>Comercializadora Todo Huincha Ltda.</strong><span>Longitudinal Sur 4277, Padre Las Casas · (45) 240 0000 · info@todohuincha.com</span></footer>
+    <footer>
+      <strong>Comercializadora Todo Huincha Ltda.</strong>
+      <span>{company.address.street}, {company.address.locality} · {company.phones[0]} · {company.emails[0]}</span>
+    </footer>
     
     <script>
       const menuToggle = document.getElementById('menu-toggle-btn');
@@ -186,8 +229,3 @@ const pathname = Astro.url.pathname;
   }
 }
 </style>
-
-
-
-
-

@@ -1,0 +1,53 @@
+[
+  {
+    "slug": "temuco",
+    "name": "Todo Huincha Temuco",
+    "city": "Padre Las Casas",
+    "region": "Araucanía",
+    "address": {
+      "street": "Carr. Longitudinal Sur 4277",
+      "locality": "Padre Las Casas",
+      "region": "Araucanía",
+      "country": "CL",
+      "geo": { "lat": -38.7613, "lng": -72.5986 }
+    },
+    "phone": "+56 (45) 240 0000",
+    "hours": "Lunes a Viernes 8:30 a 18:30",
+    "mapUrl": "https://maps.google.com/?cid=17798753958481472823",
+    "isHeadquarters": true
+  },
+  {
+    "slug": "constitucion",
+    "name": "Todo Huincha Constitución",
+    "city": "Constitución",
+    "region": "Maule",
+    "address": {
+      "street": "Km 7 camino San Javier, sector La Rueda",
+      "locality": "Constitución",
+      "region": "Maule",
+      "country": "CL",
+      "geo": { "lat": -35.3295, "lng": -72.4149 }
+    },
+    "phone": "+56 (71) 268 0000",
+    "hours": "Lunes a Viernes 8:30 a 18:00",
+    "mapUrl": "https://maps.google.com/?cid=15614884379584152874",
+    "isHeadquarters": false
+  },
+  {
+    "slug": "puerto-montt",
+    "name": "Todo Huincha Puerto Montt",
+    "city": "Puerto Montt",
+    "region": "Los Lagos",
+    "address": {
+      "street": "Coyhaique 796",
+      "locality": "Puerto Montt",
+      "region": "Los Lagos",
+      "country": "CL",
+      "geo": { "lat": -41.4717, "lng": -72.9369 }
+    },
+    "phone": "+56 (65) 227 0000",
+    "hours": "Lunes a Viernes 8:30 a 18:00",
+    "mapUrl": "https://maps.google.com/?cid=13745238795628734582",
+    "isHeadquarters": false
+  }
+]

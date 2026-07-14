@@ -1,0 +1,51 @@
+---
+import InstitutionalLayout from '../../layouts/InstitutionalLayout.astro';
+import { loadCompanyJson } from '../../lib/seo/loadCompanyJson.ts';
+import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
+
+const company = loadCompanyJson();
+const pageUrl = new URL('/empresa/mision-vision/', company.url).toString();
+const crumb = buildBreadcrumbList({
+  items: [
+    { name: 'Inicio', item: company.url },
+    { name: 'Empresa', item: new URL('/empresa/', company.url).toString() },
+    { name: 'Mision y vision', item: pageUrl },
+  ],
+});
+const pageNode = buildWebPage({
+  url: pageUrl,
+  name: 'Mision y vision | Todo Huincha',
+  description: 'Mision y vision de Comercializadora Todo Huincha Ltda.',
+  inLanguage: 'es-CL',
+  isPartOf: 'SITE',
+  breadcrumb: crumb.itemListElement[crumb.itemListElement.length - 1].item,
+});
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Empresa', url: '/empresa/' },
+  { name: 'Mision y vision', url: '/empresa/mision-vision/' },
+];
+---
+<InstitutionalLayout
+  title="Mision y vision | Todo Huincha"
+  description="Mision y vision de Comercializadora Todo Huincha Ltda."
+  pageLevelJsonLd={[pageNode, crumb]}
+  breadcrumbs={breadcrumbs}
+>
+  <div class="inst-wrap">
+    <span class="eyebrow">Mision y vision</span>
+    <h1>Compromiso con la industria del sur de Chile</h1>
+
+    <h2>Mision</h2>
+    <blockquote>
+      {company.mission}
+      <cite>Direccion General, Comercializadora Todo Huincha Ltda.</cite>
+    </blockquote>
+
+    <h2>Vision</h2>
+    <blockquote>
+      {company.vision}
+      <cite>Direccion General, Comercializadora Todo Huincha Ltda.</cite>
+    </blockquote>
+  </div>
+</InstitutionalLayout>

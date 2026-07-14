@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import FreshAstroRedirect from '../components/FreshAstroRedirect.astro';
+---
+<Base
+  title="Redirigiendo a Empresa | Todo Huincha"
+  description="Redireccion a la pagina institucional de Comercializadora Todo Huincha Ltda."
+  canonical="https://todohuincha.com/empresa/"
+  noIndex={true}
+>
+  <FreshAstroRedirect target="/empresa/" />
+  <section class="wrap">
+    <span class="eyebrow">Redireccion</span>
+    <h1>Redirigiendo a nuestra pagina de empresa...</h1>
+    <p>Si no es redirigido automaticamente, <a href="/empresa/">visite nuestra pagina de empresa</a>.</p>
+  </section>
+</Base>

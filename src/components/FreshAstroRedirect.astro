@@ -1,0 +1,9 @@
+---
+import { detectAdapter } from '../lib/seo/adapter-detection.ts';
+import { buildRedirectMeta } from '../lib/seo/redirect-fallback.ts';
+
+const { target } = Astro.props;
+const adapterActive = detectAdapter();
+const meta = buildRedirectMeta({ target, adapterActive });
+---
+{meta && <Fragment set:html={meta} />}

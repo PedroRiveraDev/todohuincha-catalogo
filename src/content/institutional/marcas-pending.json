@@ -1,0 +1,5 @@
+{
+  "status": "pending",
+  "unblockCriterion": "Approved brand list with at least one entry containing name, logo (path under public/), alt, optional url, plus reproduction rights. Swap this file to marcas.json with status \"ready\" once supplied.",
+  "brands": []
+}

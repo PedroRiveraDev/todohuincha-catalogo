@@ -1,0 +1,40 @@
+# robots.txt for todohuincha.com
+# Existing crawl rules preserved; AI-specific user agents added explicitly so LLMs
+# can ingest llms.txt / llms-full.txt for citation.
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /login
+Disallow: /vendor
+Disallow: /validation-dashboard
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+Sitemap: https://todohuincha.com/sitemap.xml

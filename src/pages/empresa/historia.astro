@@ -1,0 +1,57 @@
+---
+import InstitutionalLayout from '../../layouts/InstitutionalLayout.astro';
+import {
+  loadCompanyJson,
+  loadTimelineJson,
+} from '../../lib/seo/loadCompanyJson.ts';
+import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
+
+const company = loadCompanyJson();
+const timeline = loadTimelineJson();
+const pageUrl = new URL('/empresa/historia/', company.url).toString();
+const crumb = buildBreadcrumbList({
+  items: [
+    { name: 'Inicio', item: company.url },
+    { name: 'Empresa', item: new URL('/empresa/', company.url).toString() },
+    { name: 'Historia', item: pageUrl },
+  ],
+});
+const pageNode = buildWebPage({
+  url: pageUrl,
+  name: 'Nuestra historia | Todo Huincha',
+  description: 'Trayectoria de Comercializadora Todo Huincha Ltda. desde 1995 hasta la actualidad.',
+  inLanguage: 'es-CL',
+  isPartOf: 'SITE',
+  breadcrumb: crumb.itemListElement[crumb.itemListElement.length - 1].item,
+});
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Empresa', url: '/empresa/' },
+  { name: 'Historia', url: '/empresa/historia/' },
+];
+---
+<InstitutionalLayout
+  title="Nuestra historia | Todo Huincha"
+  description="Trayectoria de Comercializadora Todo Huincha Ltda. desde 1995 hasta la actualidad."
+  pageLevelJsonLd={[pageNode, crumb]}
+  breadcrumbs={breadcrumbs}
+>
+  <div class="inst-wrap">
+    <span class="eyebrow">Linea de tiempo</span>
+    <h1>Nuestra historia</h1>
+    <p class="lede">De Temuco a la zona sur de Chile: tres decadas de servicio tecnico, maquinaria y consumibles para industria, agricultura y faenas forestales.</p>
+
+    {timeline.length === 0 ? (
+      <p class="soon">Proximamente publicaremos la linea de tiempo completa.</p>
+    ) : (
+      <dl class="timeline">
+        {timeline.map((milestone) => (
+          <div>
+            <dt>{milestone.year}</dt>
+            <dd>{milestone.event}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+  </div>
+</InstitutionalLayout>

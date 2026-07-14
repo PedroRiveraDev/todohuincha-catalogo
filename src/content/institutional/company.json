@@ -1,0 +1,27 @@
+{
+  "legalName": "Comercializadora Todo Huincha Ltda.",
+  "brandName": "Todo Huincha",
+  "taxId": "76.123.456-7",
+  "phones": ["+56 (45) 240 0000"],
+  "emails": ["info@todohuincha.com"],
+  "socials": {
+    "linkedin": "https://www.linkedin.com/company/todohuincha",
+    "instagram": "https://www.instagram.com/todohuincha",
+    "facebook": "https://www.facebook.com/todohuincha",
+    "whatsapp": "https://wa.me/56912345678"
+  },
+  "address": {
+    "street": "Carr. Longitudinal Sur 4277",
+    "locality": "Padre Las Casas",
+    "region": "Araucanía",
+    "country": "CL",
+    "geo": { "lat": -38.7613, "lng": -72.5986 }
+  },
+  "mission": "Proveer maquinaria, consumibles y servicio tecnico especializado para industria, agricultura y faenas forestales.",
+  "vision": "Ser el referente de soluciones tecnicas en la zona sur de Chile.",
+  "shortPitch": "Comercializadora Todo Huincha Ltda. provee maquinaria, consumibles y servicio tecnico para industria, agricultura y faenas forestales.",
+  "founders": ["Sebastián Muñoz", "Martín Muñoz"],
+  "mapUrl": "https://maps.google.com/?cid=17798753958481472823",
+  "url": "https://todohuincha.com/",
+  "logo": "/logo-todohuincha.svg"
+}

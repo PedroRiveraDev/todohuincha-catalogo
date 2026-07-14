@@ -1,0 +1,63 @@
+---
+import InstitutionalLayout from '../../layouts/InstitutionalLayout.astro';
+import {
+  loadBranchesJson,
+  loadCompanyJson,
+} from '../../lib/seo/loadCompanyJson.ts';
+import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
+
+const company = loadCompanyJson();
+const branches = loadBranchesJson();
+const pageUrl = new URL('/sucursales/', company.url).toString();
+
+const crumb = buildBreadcrumbList({
+  items: [
+    { name: 'Inicio', item: company.url },
+    { name: 'Sucursales', item: pageUrl },
+  ],
+});
+
+const pageNode = buildWebPage({
+  url: pageUrl,
+  name: 'Sucursales | Comercializadora Todo Huincha',
+  description: 'Nuestras sucursales en Temuco, Constitución y Puerto Montt. Horarios, direcciones y contacto.',
+  inLanguage: 'es-CL',
+  isPartOf: 'SITE',
+  breadcrumb: crumb.itemListElement[crumb.itemListElement.length - 1].item,
+});
+
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Sucursales', url: '/sucursales/' },
+];
+---
+<InstitutionalLayout
+  title="Sucursales | Comercializadora Todo Huincha"
+  description="Encuentra tu sucursal más cercana de Todo Huincha en Temuco, Constitución y Puerto Montt. Horarios, dirección y teléfonos."
+  pageLevelJsonLd={[pageNode, crumb]}
+  breadcrumbs={breadcrumbs}
+>
+  <div class="inst-wrap">
+    <span class="eyebrow">Red de atención</span>
+    <h1>Nuestras Sucursales</h1>
+    <p class="lede">Comercializadora Todo Huincha Ltda. cuenta con sucursales estratégicas para abastecer a la industria, agricultura y faenas forestales a lo largo de Chile.</p>
+
+    <div style="display: grid; gap: 32px; margin-top: 40px;">
+      {branches.map((branch) => (
+        <div style="border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; background: var(--surface); display: grid; gap: 12px; box-shadow: var(--shadow);">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+            <h2 style="margin: 0; font-size: 1.5rem; color: var(--charcoal);">{branch.name}</h2>
+            {branch.isHeadquarters && <span style="background: var(--soft); color: var(--orange); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase;">Casa Matriz</span>}
+          </div>
+          <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Dirección:</strong> {branch.address.street}, {branch.address.locality}, {branch.address.region}</p>
+          <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Teléfono:</strong> {branch.phone}</p>
+          <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Horario:</strong> {branch.hours}</p>
+          <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href={`/sucursales/${branch.slug}/`} class="button alt" style="padding: 8px 16px; font-size: 0.85rem;">Ver mapa y detalles</a>
+            <a href={branch.mapUrl} target="_blank" rel="noopener noreferrer" class="button" style="padding: 8px 16px; font-size: 0.85rem;">Abrir en Google Maps</a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</InstitutionalLayout>

@@ -1,0 +1,71 @@
+---
+import InstitutionalLayout from '../../layouts/InstitutionalLayout.astro';
+import {
+  loadBranchesJson,
+  loadCompanyJson,
+  loadServicesJson,
+  loadTeamJson,
+} from '../../lib/seo/loadCompanyJson.ts';
+import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
+
+const company = loadCompanyJson();
+const branches = loadBranchesJson();
+const services = loadServicesJson();
+const team = loadTeamJson();
+const pageUrl = new URL('/empresa/', company.url).toString();
+const crumb = buildBreadcrumbList({
+  items: [
+    { name: 'Inicio', item: company.url },
+    { name: 'Empresa', item: pageUrl },
+  ],
+});
+const pageNode = buildWebPage({
+  url: pageUrl,
+  name: 'Empresa | Comercializadora Todo Huincha',
+  description: company.shortPitch,
+  inLanguage: 'es-CL',
+  isPartOf: 'SITE',
+  breadcrumb: crumb.itemListElement[crumb.itemListElement.length - 1].item,
+});
+const breadcrumbs = [
+  { name: 'Inicio', url: '/' },
+  { name: 'Empresa', url: '/empresa/' },
+];
+---
+<InstitutionalLayout
+  title="Empresa | Comercializadora Todo Huincha"
+  description={company.shortPitch}
+  pageLevelJsonLd={[pageNode, crumb]}
+  breadcrumbs={breadcrumbs}
+>
+  <div class="inst-wrap">
+    <span class="eyebrow">Sobre nosotros</span>
+    <h1>Comercializadora Todo Huincha Ltda.</h1>
+    <p class="lede">{company.shortPitch}</p>
+
+    <h2>Mision y alcance</h2>
+    <p>{company.mission}</p>
+    <p>{company.vision}</p>
+
+    <h2>Equipo directivo</h2>
+    <ul>
+      {team.map((member) => (
+        <li><strong>{member.name}</strong> — {member.role}</li>
+      ))}
+    </ul>
+
+    <h2>Lineas de servicio</h2>
+    <ul>
+      {services.map((service) => (
+        <li><strong>{service.name}.</strong> {service.description}</li>
+      ))}
+    </ul>
+
+    <h2>Cobertura geografica</h2>
+    <ul>
+      {branches.map((branch) => (
+        <li>{branch.address.locality}, {branch.address.region} — {branch.phone}</li>
+      ))}
+    </ul>
+  </div>
+</InstitutionalLayout>

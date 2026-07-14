@@ -1,0 +1,53 @@
+---
+import Base from './Base.astro';
+import { SITE_LANG, SITE_URL } from '../lib/seo/schema-org-ids.ts';
+
+const {
+  title,
+  description,
+  pageLevelJsonLd = [],
+  breadcrumbs = [],
+  ogImage = '/logo-todohuincha.svg',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, SITE_URL).toString();
+---
+<Base title={title} description={description} pageLevelJsonLd={pageLevelJsonLd}>
+  <nav aria-label="Migas" class="crumbs">
+    {breadcrumbs.map((crumb: { name: string; url: string }, index: number) => (
+      <>
+        {index > 0 && <span class="sep" aria-hidden="true">/</span>}
+        {index < breadcrumbs.length - 1 ? (
+          <a href={crumb.url}>{crumb.name}</a>
+        ) : (
+          <span aria-current="page">{crumb.name}</span>
+        )}
+      </>
+    ))}
+  </nav>
+  <link rel="alternate" hreflang={SITE_LANG} href={canonical} slot="head" />
+  <meta property="og:title" content={title} slot="head" />
+  <meta property="og:description" content={description} slot="head" />
+  <meta property="og:type" content="website" slot="head" />
+  <meta property="og:url" content={canonical} slot="head" />
+  <meta property="og:image" content={ogImage} slot="head" />
+  <slot />
+</Base>
+
+<style is:global>
+.crumbs{max-width:1280px;margin:24px auto 0;padding:0 clamp(20px,5vw,40px);font-size:0.85rem;color:var(--muted)}
+.crumbs a{color:var(--charcoal);text-decoration:none;margin-right:6px}
+.crumbs a:hover{color:var(--orange)}
+.crumbs [aria-current="page"]{color:var(--ink);font-weight:600}
+.crumbs span.sep{margin:0 6px;color:var(--line)}
+.inst-wrap{max-width:1280px;margin:auto;padding:clamp(40px,5vw,64px) clamp(20px,5vw,40px)}
+.inst-wrap h1{font-size:clamp(2rem,4vw,3.2rem);margin:0 0 1rem;color:var(--charcoal)}
+.inst-wrap p.lede{font-size:1.05rem;color:var(--muted);line-height:1.6;max-width:70ch}
+.inst-wrap dl.timeline{margin:32px 0;display:grid;gap:18px}
+.inst-wrap dl.timeline > div{display:grid;grid-template-columns:90px 1fr;gap:18px;align-items:baseline;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.inst-wrap dl.timeline dt{font-weight:800;color:var(--orange);font-size:1.1rem}
+.inst-wrap dl.timeline dd{margin:0;color:var(--ink);line-height:1.55}
+.inst-wrap blockquote{margin:16px 0;padding:18px 22px;border-left:4px solid var(--orange);background:var(--soft);border-radius:0 10px 10px 0;font-size:1.05rem;line-height:1.55;color:var(--ink)}
+.inst-wrap blockquote cite{display:block;margin-top:8px;font-size:0.85rem;font-style:normal;color:var(--muted)}
+.inst-wrap .soon{padding:16px 20px;background:var(--soft);border-radius:10px;color:var(--charcoal);font-size:0.95rem}
+</style>

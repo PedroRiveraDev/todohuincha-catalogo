@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import FreshAstroRedirect from '../components/FreshAstroRedirect.astro';
+---
+<Base
+  title="Redirigiendo a Historia | Todo Huincha"
+  description="Redireccion a la linea de tiempo de Comercializadora Todo Huincha Ltda."
+  canonical="https://todohuincha.com/empresa/historia/"
+  noIndex={true}
+>
+  <FreshAstroRedirect target="/empresa/historia/" />
+  <section class="wrap">
+    <span class="eyebrow">Redireccion</span>
+    <h1>Redirigiendo a nuestra historia...</h1>
+    <p>Si no es redirigido automaticamente, <a href="/empresa/historia/">conozca nuestra trayectoria</a>.</p>
+  </section>
+</Base>
