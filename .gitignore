@@ -21,9 +21,16 @@ dist/
 
 # Playwright & Testing output
 .playwright-cli/
+.playwright-mcp/
 output/
 playwright-report/
 test-results/
+
+# Local review and generated preview artifacts
+cookies.txt
+admin-preview-*.png
+pdf-renders/
+docs/page_*.png
 
 # TypeScript cache
 *.tsbuildinfo
