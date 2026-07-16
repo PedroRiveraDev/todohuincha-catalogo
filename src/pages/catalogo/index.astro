@@ -107,7 +107,8 @@ import { categories, products } from '../../data/catalog';
 </Base>
 
 <script>
-import { jsPDF } from 'jspdf';
+// jsPDF se importa dinámicamente solo cuando el usuario descarga el PDF,
+// para que un fallo en la carga de esa dependencia no rompa los filtros.
 
 // ── Estado ───────────────────────────────────────────────
 const categoryElements = [...document.querySelectorAll<HTMLElement>('.category-select-check')];
@@ -456,7 +457,10 @@ pdfBtn?.addEventListener('click', async () => {
     const title = pdfBtn.dataset.title ?? 'Todo Huincha';
     const subtitle = pdfBtn.dataset.subtitle ?? '';
     const pdfRows: string[] = JSON.parse(pdfBtn.dataset.rows ?? '[]');
-    
+
+    // Cargar jsPDF solo cuando se necesita (import dinámico, no rompe el módulo si falla).
+    const { jsPDF } = await import('jspdf');
+
     const orange = [251, 77, 8];
     const slate = [49, 62, 72];
     const muted = [108, 107, 101];

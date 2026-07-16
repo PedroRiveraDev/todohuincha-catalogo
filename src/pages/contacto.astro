@@ -1,253 +1,641 @@
 ---
 import Base from '../layouts/Base.astro';
+import {
+  loadBranchesJson,
+  loadCompanyJson,
+} from '../lib/seo/loadCompanyJson.ts';
+import { buildBreadcrumbList, buildWebPage } from '../lib/seo/jsonld.ts';
+
+const company = loadCompanyJson();
+const branches = loadBranchesJson();
 const code = Astro.url.searchParams.get('producto');
+const preselectedReason = Astro.url.searchParams.get('motivo') ?? '';
+
+const pageUrl = new URL('/contacto', company.url).toString();
+const crumb = buildBreadcrumbList({
+  items: [
+    { name: 'Inicio', item: company.url },
+    { name: 'Contacto', item: pageUrl },
+  ],
+});
+const pageNode = buildWebPage({
+  url: pageUrl,
+  name: 'Contacto | Comercializadora Todo Huincha',
+  description: 'Cotizá con Todo Huincha. Tres sucursales en el sur de Chile, servicio técnico especializado y respuesta el mismo día hábil.',
+  inLanguage: 'es-CL',
+  isPartOf: 'SITE',
+  breadcrumb: crumb.itemListElement[crumb.itemListElement.length - 1].item,
+});
+
+// Motivos predefinidos para el formulario.
+const reasons = [
+  { id: 'cotizacion', label: 'Cotización de maquinaria o consumibles' },
+  { id: 'servicio-tecnico', label: 'Servicio técnico o mantención' },
+  { id: 'repuestos', label: 'Consulta por repuestos' },
+  { id: 'visita', label: 'Coordinar visita a sucursal' },
+  { id: 'otro', label: 'Otro' },
+];
+
+// Razones para elegirnos.
+const benefits = [
+  { icon: 'clock', text: 'Respondemos el mismo día hábil con stock real y precios claros.' },
+  { icon: 'shield', text: 'Asesoría técnica gratuita antes y después de la compra.' },
+  { icon: 'tools', text: 'Servicio técnico certificado en taller y en terreno.' },
+  { icon: 'map', text: 'Tres sucursales en el sur para llegar donde estés.' },
+];
+
+// FAQ.
+const faqs = [
+  {
+    q: '¿Cuánto demora una cotización?',
+    a: 'Respondemos cotizaciones el mismo día hábil. Casos especiales (importación, fletes) pueden tomar 24-48 h.',
+  },
+  {
+    q: '¿Tienen servicio técnico en terreno?',
+    a: 'Sí. Nuestros técnicos se desplazan a faena dentro de la Araucanía, Maule y Los Lagos. Coordinamos la visita telefónicamente.',
+  },
+  {
+    q: '¿Venden repuestos de todas las marcas?',
+    a: 'Trabajamos con repuestos originales de las marcas que comercializamos. Para otras marcas consultanos por disponibilidad.',
+  },
+  {
+    q: '¿Cuáles son las formas de pago?',
+    a: 'Transferencia bancaria, tarjeta y crédito comercial sujeto a evaluación. Coordiná los detalles con tu ejecutiva comercial.',
+  },
+];
+
+// Iconos SVG inline.
+const iconPath: Record<string, string> = {
+  location: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/>',
+  call: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  schedule: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  shield: '<path d="M12 2l8 3v6c0 5-3.5 9.4-8 11-4.5-1.6-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  tools: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5z"/>',
+  map: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white" stroke="none"/>',
+  send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+  chevron: '<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  check: '<path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPath[name] ?? ''}</svg>`;
 ---
-<Base title="Solicitar cotización | Todo Huincha">
-  <div class="contacto-container">
-    <div class="contacto-grid">
-      <!-- Left column: Info -->
-      <div class="contacto-info">
-        <span class="eyebrow">Contacto y Asesoría</span>
-        <h1>Hablemos de tu proyecto</h1>
-        <p class="intro">Indícanos el producto y tu necesidad. Nuestro equipo comercial te contactará a la brevedad con una propuesta formal y personalizada.</p>
-        
-        <div class="info-list">
-          <div class="info-item">
-            <div class="info-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            </div>
-            <div class="info-content">
-              <h3>Dirección Comercial</h3>
-              <p>Longitudinal Sur 4277, Padre Las Casas, Región de la Araucanía.</p>
+<Base
+  title="Contacto y cotización | Comercializadora Todo Huincha"
+  description="Cotizá con Todo Huincha. Tres sucursales en el sur de Chile, servicio técnico especializado y respuesta el mismo día hábil."
+  pageLevelJsonLd={[pageNode, crumb]}
+>
+  <!-- HERO -->
+  <section class="cont-hero">
+    <div class="cont-hero-bg" aria-hidden="true"></div>
+    <div class="cont-hero-shade" aria-hidden="true"></div>
+    <div class="cont-hero-inner">
+      <span class="cont-eyebrow">Contacto y cotización</span>
+      <h1>Cotizá con Todo Huincha</h1>
+      <p class="cont-lede">
+        Respondemos el mismo día hábil con stock real, precios claros y asesoría técnica especializada. Tres sucursales en el sur de Chile para llegar donde estés.
+      </p>
+    </div>
+  </section>
+
+  <!-- MAIN: INFO + FORM -->
+  <section class="cont-main">
+    <div class="cont-wrap">
+      <div class="cont-grid">
+        <!-- LEFT: info + sucursales + razones -->
+        <div class="cont-info">
+          <h2 class="cont-h2">Hablemos de tu proyecto</h2>
+          <p class="cont-intro">
+            Indícanos el producto y tu necesidad. Nuestro equipo comercial te contactará a la brevedad con una propuesta formal y personalizada.
+          </p>
+
+          <!-- Datos de contacto directos -->
+          <ul class="cont-direct">
+            <li>
+              <span class="cont-direct-icon" set:html={svg('call', 22)}></span>
+              <div>
+                <p class="cont-direct-label">Teléfono</p>
+                <a class="cont-direct-value" href={`tel:${company.phones[0].replace(/\s|\(|\)/g, '')}`}>{company.phones[0]}</a>
+              </div>
+            </li>
+            <li>
+              <span class="cont-direct-icon" set:html={svg('mail', 22)}></span>
+              <div>
+                <p class="cont-direct-label">Correo</p>
+                <a class="cont-direct-value" href={`mailto:${company.emails[0]}`}>{company.emails[0]}</a>
+              </div>
+            </li>
+            <li>
+              <span class="cont-direct-icon" set:html={svg('schedule', 22)}></span>
+              <div>
+                <p class="cont-direct-label">Horario</p>
+                <p class="cont-direct-value">Lun a Vie, 8:30 a 18:30</p>
+              </div>
+            </li>
+            <li>
+              <span class="cont-direct-icon" set:html={svg('location', 22)}></span>
+              <div>
+                <p class="cont-direct-label">Casa matriz</p>
+                <p class="cont-direct-value">{company.address.street}, {company.address.locality}</p>
+              </div>
+            </li>
+          </ul>
+
+          <!-- Sucursales -->
+          <div class="cont-subsection">
+            <h3 class="cont-h3">Nuestras sucursales</h3>
+            <div class="cont-branches">
+              {branches.map((branch) => (
+                <a class="cont-branch" href={`/sucursales/${branch.slug}/`}>
+                  <span class="cont-branch-loc">{branch.city}</span>
+                  <span class="cont-branch-region">{branch.address.region}</span>
+                  <span class="cont-branch-addr">{branch.address.street}</span>
+                  <span class="cont-branch-hours">{branch.hours}</span>
+                  <span class="cont-branch-cta">Ver sucursal <span set:html={svg('chevron', 14)}></span></span>
+                </a>
+              ))}
             </div>
           </div>
 
-          <div class="info-item">
-            <div class="info-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-            </div>
-            <div class="info-content">
-              <h3>Teléfono de Contacto</h3>
-              <p>(45) 240 0000</p>
-            </div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            </div>
-            <div class="info-content">
-              <h3>Correo Electrónico</h3>
-              <p>info@todohuincha.com</p>
-            </div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            </div>
-            <div class="info-content">
-              <h3>Horario de Atención</h3>
-              <p>Lunes a Viernes: 8:30 a 18:30 hrs.</p>
-            </div>
+          <!-- Razones -->
+          <div class="cont-subsection">
+            <h3 class="cont-h3">Por qué elegirnos</h3>
+            <ul class="cont-reasons">
+              {benefits.map((b) => (
+                <li>
+                  <span class="cont-reason-icon" set:html={svg(b.icon, 18)}></span>
+                  <span>{b.text}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      </div>
 
-      <!-- Right column: Form -->
-      <div class="contacto-form-wrapper">
-        <form class="contacto-form" action="mailto:info@todohuincha.com" method="post" enctype="text/plain">
-          <div class="form-row">
-            <label>
-              <span>Nombre completo *</span>
-              <input class="input-field" required name="nombre" placeholder="Juan Pérez" />
+        <!-- RIGHT: form -->
+        <aside class="cont-form-card">
+          <header class="cont-form-head">
+            <span class="cont-form-eyebrow">Formulario de cotización</span>
+            <h2 class="cont-h2 cont-h2--ink">Solicita tu cotización</h2>
+            <p>Completa los datos y te respondemos a la brevedad.</p>
+          </header>
+
+          <form class="cont-form" id="contact-form" novalidate>
+            <div class="cont-form-row">
+              <label class="cont-field">
+                <span class="cont-label">Nombre completo <em>*</em></span>
+                <input class="cont-input" required name="nombre" placeholder="Juan Pérez" autocomplete="name" />
+              </label>
+              <label class="cont-field">
+                <span class="cont-label">Empresa</span>
+                <input class="cont-input" name="empresa" placeholder="Mi Empresa S.A." autocomplete="organization" />
+              </label>
+            </div>
+
+            <div class="cont-form-row">
+              <label class="cont-field">
+                <span class="cont-label">Correo electrónico <em>*</em></span>
+                <input class="cont-input" required type="email" name="correo" placeholder="juan@correo.com" autocomplete="email" />
+              </label>
+              <label class="cont-field">
+                <span class="cont-label">Teléfono</span>
+                <input class="cont-input" type="tel" name="telefono" placeholder="+56 9 ..." autocomplete="tel" />
+              </label>
+            </div>
+
+            <div class="cont-form-row">
+              <label class="cont-field">
+                <span class="cont-label">Motivo de contacto <em>*</em></span>
+                <select class="cont-input" required name="motivo" id="motivo-select">
+                  <option value="">Selecciona un motivo</option>
+                  {reasons.map((r) => (
+                    <option value={r.id} selected={r.id === preselectedReason}>{r.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label class="cont-field">
+                <span class="cont-label">Sucursal preferida</span>
+                <select class="cont-input" name="sucursal">
+                  <option value="">Sin preferencia</option>
+                  {branches.map((branch) => (
+                    <option value={branch.slug}>{branch.name}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label class="cont-field">
+              <span class="cont-label">Producto o código de referencia</span>
+              <input class="cont-input" name="producto" value={code ?? ''} placeholder="Ej. Sierra 24 pulgadas, ref 951I" />
             </label>
-            <label>
-              <span>Empresa</span>
-              <input class="input-field" name="empresa" placeholder="Mi Empresa S.A." />
+
+            <label class="cont-field">
+              <span class="cont-label">Mensaje / Requerimiento <em>*</em></span>
+              <textarea class="cont-input cont-textarea" required rows="5" name="mensaje" placeholder="Cuéntanos en detalle qué maquinaria o consumibles necesitas cotizar..."></textarea>
             </label>
+
+            <button type="submit" class="cont-submit">
+              <span>Enviar cotización</span>
+              <span class="cont-submit-icon" set:html={svg('send', 18)}></span>
+            </button>
+
+            <p class="cont-form-note">
+              Al enviar abriremos tu cliente de correo con el mensaje pre-armado. También podés escribirnos directo a <a href={`mailto:${company.emails[0]}`}>{company.emails[0]}</a>.
+            </p>
+          </form>
+
+          <div class="cont-form-success" id="contact-success" hidden>
+            <span class="cont-form-success-icon" set:html={svg('check', 32)}></span>
+            <h3>¡Listo! Tu cliente de correo se abrió</h3>
+            <p>Revisá tu aplicación de correo y enviá el mensaje. Si no se abrió, escribinos directo a <a href={`mailto:${company.emails[0]}`}>{company.emails[0]}</a>.</p>
           </div>
-
-          <div class="form-row">
-            <label>
-              <span>Correo electrónico *</span>
-              <input class="input-field" required type="email" name="correo" placeholder="juan@correo.com" />
-            </label>
-            <label>
-              <span>Producto o código de referencia</span>
-              <input class="input-field" name="producto" value={code ?? ''} placeholder="Ej. Sierra 24 pulgadas" />
-            </label>
-          </div>
-
-          <label class="full-width">
-            <span>Mensaje / Requerimiento *</span>
-            <textarea class="input-field text-area" required rows="6" name="mensaje" placeholder="Cuéntanos en detalle qué maquinaria o consumibles necesitas cotizar..."></textarea>
-          </label>
-
-          <button class="button submit-btn">
-            <span>Enviar cotización</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 8px; display: inline-block; vertical-align: middle;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          </button>
-        </form>
+        </aside>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="cont-section cont-section--soft">
+    <div class="cont-wrap cont-wrap--narrow">
+      <header class="cont-faq-head">
+        <span class="cont-eyebrow">Preguntas frecuentes</span>
+        <h2 class="cont-h2">Resolvemos tus dudas</h2>
+      </header>
+      <div class="cont-faq">
+        {faqs.map((item, idx) => (
+          <details class="cont-faq-item" open={idx === 0}>
+            <summary>
+              <span>{item.q}</span>
+              <span class="cont-faq-icon" set:html={svg('chevron', 18)}></span>
+            </summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
 </Base>
 
+<script>
+  // Form handler: arma un mailto con todos los campos y abre el cliente de correo.
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const success = document.getElementById('contact-success') as HTMLElement | null;
+  if (form && success) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const nombre = String(data.get('nombre') ?? '').trim();
+      const correo = String(data.get('correo') ?? '').trim();
+      const motivo = String(data.get('motivo') ?? '').trim();
+      const mensaje = String(data.get('mensaje') ?? '').trim();
+      if (!nombre || !correo || !motivo || !mensaje) {
+        form.reportValidity();
+        return;
+      }
+      const motivoLabels: Record<string, string> = {
+        cotizacion: 'Cotización',
+        'servicio-tecnico': 'Servicio técnico',
+        repuestos: 'Repuestos',
+        visita: 'Visita a sucursal',
+        otro: 'Otro',
+      };
+      const lines = [
+        `Hola, soy ${nombre}.`,
+        `Empresa: ${String(data.get('empresa') ?? '(no indicada)')}`,
+        `Correo: ${correo}`,
+        `Teléfono: ${String(data.get('telefono') ?? '(no indicado)')}`,
+        `Motivo: ${motivoLabels[motivo] ?? motivo}`,
+        `Sucursal preferida: ${String(data.get('sucursal') ?? 'Sin preferencia')}`,
+        `Producto o código: ${String(data.get('producto') ?? '(no indicado)')}`,
+        '',
+        'Mensaje:',
+        mensaje,
+      ];
+      const subject = `Cotización Todo Huincha — ${motivoLabels[motivo] ?? motivo}`;
+      const body = encodeURIComponent(lines.join('\n'));
+      const mailto = `mailto:info@todohuincha.com?subject=${encodeURIComponent(subject)}&body=${body}`;
+      window.location.href = mailto;
+      // Mostrar mensaje de éxito después de un breve delay.
+      setTimeout(() => {
+        form.hidden = true;
+        success.hidden = false;
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
+    });
+  }
+</script>
+
 <style>
-  .contacto-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: clamp(52px, 7vw, 96px) clamp(20px, 5vw, 40px);
+  .cont-hero{
+    position:relative;
+    height:540px;
+    display:flex;align-items:center;
+    overflow:hidden;
+    background:var(--charcoal);
+  }
+  .cont-hero-bg{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(28,32,38,.55) 0%,rgba(28,32,38,.85) 100%),
+      url('/hero/taller-maquinaria.jpg') center/cover no-repeat;
+    filter:saturate(.85) contrast(1.05);
+  }
+  .cont-hero-shade{
+    position:absolute;inset:0;
+    background:linear-gradient(90deg,rgba(28,32,38,.85) 0%,rgba(28,32,38,.45) 60%,rgba(28,32,38,.15) 100%);
+  }
+  .cont-hero-inner{
+    position:relative;
+    width:100%;
+    max-width:1280px;
+    margin:auto;
+    padding:clamp(80px,10vw,120px) clamp(20px,5vw,40px);
+    color:#fff;
+  }
+  .cont-eyebrow{
+    display:inline-block;
+    color:#ffb18f;
+    font-size:.78rem;font-weight:850;letter-spacing:.2em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .cont-hero h1{
+    color:#fff;
+    font-size:clamp(2.2rem,5vw,4rem);
+    line-height:1.04;letter-spacing:-.035em;
+    margin:0 0 18px;font-weight:800;
+    max-width:18ch;
+  }
+  .cont-lede{
+    color:rgba(255,255,255,.85);
+    font-size:clamp(1rem,1.15vw,1.12rem);
+    line-height:1.6;max-width:62ch;margin:0;
   }
 
-  .contacto-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.15fr;
-    gap: clamp(40px, 6vw, 80px);
-    align-items: start;
+  /* MAIN */
+  .cont-main{padding:clamp(56px,7vw,96px) 0}
+  .cont-wrap{
+    max-width:1280px;
+    margin:auto;
+    padding:0 clamp(20px,5vw,40px);
+  }
+  .cont-wrap--narrow{max-width:880px}
+  .cont-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+    gap:clamp(40px,6vw,80px);
+    align-items:start;
   }
 
-  .contacto-info {
-    display: flex;
-    flex-direction: column;
+  .cont-info{display:flex;flex-direction:column}
+  .cont-h2{
+    color:var(--charcoal);
+    font-size:clamp(1.6rem,2.6vw,2.2rem);
+    line-height:1.1;letter-spacing:-.025em;
+    margin:0 0 14px;font-weight:800;
+  }
+  .cont-h2--ink{color:var(--charcoal)}
+  .cont-intro{
+    color:var(--muted);line-height:1.6;margin:0 0 32px;max-width:60ch;
+  }
+  .cont-h3{
+    color:var(--charcoal);
+    font-size:1.05rem;font-weight:800;letter-spacing:-.01em;
+    margin:0 0 16px;text-transform:none;
   }
 
-  .contacto-info h1 {
-    font-size: clamp(2rem, 4vw, 3.2rem);
-    margin: 10px 0 20px;
-    color: var(--charcoal);
+  .cont-direct{
+    list-style:none;margin:0 0 36px;padding:0;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;
+  }
+  .cont-direct li{
+    display:flex;gap:12px;align-items:flex-start;
+    background:var(--soft);
+    border-radius:10px;
+    padding:16px 18px;
+  }
+  .cont-direct-icon{
+    flex-shrink:0;
+    width:38px;height:38px;
+    background:var(--surface);
+    color:var(--orange);
+    border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .cont-direct-label{
+    margin:0 0 4px;
+    font-size:.7rem;font-weight:800;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .cont-direct-value{
+    margin:0;
+    color:var(--charcoal);
+    font-size:.95rem;font-weight:600;line-height:1.4;
+    word-break:break-word;
+  }
+  a.cont-direct-value{color:inherit}
+  a.cont-direct-value:hover{color:var(--orange)}
+
+  .cont-subsection{margin-top:8px;padding-top:8px}
+  .cont-subsection + .cont-subsection{margin-top:36px;padding-top:32px;border-top:1px solid var(--line)}
+
+  .cont-branches{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;
+  }
+  .cont-branch{
+    display:flex;flex-direction:column;gap:4px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 18px 14px;
+    transition:border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .cont-branch:hover{
+    border-color:var(--orange);
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(45,25,13,.08);
+  }
+  .cont-branch-loc{
+    color:var(--charcoal);
+    font-size:1rem;font-weight:800;letter-spacing:-.01em;
+  }
+  .cont-branch-region{
+    color:var(--orange);
+    font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .cont-branch-addr,
+  .cont-branch-hours{
+    color:var(--muted);
+    font-size:.85rem;line-height:1.4;margin:0;
+  }
+  .cont-branch-cta{
+    display:inline-flex;align-items:center;gap:4px;
+    margin-top:8px;
+    color:var(--charcoal);
+    font-size:.74rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .cont-branch:hover .cont-branch-cta{color:var(--orange)}
+
+  .cont-reasons{
+    list-style:none;margin:0;padding:0;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .cont-reasons li{
+    display:flex;gap:12px;align-items:flex-start;
+    color:var(--charcoal);font-size:.94rem;line-height:1.5;
+  }
+  .cont-reason-icon{
+    flex-shrink:0;
+    width:32px;height:32px;
+    background:var(--orange);
+    color:#fff;
+    border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
   }
 
-  .contacto-info .intro {
-    font-size: 1.05rem;
-    color: var(--muted);
-    line-height: 1.6;
-    margin-bottom: 40px;
+  /* FORM CARD */
+  .cont-form-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:clamp(28px,4vw,40px);
+    box-shadow:0 14px 38px rgba(45,25,13,.06);
+    position:sticky;top:96px;
+  }
+  .cont-form-head{margin-bottom:24px}
+  .cont-form-head p{color:var(--muted);margin:8px 0 0;font-size:.94rem}
+  .cont-form-eyebrow{
+    display:inline-block;
+    color:var(--orange);
+    font-size:.74rem;font-weight:850;letter-spacing:.18em;text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .cont-form{
+    display:flex;flex-direction:column;gap:18px;
+  }
+  .cont-form-row{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+  }
+  .cont-field{
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .cont-label{
+    font-size:.78rem;font-weight:800;letter-spacing:.04em;
+    color:var(--charcoal);
+  }
+  .cont-label em{
+    color:var(--orange);
+    font-style:normal;
+    margin-left:2px;
+  }
+  .cont-input{
+    width:100%;
+    padding:11px 14px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:8px;
+    font:inherit;font-size:.92rem;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .cont-input::placeholder{color:#a3a8ad}
+  .cont-input:focus{
+    border-color:var(--orange);
+    box-shadow:0 0 0 3px rgba(251,77,8,.12);
+  }
+  textarea.cont-input{resize:vertical;min-height:120px}
+  .cont-submit{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    background:var(--orange);
+    color:#fff;
+    border:1px solid var(--orange);
+    padding:14px 26px;
+    font-size:.88rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:8px;
+    cursor:pointer;
+    transition:background .2s, transform .2s;
+    margin-top:4px;
+  }
+  .cont-submit:hover{background:var(--orange-deep);transform:translateY(-1px)}
+  .cont-form-note{
+    margin:0;
+    color:var(--muted);
+    font-size:.78rem;line-height:1.55;
+  }
+  .cont-form-note a{color:var(--orange);font-weight:700}
+  .cont-form-note a:hover{text-decoration:underline}
+
+  /* SUCCESS STATE */
+  .cont-form-success{
+    text-align:center;
+    padding:24px 12px;
+  }
+  .cont-form-success-icon{
+    display:inline-flex;width:64px;height:64px;
+    background:#dcfce7;color:#16a34a;
+    border-radius:50%;
+    align-items:center;justify-content:center;
+    margin-bottom:16px;
+  }
+  .cont-form-success h3{
+    color:var(--charcoal);
+    font-size:1.25rem;font-weight:800;letter-spacing:-.01em;
+    margin:0 0 8px;
+  }
+  .cont-form-success p{
+    color:var(--muted);line-height:1.55;margin:0;font-size:.94rem;
+  }
+  .cont-form-success a{color:var(--orange);font-weight:700}
+  .cont-form-success a:hover{text-decoration:underline}
+
+  /* SECTION + FAQ */
+  .cont-section{padding:clamp(64px,8vw,112px) 0}
+  .cont-section--soft{background:var(--soft)}
+  .cont-faq-head{text-align:center;margin-bottom:48px;max-width:720px;margin-inline:auto}
+  .cont-faq-head .cont-h2{margin-top:10px}
+  .cont-faq{display:flex;flex-direction:column;gap:12px}
+  .cont-faq-item{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    transition:border-color .2s;
+  }
+  .cont-faq-item[open]{border-color:var(--orange)}
+  .cont-faq-item summary{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:18px 22px;
+    cursor:pointer;
+    list-style:none;
+    color:var(--charcoal);
+    font-size:1rem;font-weight:700;letter-spacing:-.01em;
+  }
+  .cont-faq-item summary::-webkit-details-marker{display:none}
+  .cont-faq-icon{
+    flex-shrink:0;
+    color:var(--orange);
+    transition:transform .25s;
+  }
+  .cont-faq-item[open] .cont-faq-icon{transform:rotate(180deg)}
+  .cont-faq-item p{
+    margin:0;
+    padding:0 22px 20px;
+    color:var(--muted);line-height:1.6;font-size:.94rem;
   }
 
-  .info-list {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
+  /* Responsive */
+  @media (max-width:980px){
+    .cont-grid{grid-template-columns:1fr;gap:48px}
+    .cont-form-card{position:static}
   }
-
-  .info-item {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-  }
-
-  .info-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: var(--soft);
-    color: var(--orange);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .info-content h3 {
-    font-size: 0.95rem;
-    font-weight: 750;
-    color: var(--charcoal);
-    margin: 0 0 4px 0;
-  }
-
-  .info-content p {
-    font-size: 0.9rem;
-    color: var(--muted);
-    margin: 0;
-    line-height: 1.5;
-  }
-
-  /* Form Styling */
-  .contacto-form-wrapper {
-    background: #ffffff;
-    border: 1px solid rgba(49, 62, 72, 0.08);
-    border-radius: 16px;
-    padding: clamp(24px, 5vw, 40px);
-    box-shadow: 0 10px 30px rgba(49, 62, 72, 0.03);
-  }
-
-  .contacto-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .contacto-form label {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--charcoal);
-  }
-
-  .contacto-form label span {
-    color: var(--charcoal);
-  }
-
-  .input-field {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid var(--line);
-    background: #ffffff;
-    border-radius: 8px;
-    font: inherit;
-    font-size: 0.92rem;
-    outline: none;
-    transition: border-color 0.25s, box-shadow 0.25s;
-    color: var(--ink);
-  }
-
-  .input-field::placeholder {
-    color: #a3a8ad;
-  }
-
-  .input-field:focus {
-    border-color: var(--orange);
-    box-shadow: 0 0 0 3px rgba(251, 77, 8, 0.12);
-  }
-
-  .text-area {
-    resize: vertical;
-  }
-
-  .submit-btn {
-    align-self: flex-start;
-    padding: 14px 28px;
-    margin-top: 10px;
-  }
-
-  @media (max-width: 900px) {
-    .contacto-grid {
-      grid-template-columns: 1fr;
-      gap: 50px;
-    }
-    
-    .contacto-info .intro {
-      margin-bottom: 30px;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .form-row {
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-    .submit-btn {
-      align-self: stretch;
-    }
+  @media (max-width:640px){
+    .cont-hero{height:420px}
+    .cont-direct{grid-template-columns:1fr}
+    .cont-form-row{grid-template-columns:1fr}
   }
 </style>

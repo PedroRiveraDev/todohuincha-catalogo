@@ -68,9 +68,60 @@ const canonicalHref = canonical ?? new URL(pathname, company.url).toString();
       </nav>
     </header>
     <main><slot /></main>
-    <footer>
-      <strong>Comercializadora Todo Huincha Ltda.</strong>
-      <span>{company.address.street}, {company.address.locality} · {company.phones[0]} · {company.emails[0]}</span>
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Enlaces útiles</h4>
+          <ul>
+            <li><a href="/">Inicio</a></li>
+            <li><a href="/empresa/">Sobre nosotros</a></li>
+            <li><a href="/sucursales/">Sucursales</a></li>
+            <li><a href="/marcas/">Marcas</a></li>
+            <li><a href="/contacto">Contáctenos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col footer-col--about">
+          <h4>Sobre nosotros</h4>
+          <p>{company.shortPitch}</p>
+        </div>
+        <div class="footer-col">
+          <h4>Contáctenos</h4>
+          <ul class="footer-contact">
+            <li><a href="/contacto">Contáctenos</a></li>
+            <li><a href={`mailto:${company.emails[0]}`}>{company.emails[0]}</a></li>
+            <li><a href={`tel:${company.phones[0].replace(/\s|\(|\)/g, '')}`}>{company.phones[0]}</a></li>
+            <li>{company.address.street}, {company.address.locality}</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Síganos</h4>
+          <div class="footer-socials">
+            {company.socials.facebook && (
+              <a href={company.socials.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+              </a>
+            )}
+            {company.socials.instagram && (
+              <a href={company.socials.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+              </a>
+            )}
+            {company.socials.linkedin && (
+              <a href={company.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+              </a>
+            )}
+            {company.socials.whatsapp && (
+              <a href={company.socials.whatsapp} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.2-.32a8.188 8.188 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.39 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01z"/></svg>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; {new Date().getFullYear()} {company.legalName}. Todos los derechos reservados.</p>
+      </div>
     </footer>
     
     <script>
@@ -227,5 +278,89 @@ const canonicalHref = canonical ?? new URL(pathname, company.url).toString();
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Footer */
+.site-footer {
+  background: var(--charcoal);
+  color: #fff;
+  padding: 60px clamp(20px, 5vw, 80px) 30px;
+  margin-top: auto;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.footer-col h4 {
+  color: var(--orange);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 18px;
+}
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.footer-col a {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  transition: color 0.2s;
+}
+.footer-col a:hover {
+  color: var(--orange);
+}
+.footer-col--about p {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.footer-contact li {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.footer-socials {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+}
+.footer-socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.footer-socials a:hover {
+  background: var(--orange);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.footer-bottom {
+  max-width: 1280px;
+  margin: 40px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+.footer-bottom p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  margin: 0;
 }
 </style>

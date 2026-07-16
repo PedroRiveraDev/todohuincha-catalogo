@@ -3,6 +3,7 @@ import InstitutionalLayout from '../../layouts/InstitutionalLayout.astro';
 import {
   loadBranchesJson,
   loadCompanyJson,
+  loadServicesJson,
 } from '../../lib/seo/loadCompanyJson.ts';
 import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
 
@@ -16,7 +17,12 @@ export async function getStaticPaths() {
 
 const { branch } = Astro.props;
 const company = loadCompanyJson();
+const services = loadServicesJson();
+const allBranches = loadBranchesJson();
 const pageUrl = new URL(`/sucursales/${branch.slug}/`, company.url).toString();
+
+// Otras sucursales (para cross-link).
+const otherBranches = allBranches.filter((b) => b.slug !== branch.slug);
 
 const crumb = buildBreadcrumbList({
   items: [
@@ -66,46 +72,472 @@ const localBusinessJsonLd = {
   ]
 };
 
-const breadcrumbs = [
-  { name: 'Inicio', url: '/' },
-  { name: 'Sucursales', url: '/sucursales/' },
-  { name: branch.city, url: `/sucursales/${branch.slug}/` },
-];
+// Foto por sucursal (reusamos assets del proyecto, misma galería que el index).
+const branchPhotos: Record<string, string> = {
+  temuco: '/hero/taller-maquinaria.jpg',
+  constitucion: '/hero/panel-3.jpg',
+  'puerto-montt': '/hero/panel-5.jpg',
+};
+const heroPhoto = branchPhotos[branch.slug] ?? '/hero/taller.jpg';
+
+// Notas operativas por sucursal (honestas, alineadas con la realidad).
+const branchNotes: Record<string, string> = {
+  temuco: 'Casa matriz. Stock completo de maquinaria, consumibles y repuestos. Taller de servicio técnico con técnicos certificados.',
+  constitucion: 'Atención especializada para faenas forestales del Maule. Stock de maquinaria pesada y consumibles para madera.',
+  'puerto-montt': 'Cobertura logística para la región de Los Lagos. Venta de maquinaria y servicio técnico presencial en faena.',
+};
+
+// Iconos SVG inline.
+const iconPath: Record<string, string> = {
+  location: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/>',
+  call: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  schedule: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  machinery: '<path d="M3 17h18M5 17V9h4l2-3h2l2 3h4v8"/><circle cx="8" cy="19" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="19" r="1.5" fill="currentColor" stroke="none"/>',
+  consumables: '<path d="M4 4h16v6H4zM4 14h16v6H4z"/><path d="M8 7h8M8 17h8"/>',
+  support: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5z"/>',
+  arrow: '<path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  back: '<path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPath[name] ?? ''}</svg>`;
+
+// Iframe Google Maps sin API key.
+const mapEmbed = (lat: number, lng: number) =>
+  `https://maps.google.com/maps?q=${lat},${lng}&hl=es&z=15&output=embed`;
+
+const serviceIconMap: Record<string, string> = {
+  maquinaria: 'machinery',
+  consumibles: 'consumables',
+  'servicio-tecnico': 'support',
+};
 ---
 <InstitutionalLayout
   title={`${branch.name} | Comercializadora Todo Huincha`}
   description={`Dirección, teléfono, mapa de ubicación y horarios de atención de la sucursal de Todo Huincha en ${branch.city}.`}
   pageLevelJsonLd={[pageNode, crumb, localBusinessJsonLd]}
-  breadcrumbs={breadcrumbs}
 >
-  <div class="inst-wrap">
-    <span class="eyebrow">Detalles de sucursal</span>
-    <h1>{branch.name}</h1>
-    <p class="lede">Información de contacto, ubicación y horarios de atención para nuestra sucursal de {branch.city}.</p>
+  <!-- HERO -->
+  <section class="sucd-hero">
+    <div class="sucd-hero-bg" aria-hidden="true"></div>
+    <div class="sucd-hero-shade" aria-hidden="true"></div>
+    <div class="sucd-hero-inner">
+      <a class="sucd-back" href="/sucursales/" set:html={`${svg('back', 16)}<span>Volver a sucursales</span>`}></a>
+      <span class="sucd-eyebrow">Sucursal {branch.city}</span>
+      <h1>{branch.name}</h1>
+      <p class="sucd-lede">{branchNotes[branch.slug] ?? ''}</p>
+      {branch.isHeadquarters && (
+        <span class="sucd-badge">Casa Matriz</span>
+      )}
+    </div>
+  </section>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 32px; align-items: start;">
-      <div style="border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; background: var(--surface); display: grid; gap: 16px; box-shadow: var(--shadow);">
-        <h2 style="margin: 0 0 8px; font-size: 1.35rem; color: var(--charcoal);">Información General</h2>
-        <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Dirección:</strong><br/>{branch.address.street}<br/>{branch.address.locality}, {branch.address.region}</p>
-        <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Teléfono:</strong><br/>{branch.phone}</p>
-        <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Horario de Atención:</strong><br/>{branch.hours}</p>
-        <div style="margin-top: 12px;">
-          <a href={branch.mapUrl} target="_blank" rel="noopener noreferrer" class="button" style="width: 100%; text-align: center;">¿Cómo llegar? (Google Maps)</a>
-        </div>
-      </div>
+  <!-- INFO + MAPA -->
+  <section class="sucd-section">
+    <div class="sucd-wrap">
+      <div class="sucd-info-grid">
+        <article class="sucd-info-card">
+          <h2>Información de contacto</h2>
+          <ul class="sucd-info-list">
+            <li>
+              <span class="sucd-info-icon" set:html={svg('location')}></span>
+              <div>
+                <p class="sucd-info-label">Dirección</p>
+                <p class="sucd-info-value">{branch.address.street}<br/>{branch.address.locality}, {branch.address.region}</p>
+              </div>
+            </li>
+            <li>
+              <span class="sucd-info-icon" set:html={svg('call')}></span>
+              <div>
+                <p class="sucd-info-label">Teléfono</p>
+                <p class="sucd-info-value">
+                  <a href={`tel:${branch.phone.replace(/\s|\(|\)/g, '')}`}>{branch.phone}</a>
+                </p>
+              </div>
+            </li>
+            <li>
+              <span class="sucd-info-icon" set:html={svg('schedule')}></span>
+              <div>
+                <p class="sucd-info-label">Horario de atención</p>
+                <p class="sucd-info-value">{branch.hours}</p>
+              </div>
+            </li>
+            <li>
+              <span class="sucd-info-icon" set:html={svg('mail')}></span>
+              <div>
+                <p class="sucd-info-label">Email</p>
+                <p class="sucd-info-value">
+                  <a href={`mailto:${company.emails[0]}`}>{company.emails[0]}</a>
+                </p>
+              </div>
+            </li>
+          </ul>
+          <div class="sucd-info-actions">
+            <a class="sucd-btn sucd-btn--primary" href={branch.mapUrl} target="_blank" rel="noopener noreferrer">Cómo llegar</a>
+            <a class="sucd-btn sucd-btn--ghost" href={`tel:${branch.phone.replace(/\s|\(|\)/g, '')}`}>Llamar ahora</a>
+          </div>
+        </article>
 
-      <div style="border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; background: var(--surface); box-shadow: var(--shadow); height: 100%; min-height: 320px; display: flex; align-items: center; justify-content: center; text-align: center;">
-        <div style="padding: 24px;">
-          <svg style="width: 48px; height: 48px; color: var(--orange); margin-bottom: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
-          <h3 style="margin: 0 0 8px; color: var(--charcoal);">Ubicación Satelital</h3>
-          <p style="font-size: 0.9rem; color: var(--muted); margin-bottom: 16px;">Coordenadas: Lat {branch.address.geo.lat}, Lng {branch.address.geo.lng}</p>
-          <a href={branch.mapUrl} target="_blank" rel="noopener noreferrer" class="button alt">Ver Mapa Interactivo</a>
+        <div class="sucd-map-frame">
+          <iframe
+            title={`Ubicación de ${branch.name}`}
+            src={mapEmbed(branch.address.geo.lat, branch.address.geo.lng)}
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+          <div class="sucd-map-overlay">
+            <span class="sucd-map-eyebrow">Coordenadas</span>
+            <span class="sucd-map-coords">Lat {branch.address.geo.lat}, Lng {branch.address.geo.lng}</span>
+          </div>
         </div>
       </div>
     </div>
-    
-    <div style="margin-top: 24px;">
-      <a href="/sucursales/" class="back-link">&larr; Volver a todas las sucursales</a>
+  </section>
+
+  <!-- SERVICIOS EN ESTA SUCURSAL -->
+  <section class="sucd-section sucd-section--soft">
+    <div class="sucd-wrap">
+      <header class="sucd-services-head">
+        <span class="sucd-eyebrow">Lo que ofrecemos aquí</span>
+        <h2 class="sucd-h2">Servicios disponibles en {branch.city}</h2>
+        <p>Las tres líneas operativas de Todo Huincha están disponibles en esta sucursal. Consultá por disponibilidad específica de stock o visita nuestra sección de contacto.</p>
+      </header>
+      <div class="sucd-services">
+        {services.map((service) => (
+          <article class="sucd-service">
+            <span class="sucd-service-icon" set:html={svg(serviceIconMap[service.id] ?? 'support', 28)}></span>
+            <h3>{service.name}</h3>
+            <p>{service.description}</p>
+          </article>
+        ))}
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- OTRAS SUCURSALES -->
+  {otherBranches.length > 0 && (
+    <section class="sucd-section">
+      <div class="sucd-wrap">
+        <header class="sucd-others-head">
+          <span class="sucd-eyebrow">Red nacional</span>
+          <h2 class="sucd-h2">Otras sucursales</h2>
+        </header>
+        <div class="sucd-others">
+          {otherBranches.map((other) => (
+            <a class="sucd-other" href={`/sucursales/${other.slug}/`}>
+              <span class="sucd-other-loc">{other.city}</span>
+              <span class="sucd-other-region">{other.address.region}</span>
+              <span class="sucd-other-addr">{other.address.street}</span>
+              <span class="sucd-other-cta" set:html={`Ver detalles ${svg('arrow', 14)}`}></span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- CTA -->
+  <section class="sucd-cta">
+    <div class="sucd-cta-inner">
+      <h2>¿Te acercás a {branch.city}?</h2>
+      <p>Aprovechá tu visita para conocer la sucursal y recibir asesoría en terreno. Coordinamos una reunión técnica con uno de nuestros especialistas.</p>
+      <div class="sucd-cta-actions">
+        <a class="sucd-cta-btn sucd-cta-btn--primary" href="/contacto">Coordinar visita</a>
+        <a class="sucd-cta-btn sucd-cta-btn--ghost" href="/catalogo">Ver catálogo</a>
+      </div>
+    </div>
+  </section>
 </InstitutionalLayout>
+
+<style is:global>
+  /* =========================================================
+     Sucursal — Detalle
+     Prefijo `sucd-` para no colisionar con el index `suc-`.
+     ========================================================= */
+
+  /* HERO */
+  .sucd-hero{
+    position:relative;
+    height:540px;
+    display:flex;
+    align-items:center;
+    overflow:hidden;
+    background:var(--charcoal);
+  }
+  .sucd-hero-bg{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(28,32,38,.55) 0%,rgba(28,32,38,.85) 100%),
+      var(--sucd-hero-img, url('/hero/taller.jpg')) center/cover no-repeat;
+    filter:saturate(.85) contrast(1.05);
+  }
+  .sucd-hero-shade{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.55) 100%);
+  }
+  .sucd-hero-inner{
+    position:relative;
+    width:100%;
+    max-width:1280px;
+    margin:auto;
+    padding:clamp(80px,10vw,120px) clamp(20px,5vw,40px);
+    color:#fff;
+  }
+  .sucd-back{
+    display:inline-flex;align-items:center;gap:8px;
+    color:rgba(255,255,255,.85);
+    font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    margin-bottom:24px;
+    transition:color .2s;
+  }
+  .sucd-back:hover{color:var(--orange)}
+  .sucd-eyebrow{
+    display:inline-block;
+    color:#ffb18f;
+    font-size:.78rem;font-weight:850;letter-spacing:.2em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .sucd-hero h1{
+    color:#fff;
+    font-size:clamp(2.4rem,5.4vw,4.4rem);
+    line-height:1.02;letter-spacing:-.035em;
+    text-transform:none;
+    margin:0 0 18px;font-weight:800;
+    max-width:18ch;
+  }
+  .sucd-lede{
+    color:rgba(255,255,255,.85);
+    font-size:clamp(1rem,1.2vw,1.15rem);
+    line-height:1.6;max-width:62ch;margin:0;
+  }
+  .sucd-badge{
+    display:inline-block;
+    margin-top:20px;
+    background:var(--orange);
+    color:#fff;
+    font-size:.78rem;font-weight:850;letter-spacing:.14em;
+    text-transform:uppercase;
+    padding:8px 14px;border-radius:6px;
+  }
+
+  /* SECCIONES */
+  .sucd-section{padding:clamp(56px,7vw,96px) 0}
+  .sucd-section--soft{background:var(--soft)}
+  .sucd-wrap{
+    max-width:1280px;
+    margin:auto;
+    padding:0 clamp(20px,5vw,40px);
+  }
+  .sucd-h2{
+    color:var(--charcoal);
+    font-size:clamp(1.8rem,3.2vw,2.4rem);
+    line-height:1.1;letter-spacing:-.03em;
+    text-transform:none;
+    margin:0 0 16px;font-weight:800;
+  }
+
+  /* INFO + MAPA */
+  .sucd-info-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+    gap:clamp(28px,4vw,48px);
+    align-items:stretch;
+  }
+  .sucd-info-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:clamp(28px,4vw,40px);
+    box-shadow:0 8px 24px rgba(45,25,13,.04);
+    display:flex;flex-direction:column;
+  }
+  .sucd-info-card h2{
+    color:var(--charcoal);
+    font-size:1.35rem;font-weight:800;letter-spacing:-.01em;
+    margin:0 0 24px;
+  }
+  .sucd-info-list{
+    list-style:none;margin:0;padding:0;
+    display:flex;flex-direction:column;gap:20px;
+    flex:1 1 auto;
+  }
+  .sucd-info-list li{
+    display:flex;gap:14px;align-items:flex-start;
+  }
+  .sucd-info-icon{
+    flex-shrink:0;
+    width:40px;height:40px;
+    background:var(--soft);
+    color:var(--orange);
+    border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .sucd-info-label{
+    margin:0 0 4px;
+    font-size:.74rem;font-weight:800;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .sucd-info-value{
+    margin:0;
+    color:var(--ink);font-size:1rem;line-height:1.5;
+  }
+  .sucd-info-value a{color:inherit}
+  .sucd-info-value a:hover{color:var(--orange)}
+  .sucd-info-actions{
+    display:flex;gap:12px;flex-wrap:wrap;
+    margin-top:28px;
+  }
+  .sucd-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:13px 22px;
+    font-size:.82rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:8px;
+    transition:transform .2s, background .2s, color .2s, border-color .2s;
+    flex:1 1 auto;
+  }
+  .sucd-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
+  .sucd-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}
+  .sucd-btn--ghost{background:transparent;color:var(--charcoal);border:1px solid var(--line)}
+  .sucd-btn--ghost:hover{border-color:var(--orange);color:var(--orange)}
+
+  .sucd-map-frame{
+    position:relative;
+    min-height:480px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .sucd-map-frame iframe{
+    position:absolute;inset:0;
+    width:100%;height:100%;border:0;
+    filter:saturate(.7) contrast(.95);
+  }
+  .sucd-map-overlay{
+    position:absolute;
+    bottom:14px;left:14px;
+    background:rgba(255,255,255,.95);
+    backdrop-filter:blur(8px);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 14px;
+    display:flex;flex-direction:column;gap:2px;
+    z-index:2;
+  }
+  .sucd-map-eyebrow{
+    font-size:.66rem;font-weight:800;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--orange);
+  }
+  .sucd-map-coords{
+    font-size:.78rem;font-weight:600;
+    color:var(--charcoal);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* SERVICIOS */
+  .sucd-services-head{text-align:center;max-width:720px;margin:0 auto 48px}
+  .sucd-services-head .sucd-h2{margin-top:8px}
+  .sucd-services-head p{color:var(--muted);line-height:1.6;margin-top:12px}
+  .sucd-services{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:20px;
+  }
+  .sucd-service{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-top:4px solid var(--orange);
+    border-radius:var(--radius);
+    padding:28px 26px;
+    transition:transform .25s, box-shadow .25s;
+  }
+  .sucd-service:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(45,25,13,.10)}
+  .sucd-service-icon{
+    display:inline-flex;width:48px;height:48px;
+    color:var(--orange);
+    background:var(--soft);
+    border-radius:10px;
+    align-items:center;justify-content:center;
+    margin-bottom:16px;
+  }
+  .sucd-service h3{
+    color:var(--charcoal);
+    font-size:1.15rem;font-weight:800;letter-spacing:-.01em;
+    margin:0 0 8px;text-transform:none;
+  }
+  .sucd-service p{color:var(--muted);font-size:.92rem;line-height:1.55;margin:0}
+
+  /* OTRAS SUCURSALES */
+  .sucd-others-head{text-align:center;margin-bottom:36px}
+  .sucd-others{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:18px;
+    max-width:880px;margin:auto;
+  }
+  .sucd-other{
+    display:flex;flex-direction:column;gap:6px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px 26px;
+    transition:border-color .2s, transform .2s;
+  }
+  .sucd-other:hover{border-color:var(--orange);transform:translateY(-2px)}
+  .sucd-other-loc{
+    color:var(--charcoal);
+    font-size:1.1rem;font-weight:800;letter-spacing:-.01em;
+  }
+  .sucd-other-region{
+    color:var(--orange);
+    font-size:.74rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .sucd-other-addr{color:var(--muted);font-size:.9rem;line-height:1.5}
+  .sucd-other-cta{
+    display:inline-flex;align-items:center;gap:6px;
+    margin-top:10px;
+    color:var(--charcoal);
+    font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .sucd-other:hover .sucd-other-cta{color:var(--orange)}
+
+  /* CTA */
+  .sucd-cta{
+    background:
+      radial-gradient(circle at 80% 20%,rgba(251,77,8,.16),transparent 55%),
+      linear-gradient(135deg,#1f262e 0%,var(--charcoal) 100%);
+    color:#fff;
+    padding:clamp(64px,9vw,112px) clamp(20px,5vw,40px);
+    text-align:center;
+  }
+  .sucd-cta-inner{max-width:780px;margin:auto}
+  .sucd-cta h2{
+    color:#fff;
+    font-size:clamp(1.8rem,3.6vw,2.6rem);
+    line-height:1.1;letter-spacing:-.025em;
+    margin:0 0 16px;font-weight:800;
+  }
+  .sucd-cta p{color:rgba(255,255,255,.78);margin:0 0 30px;line-height:1.6}
+  .sucd-cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .sucd-cta-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:14px 28px;
+    font-size:.92rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:8px;
+    transition:transform .2s, background .2s, color .2s, border-color .2s;
+  }
+  .sucd-cta-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
+  .sucd-cta-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}
+  .sucd-cta-btn--ghost{background:transparent;color:#fff;border:2px solid var(--orange)}
+  .sucd-cta-btn--ghost:hover{background:rgba(251,77,8,.08);border-color:var(--orange)}
+
+  /* Responsive */
+  @media (max-width:900px){
+    .sucd-info-grid{grid-template-columns:1fr}
+    .sucd-map-frame{min-height:360px}
+  }
+  @media (max-width:640px){
+    .sucd-hero{height:420px}
+    .sucd-btn{flex:1 1 100%}
+  }
+</style>

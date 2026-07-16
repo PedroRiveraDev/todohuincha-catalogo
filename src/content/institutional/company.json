@@ -5,21 +5,21 @@
   "phones": ["+56 (45) 240 0000"],
   "emails": ["info@todohuincha.com"],
   "socials": {
-    "linkedin": "https://www.linkedin.com/company/todohuincha",
-    "instagram": "https://www.instagram.com/todohuincha",
-    "facebook": "https://www.facebook.com/todohuincha",
-    "whatsapp": "https://wa.me/56912345678"
+    "linkedin": "https://www.linkedin.com/company/comercializadora-todo-huincha-ltda/",
+    "instagram": "https://www.instagram.com/todo_huincha_ltda/",
+    "facebook": "https://www.facebook.com/p/Comercializadora-Todo-Huincha-Ltda-100049759401901/",
+    "whatsapp": "https://wa.me/56974997212"
   },
   "address": {
-    "street": "Carr. Longitudinal Sur 4277",
+    "street": "Longitudinal Sur 4277",
     "locality": "Padre Las Casas",
     "region": "Araucanía",
     "country": "CL",
     "geo": { "lat": -38.7613, "lng": -72.5986 }
   },
-  "mission": "Proveer maquinaria, consumibles y servicio tecnico especializado para industria, agricultura y faenas forestales.",
-  "vision": "Ser el referente de soluciones tecnicas en la zona sur de Chile.",
-  "shortPitch": "Comercializadora Todo Huincha Ltda. provee maquinaria, consumibles y servicio tecnico para industria, agricultura y faenas forestales.",
+  "mission": "Proveer maquinaria, consumibles y servicio técnico especializado para industria, agricultura y faenas forestales.",
+  "vision": "Ser el referente de soluciones técnicas en la zona sur de Chile.",
+  "shortPitch": "Comercializadora Todo Huincha es una importadora mayorista de Sierras Huinchas con alcance de ventas en todo el país y presencia física en Temuco, Constitución y Puerto Montt. Con años de tradición en el rubro, nos dedicamos a satisfacer las necesidades de la industria maderera, metal mecánica, alimentos y papel.",
   "founders": ["Sebastián Muñoz", "Martín Muñoz"],
   "mapUrl": "https://maps.google.com/?cid=17798753958481472823",
   "url": "https://todohuincha.com/",

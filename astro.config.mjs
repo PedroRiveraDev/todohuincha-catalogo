@@ -12,4 +12,9 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   site: 'https://todohuincha.com',
   output: 'static',
+  vite: {
+    optimizeDeps: {
+      include: ['jspdf'],
+    },
+  },
 });

@@ -1,6 +1,210 @@
 ---
 import Base from '../layouts/Base.astro';
-import DownloadPdf from '../components/DownloadPdf.astro';
 import { machines, machineCategories } from '../data/maquinaria';
 ---
-<Base title="Maquinaria | Todo Huincha" description="Catálogo de maquinaria Todo Huincha, disponible por cotización."><section class="wrap"><span class="eyebrow">División maquinaria</span><h1>Equipos para hacer crecer tu proyecto</h1><p class="muted">Nuestro catálogo propio reúne la información técnica disponible y las imágenes entregadas para cada familia de maquinaria. Cotiza directamente con nuestro equipo.</p><div class="category-list">{machineCategories.map((category)=><a href={`#${category.toLowerCase()}`}>{category}</a>)}</div>{machineCategories.map((category)=><section id={category.toLowerCase()} style="margin-top:62px"><h2>{category}</h2><div class="grid">{machines.filter((machine)=>machine.category===category).map((machine)=><article class="card"><img class="product-image" src={machine.image} alt={machine.name} loading="lazy" /><h3>{machine.name}</h3><p class="muted">{machine.summary}</p><a class="button" href={`/maquinaria/${machine.slug}`}>Ver ficha y cotizar</a></article>)}</div></section>)}</section></Base>
+<Base title="Maquinaria | Todo Huincha" description="Catálogo de maquinaria Todo Huincha, disponible por cotización.">
+  <!-- HERO -->
+  <section class="maq-hero">
+    <div class="maq-hero-bg" aria-hidden="true"></div>
+    <div class="maq-hero-shade" aria-hidden="true"></div>
+    <div class="maq-hero-inner">
+      <span class="maq-eyebrow">División maquinaria</span>
+      <h1>Equipos para hacer crecer tu proyecto</h1>
+      <p class="maq-lede">
+        Nuestro catálogo propio reúne la información técnica disponible y las imágenes entregadas para cada familia de maquinaria. Cotizá directamente con nuestro equipo.
+      </p>
+      <nav class="maq-categories" aria-label="Categorías de maquinaria">
+        {machineCategories.map((category) => (
+          <a class="maq-category" href={`#${category.toLowerCase()}`}>{category}</a>
+        ))}
+      </nav>
+    </div>
+  </section>
+
+  <!-- LISTADO POR CATEGORÍA -->
+  <section class="maq-section">
+    <div class="maq-wrap">
+      {machineCategories.map((category) => (
+        <section id={category.toLowerCase()} class="maq-category-block">
+          <header class="maq-category-head">
+            <h2>{category}</h2>
+            <span class="maq-category-count">{machines.filter((m) => m.category === category).length} productos</span>
+          </header>
+          <div class="maq-grid">
+            {machines.filter((machine) => machine.category === category).map((machine) => (
+              <article class="maq-card">
+                <div class="maq-card-photo">
+                  <img class="product-image" src={machine.image} alt={machine.name} loading="lazy" />
+                </div>
+                <div class="maq-card-body">
+                  <h3>{machine.name}</h3>
+                  <p class="muted">{machine.summary}</p>
+                  <a class="maq-card-btn" href={`/maquinaria/${machine.slug}`}>Ver ficha y cotizar</a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* HERO */
+  .maq-hero{
+    position:relative;
+    height:540px;
+    display:flex;
+    align-items:center;
+    overflow:hidden;
+    background:var(--charcoal);
+  }
+  .maq-hero-bg{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(28,32,38,.55) 0%,rgba(28,32,38,.88) 100%),
+      url('/hero/maquinaria-verde.jpg') center/cover no-repeat;
+    filter:saturate(.85) contrast(1.05);
+  }
+  .maq-hero-shade{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.45) 100%);
+  }
+  .maq-hero-inner{
+    position:relative;
+    width:100%;
+    max-width:1280px;
+    margin:auto;
+    padding:clamp(80px,10vw,120px) clamp(20px,5vw,40px);
+    color:#fff;
+  }
+  .maq-eyebrow{
+    display:inline-block;
+    color:#ffb18f;
+    font-size:.78rem;font-weight:850;letter-spacing:.2em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .maq-hero h1{
+    color:#fff;
+    font-size:clamp(2.4rem,5.4vw,4.4rem);
+    line-height:1.02;letter-spacing:-.035em;
+    margin:0 0 18px;font-weight:800;
+    max-width:18ch;
+  }
+  .maq-lede{
+    color:rgba(255,255,255,.85);
+    font-size:clamp(1rem,1.15vw,1.12rem);
+    line-height:1.6;max-width:62ch;margin:0 0 28px;
+  }
+  .maq-categories{
+    display:flex;flex-wrap:wrap;gap:10px;
+  }
+  .maq-category{
+    display:inline-flex;align-items:center;
+    padding:10px 18px;
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.25);
+    border-radius:999px;
+    color:#fff;
+    font-size:.82rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    transition:background .2s, border-color .2s, color .2s;
+  }
+  .maq-category:hover{
+    background:var(--orange);
+    border-color:var(--orange);
+    color:#fff;
+  }
+
+  /* LISTADO */
+  .maq-section{
+    padding:clamp(56px,7vw,96px) 0;
+    background:var(--canvas);
+  }
+  .maq-wrap{
+    max-width:1280px;
+    margin:auto;
+    padding:0 clamp(20px,5vw,40px);
+  }
+  .maq-category-block{margin-bottom:64px}
+  .maq-category-block:last-child{margin-bottom:0}
+  .maq-category-head{
+    display:flex;align-items:baseline;gap:14px;
+    margin-bottom:28px;
+    padding-bottom:14px;
+    border-bottom:2px solid var(--line);
+  }
+  .maq-category-head h2{
+    color:var(--charcoal);
+    font-size:clamp(1.5rem,2.4vw,2rem);
+    font-weight:800;letter-spacing:-.02em;
+    margin:0;
+  }
+  .maq-category-count{
+    color:var(--orange);
+    font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .maq-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:24px;
+  }
+  .maq-card{
+    display:flex;flex-direction:column;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    transition:transform .25s, box-shadow .25s, border-color .25s;
+  }
+  .maq-card:hover{
+    transform:translateY(-3px);
+    border-color:var(--orange);
+    box-shadow:0 14px 30px rgba(45,25,13,.10);
+  }
+  .maq-card-photo{
+    background:#fff;
+    aspect-ratio:4 / 3;
+    display:flex;align-items:center;justify-content:center;
+    padding:18px;
+  }
+  .maq-card-photo img{
+    max-width:100%;max-height:100%;
+    object-fit:contain;
+  }
+  .maq-card-body{
+    display:flex;flex-direction:column;gap:10px;
+    padding:22px 22px 26px;
+    flex:1 1 auto;
+  }
+  .maq-card-body h3{
+    color:var(--charcoal);
+    font-size:1.05rem;font-weight:800;letter-spacing:-.01em;
+    margin:0;line-height:1.25;
+  }
+  .maq-card-body .muted{
+    color:var(--muted);
+    font-size:.9rem;line-height:1.5;
+    margin:0 0 4px;
+    flex:1 1 auto;
+  }
+  .maq-card-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--orange);
+    color:#fff;
+    padding:12px 18px;
+    border-radius:8px;
+    font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    transition:background .2s, transform .2s;
+    margin-top:6px;
+  }
+  .maq-card-btn:hover{
+    background:var(--orange-deep);
+    transform:translateY(-1px);
+  }
+
+  /* Responsive */
+  @media (max-width:700px){
+    .maq-hero{height:420px}
+  }
+</style>

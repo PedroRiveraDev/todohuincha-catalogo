@@ -1,4 +1,18 @@
 [
-  { "name": "Sebastian Munoz", "role": "Direccion General", "responsibilities": ["Direccion estrategica", "Relaciones comerciales"], "sameAs": [] },
-  { "name": "Martin Munoz", "role": "Direccion de Operaciones", "responsibilities": ["Operaciones", "Servicio tecnico"], "sameAs": [] }
+  {
+    "name": "Sebastián Muñoz",
+    "role": "Dirección General",
+    "responsibilities": ["Dirección estratégica", "Relaciones comerciales", "Expansión de negocios"],
+    "bio": "Me desempeño desde el año 2006 en Comercializadora Todo Huincha, hoy en día a cargo de la dirección. Mi principal función en la empresa es dirigir la administración del área comercial y de producción. Manteniendo una estrecha relación con nuestros principales proveedores, así como también a cargo de liderar el área de expansión de negocios e implementación de equipamiento de vanguardia. Mi visión es seguir contribuyendo al crecimiento y éxito continuo de Comercializadora Todo Huincha Ltda.",
+    "photo": "/team/sebastian-munoz.webp",
+    "sameAs": ["https://www.linkedin.com/company/comercializadora-todo-huincha-ltda/"]
+  },
+  {
+    "name": "Martín Muñoz",
+    "role": "Dirección de Operaciones",
+    "responsibilities": ["Operaciones", "Servicio técnico", "Área comercial"],
+    "bio": "Presente en Comercializadora Todo Huincha Ltda., desde fines del año 2016 me desempeño como responsable de la parte técnica y operativa. Mi labor principal es garantizar el correcto funcionamiento de los procesos técnicos y operativos; hoy en día comienzo el desafío de involucrarme en nuestra área comercial para seguir aportando al crecimiento de la empresa.",
+    "photo": "/team/martin-munoz.webp",
+    "sameAs": []
+  }
 ]

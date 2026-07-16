@@ -26,38 +26,406 @@ const pageNode = buildWebPage({
   breadcrumb: crumb.itemListElement[crumb.itemListElement.length - 1].item,
 });
 
-const breadcrumbs = [
-  { name: 'Inicio', url: '/' },
-  { name: 'Sucursales', url: '/sucursales/' },
-];
+// Foto industrial por sucursal (reusamos assets existentes del proyecto).
+const branchPhotos: Record<string, string> = {
+  temuco: '/hero/taller-maquinaria.jpg',
+  constitucion: '/hero/panel-3.jpg',
+  'puerto-montt': '/hero/panel-5.jpg',
+};
+const photoFallback = '/hero/taller.jpg';
+
+// Etiqueta corta para mostrar en el mapa (zona geográfica).
+const zoneLabels: Record<string, string> = {
+  temuco: 'Zona Sur — Temuco',
+  constitucion: 'Zona Central — Constitución',
+  'puerto-montt': 'Zona Austral — Puerto Montt',
+};
+const zoneDescriptions: Record<string, string> = {
+  temuco: 'Soporte técnico principal y stock completo.',
+  constitucion: 'Especialistas en faenas forestales del Maule.',
+  'puerto-montt': 'Cobertura logística para la región de Los Lagos.',
+};
+
+// SVG inline (sin dependencias externas) — Material Symbols风格的 iconos monocromáticos.
+const iconPath: Record<string, string> = {
+  location: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/>',
+  call: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  schedule: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>',
+  arrow: '<path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPath[name] ?? ''}</svg>`;
+
+// Iframe de Google Maps sin API key (point por sucursal).
+const mapEmbed = (lat: number, lng: number) =>
+  `https://maps.google.com/maps?q=${lat},${lng}&hl=es&z=6&output=embed`;
 ---
 <InstitutionalLayout
   title="Sucursales | Comercializadora Todo Huincha"
   description="Encuentra tu sucursal más cercana de Todo Huincha en Temuco, Constitución y Puerto Montt. Horarios, dirección y teléfonos."
   pageLevelJsonLd={[pageNode, crumb]}
-  breadcrumbs={breadcrumbs}
 >
-  <div class="inst-wrap">
-    <span class="eyebrow">Red de atención</span>
-    <h1>Nuestras Sucursales</h1>
-    <p class="lede">Comercializadora Todo Huincha Ltda. cuenta con sucursales estratégicas para abastecer a la industria, agricultura y faenas forestales a lo largo de Chile.</p>
-
-    <div style="display: grid; gap: 32px; margin-top: 40px;">
-      {branches.map((branch) => (
-        <div style="border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; background: var(--surface); display: grid; gap: 12px; box-shadow: var(--shadow);">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
-            <h2 style="margin: 0; font-size: 1.5rem; color: var(--charcoal);">{branch.name}</h2>
-            {branch.isHeadquarters && <span style="background: var(--soft); color: var(--orange); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase;">Casa Matriz</span>}
-          </div>
-          <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Dirección:</strong> {branch.address.street}, {branch.address.locality}, {branch.address.region}</p>
-          <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Teléfono:</strong> {branch.phone}</p>
-          <p style="margin: 0; font-size: 1rem; color: var(--ink);"><strong>Horario:</strong> {branch.hours}</p>
-          <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
-            <a href={`/sucursales/${branch.slug}/`} class="button alt" style="padding: 8px 16px; font-size: 0.85rem;">Ver mapa y detalles</a>
-            <a href={branch.mapUrl} target="_blank" rel="noopener noreferrer" class="button" style="padding: 8px 16px; font-size: 0.85rem;">Abrir en Google Maps</a>
-          </div>
-        </div>
-      ))}
+  <!-- HERO -->
+  <section class="suc-hero">
+    <div class="suc-hero-bg" aria-hidden="true"></div>
+    <div class="suc-hero-shade" aria-hidden="true"></div>
+    <div class="suc-hero-inner">
+      <span class="suc-eyebrow">Red de atención nacional</span>
+      <h1>Nuestras sucursales</h1>
+      <p class="suc-lede">
+        Comercializadora Todo Huincha Ltda. cuenta con sucursales estratégicas para abastecer a la industria, la agricultura y las faenas forestales a lo largo del sur de Chile.
+      </p>
     </div>
-  </div>
+  </section>
+
+  <!-- GRID DE SUCURSALES -->
+  <section class="suc-section">
+    <div class="suc-wrap">
+      <div class="suc-grid">
+        {branches.map((branch) => {
+          const photo = branchPhotos[branch.slug] ?? photoFallback;
+          const phoneRaw = branch.phone.replace(/\s|\(|\)/g, '');
+          return (
+            <article class="suc-card">
+              <div class="suc-card-photo">
+                <img src={photo} alt={`Sucursal ${branch.name}`} loading="lazy" />
+                {branch.isHeadquarters && (
+                  <span class="suc-card-badge">Casa Matriz</span>
+                )}
+              </div>
+              <div class="suc-card-body">
+                <h2>{branch.city}</h2>
+                <ul class="suc-card-info">
+                  <li>
+                    <span class="suc-info-icon" set:html={svg('location')}></span>
+                    <span>{branch.address.street}, {branch.address.locality}, {branch.address.region}</span>
+                  </li>
+                  <li>
+                    <span class="suc-info-icon" set:html={svg('call')}></span>
+                    <a href={`tel:${phoneRaw}`}>{branch.phone}</a>
+                  </li>
+                  <li>
+                    <span class="suc-info-icon" set:html={svg('schedule')}></span>
+                    <span>{branch.hours.replace('Lunes a Viernes', 'Lun - Vie')}</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="suc-card-actions">
+                <a class="suc-card-btn suc-card-btn--primary" href={branch.mapUrl} target="_blank" rel="noopener noreferrer">Google Maps</a>
+                <a class="suc-card-btn suc-card-btn--icon" href={`/sucursales/${branch.slug}/`} aria-label={`Ver detalles de ${branch.name}`} set:html={svg('info', 18)}></a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- UBICACIÓN ESTRATÉGICA + MAPA -->
+  <section class="suc-section suc-section--soft">
+    <div class="suc-wrap">
+      <div class="suc-map">
+        <div class="suc-map-copy">
+          <span class="suc-eyebrow">Cobertura</span>
+          <h2 class="suc-h2">Ubicación estratégica</h2>
+          <p>Estamos presentes en los núcleos productivos más importantes del sur del país para garantizar tiempos de respuesta mínimos y soporte técnico presencial.</p>
+          <ul class="suc-zones">
+            {branches.map((branch) => (
+              <li class={`suc-zone ${branch.isHeadquarters ? 'suc-zone--active' : ''}`}>
+                <p class="suc-zone-name">{zoneLabels[branch.slug] ?? branch.name}</p>
+                <p class="suc-zone-desc">{zoneDescriptions[branch.slug] ?? ''}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="suc-map-frame">
+          {branches[0] && (
+            <iframe
+              title={`Ubicación de ${branches[0].name}`}
+              src={mapEmbed(branches[0].address.geo.lat, branches[0].address.geo.lng)}
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="suc-cta">
+    <div class="suc-cta-inner">
+      <span class="suc-cta-eyebrow">Asesoría técnica</span>
+      <h2>¿Necesitas ayuda para elegir tu maquinaria?</h2>
+      <p>Nuestros expertos están disponibles en todas las sucursales para ayudarte a elegir la mejor máquina para tu faena.</p>
+      <div class="suc-cta-actions">
+        <a class="suc-cta-btn suc-cta-btn--primary" href="/contacto">Contactar sucursal</a>
+        <a class="suc-cta-btn suc-cta-btn--ghost" href="/catalogo">Ver catálogo</a>
+      </div>
+    </div>
+  </section>
 </InstitutionalLayout>
+
+<style is:global>
+  /* =========================================================
+     Sucursales — Todo Huincha
+     Reusa variables del Base layout: --orange, --charcoal,
+     --ink, --muted, --surface, --soft, --line, --radius.
+     ========================================================= */
+
+  /* HERO */
+  .suc-hero{
+    position:relative;
+    height:540px;
+    display:flex;
+    align-items:center;
+    overflow:hidden;
+    background:var(--charcoal);
+    border-bottom:1px solid var(--line);
+  }
+  .suc-hero-bg{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(49,62,72,.35) 0%,rgba(49,62,72,.75) 100%),
+      url('/hero/taller.jpg') center/cover no-repeat;
+    filter:saturate(.85) contrast(1.05);
+  }
+  .suc-hero-shade{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(249,249,249,0) 0%,rgba(249,249,249,.92) 90%);
+  }
+  .suc-hero-inner{
+    position:relative;
+    width:100%;
+    max-width:1280px;
+    margin:auto;
+    padding:clamp(80px,10vw,120px) clamp(20px,5vw,40px);
+  }
+  .suc-hero h1{
+    color:var(--charcoal);
+    font-size:clamp(2.6rem,6vw,4.8rem);
+    line-height:1.02;letter-spacing:-.035em;
+    text-transform:none;
+    margin:0 0 18px;font-weight:800;
+  }
+  .suc-lede{
+    color:var(--ink);
+    font-size:clamp(1.02rem,1.2vw,1.18rem);
+    line-height:1.6;max-width:62ch;margin:0;
+  }
+  .suc-eyebrow{
+    display:inline-block;
+    color:var(--orange);
+    font-size:.78rem;font-weight:850;letter-spacing:.2em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+
+  /* SECCIONES */
+  .suc-section{padding:clamp(56px,7vw,96px) 0}
+  .suc-section--soft{background:var(--soft);border-top:1px solid var(--line)}
+  .suc-wrap{
+    max-width:1280px;
+    margin:auto;
+    padding:0 clamp(20px,5vw,40px);
+  }
+
+  /* GRID DE CARDS */
+  .suc-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:28px;
+  }
+  .suc-card{
+    display:flex;flex-direction:column;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    transition:transform .25s, border-color .25s, box-shadow .25s;
+  }
+  .suc-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--orange);
+    box-shadow:0 14px 30px rgba(45,25,13,.10);
+  }
+  .suc-card-photo{
+    position:relative;
+    height:240px;
+    overflow:hidden;
+    background:var(--charcoal);
+    border-bottom:1px solid var(--line);
+  }
+  .suc-card-photo img{
+    width:100%;height:100%;object-fit:cover;
+    transition:transform .5s ease;
+  }
+  .suc-card:hover .suc-card-photo img{transform:scale(1.05)}
+  .suc-card-badge{
+    position:absolute;
+    top:16px;left:16px;
+    background:var(--orange);
+    color:#fff;
+    font-size:.74rem;font-weight:850;letter-spacing:.12em;
+    text-transform:uppercase;
+    padding:6px 12px;border-radius:6px;
+  }
+  .suc-card-body{padding:28px 28px 8px;flex:1 1 auto}
+  .suc-card-body h2{
+    color:var(--charcoal);
+    font-size:1.6rem;font-weight:800;
+    letter-spacing:-.01em;margin:0 0 20px;
+    transition:color .2s;
+  }
+  .suc-card:hover .suc-card-body h2{color:var(--orange)}
+  .suc-card-info{
+    list-style:none;margin:0;padding:0;
+    display:flex;flex-direction:column;gap:16px;
+  }
+  .suc-card-info li{
+    display:flex;align-items:flex-start;gap:12px;
+    color:var(--muted);font-size:.96rem;line-height:1.5;
+  }
+  .suc-info-icon{
+    flex-shrink:0;
+    width:22px;height:22px;
+    color:var(--orange);
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .suc-card-info a{color:inherit}
+  .suc-card-info a:hover{color:var(--orange)}
+  .suc-card-actions{
+    display:flex;gap:10px;
+    padding:24px 28px 28px;
+  }
+  .suc-card-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:8px;
+    padding:12px 18px;
+    transition:background .2s, color .2s, border-color .2s;
+  }
+  .suc-card-btn--primary{
+    flex:1 1 auto;
+    background:var(--surface);
+    color:var(--charcoal);
+    border:1px solid var(--line);
+  }
+  .suc-card-btn--primary:hover{
+    background:var(--orange);
+    color:#fff;
+    border-color:var(--orange);
+  }
+  .suc-card-btn--icon{
+    flex:0 0 auto;
+    width:46px;padding:0;
+    background:var(--soft);
+    color:var(--charcoal);
+    border:1px solid transparent;
+  }
+  .suc-card-btn--icon:hover{
+    background:var(--orange);
+    color:#fff;
+  }
+
+  /* MAPA + COPY */
+  .suc-map{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,2fr);
+    gap:clamp(32px,5vw,64px);
+    align-items:stretch;
+  }
+  .suc-map-copy h2{
+    color:var(--charcoal);
+    font-size:clamp(1.8rem,3.2vw,2.4rem);
+    line-height:1.1;letter-spacing:-.03em;
+    margin:0 0 16px;font-weight:800;text-transform:none;
+  }
+  .suc-map-copy > p{
+    color:var(--muted);line-height:1.65;margin:0 0 24px;max-width:48ch;
+  }
+  .suc-zones{
+    list-style:none;margin:0;padding:0;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .suc-zone{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:4px solid var(--line);
+    border-radius:8px;
+    padding:14px 16px;
+    transition:border-color .2s, transform .2s;
+  }
+  .suc-zone:hover{border-left-color:var(--orange);transform:translateX(2px)}
+  .suc-zone--active{border-left-color:var(--orange);box-shadow:0 6px 14px rgba(45,25,13,.06)}
+  .suc-zone-name{
+    margin:0 0 4px;
+    color:var(--charcoal);
+    font-size:.92rem;font-weight:800;letter-spacing:.01em;
+  }
+  .suc-zone-desc{
+    margin:0;
+    color:var(--muted);
+    font-size:.82rem;line-height:1.5;
+  }
+  .suc-map-frame{
+    position:relative;
+    min-height:480px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .suc-map-frame iframe{
+    position:absolute;inset:0;
+    width:100%;height:100%;border:0;
+    filter:saturate(.7) contrast(.95);
+  }
+
+  /* CTA */
+  .suc-cta{
+    background:
+      radial-gradient(circle at 80% 20%,rgba(251,77,8,.16),transparent 55%),
+      linear-gradient(135deg,#1f262e 0%,var(--charcoal) 100%);
+    color:#fff;
+    padding:clamp(64px,9vw,112px) clamp(20px,5vw,40px);
+    text-align:center;
+  }
+  .suc-cta-inner{max-width:780px;margin:auto}
+  .suc-cta-eyebrow{
+    display:inline-block;
+    color:#ffb18f;
+    font-size:.78rem;font-weight:850;letter-spacing:.18em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .suc-cta h2{
+    color:#fff;
+    font-size:clamp(1.8rem,3.6vw,2.8rem);
+    line-height:1.1;letter-spacing:-.025em;
+    margin:0 0 16px;font-weight:800;
+  }
+  .suc-cta p{color:rgba(255,255,255,.78);margin:0 0 30px;line-height:1.6}
+  .suc-cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .suc-cta-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:14px 28px;
+    font-size:.92rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:8px;
+    transition:transform .2s, background .2s, color .2s, border-color .2s;
+  }
+  .suc-cta-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
+  .suc-cta-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}
+  .suc-cta-btn--ghost{background:transparent;color:#fff;border:2px solid var(--orange)}
+  .suc-cta-btn--ghost:hover{background:rgba(251,77,8,.08);border-color:var(--orange)}
+
+  /* Responsive */
+  @media (max-width:900px){
+    .suc-map{grid-template-columns:1fr;gap:32px}
+    .suc-map-frame{min-height:360px}
+  }
+  @media (max-width:640px){
+    .suc-hero{height:420px}
+    .suc-card-photo{height:200px}
+    .suc-grid{gap:20px}
+  }
+</style>

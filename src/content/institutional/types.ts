@@ -65,6 +65,8 @@ export interface TeamMember {
   name: string;
   role: string;
   responsibilities: string[];
+  bio?: string;
+  photo?: string;
   sameAs?: string[];
 }
 

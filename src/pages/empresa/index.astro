@@ -3,14 +3,12 @@ import InstitutionalLayout from '../../layouts/InstitutionalLayout.astro';
 import {
   loadBranchesJson,
   loadCompanyJson,
-  loadServicesJson,
   loadTeamJson,
 } from '../../lib/seo/loadCompanyJson.ts';
 import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
 
 const company = loadCompanyJson();
 const branches = loadBranchesJson();
-const services = loadServicesJson();
 const team = loadTeamJson();
 const pageUrl = new URL('/empresa/', company.url).toString();
 const crumb = buildBreadcrumbList({
@@ -27,45 +25,666 @@ const pageNode = buildWebPage({
   isPartOf: 'SITE',
   breadcrumb: crumb.itemListElement[crumb.itemListElement.length - 1].item,
 });
-const breadcrumbs = [
-  { name: 'Inicio', url: '/' },
-  { name: 'Empresa', url: '/empresa/' },
+
+// Métricas coherentes con la realidad de la empresa.
+const metrics = [
+  { value: '3', label: 'Sucursales en el sur' },
+  { value: '30+', label: 'Años de experiencia' },
+  { value: '1000+', label: 'Clientes activos' },
+  { value: '24/7', label: 'Soporte técnico' },
 ];
+
+// Pilares derivados de la misión y el tipo de operación.
+const pillars = [
+  {
+    icon: 'precision',
+    title: 'Precisión técnica',
+    body: 'Cada máquina, consumible y repuesto se evalúa para asegurar el rendimiento que la industria, agricultura y faenas forestales exigen.',
+  },
+  {
+    icon: 'speed',
+    title: 'Respuesta ágil',
+    body: 'Operamos con la velocidad de la zona sur: tiempos de respuesta cortos y stock disponible para que tu faena no se detenga.',
+  },
+  {
+    icon: 'shield',
+    title: 'Calidad certificada',
+    body: 'Trabajamos con marcas reconocidas y proveedores validados. Lo que vendemos es lo que probamos todos los días en terreno.',
+  },
+  {
+    icon: 'people',
+    title: 'Acompañamiento real',
+    body: 'Servicio técnico, asesoría en compra y postventa. Nuestro equipo se comporta como una extensión de tu operación.',
+  },
+];
+
+// Iconos SVG inline (sin dependencias externas).
+const icons: Record<string, string> = {
+  precision: '<path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>',
+  speed: '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="currentColor" stroke="none"/>',
+  shield: '<path d="M12 2l8 3v6c0 5-3.5 9.4-8 11-4.5-1.6-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5"/><path d="M14 19c0-2.2 1.8-4 4-4s4 1.8 4 4"/>',
+  tools: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5z"/>',
+  audit: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6M11 8v6" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
+  training: '<path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v4c2 2 8 2 10 0v-4"/><path d="M21 9v6"/>',
+  stock: '<path d="M3 7l9-4 9 4-9 4-9-4z" fill="currentColor" stroke="none"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
+  arrow: '<path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  map: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white" stroke="none"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+};
+const svg = (name: string) => `<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] ?? ''}</svg>`;
 ---
 <InstitutionalLayout
   title="Empresa | Comercializadora Todo Huincha"
   description={company.shortPitch}
   pageLevelJsonLd={[pageNode, crumb]}
-  breadcrumbs={breadcrumbs}
 >
-  <div class="inst-wrap">
-    <span class="eyebrow">Sobre nosotros</span>
-    <h1>Comercializadora Todo Huincha Ltda.</h1>
-    <p class="lede">{company.shortPitch}</p>
+  <!-- HERO -->
+  <section class="emp-hero">
+    <div class="emp-hero-bg" aria-hidden="true"></div>
+    <div class="emp-hero-shade" aria-hidden="true"></div>
+    <div class="emp-hero-inner">
+      <div class="emp-hero-copy">
+        <span class="emp-eyebrow"><span class="emp-eyebrow-line"></span>Nuestra identidad</span>
+        <h1>Resistencia en cada <span class="emp-accent">faena</span></h1>
+        <p class="emp-lede">
+          En <strong>Comercializadora Todo Huincha</strong> definimos la excelencia industrial a través de soluciones especializadas de maquinaria, consumibles y servicio técnico. Más de tres décadas sosteniendo a la industria, la agricultura y las faenas forestales del sur de Chile.
+        </p>
+      </div>
+    </div>
+  </section>
 
-    <h2>Mision y alcance</h2>
-    <p>{company.mission}</p>
-    <p>{company.vision}</p>
+  <!-- NARRATIVA + PILARES (grid 2-col solo en esta sección) -->
+  <section class="emp-section">
+    <div class="emp-wrap emp-wrap--narrative">
+      <div class="emp-narrative">
+        <span class="emp-accent-line"></span>
+        <span class="emp-eyebrow emp-eyebrow--ink">El referente</span>
+        <h2 class="emp-h2">La autoridad en <br/>abastecimiento industrial del sur</h2>
+        <p class="emp-body">
+          Fundada sobre los principios de precisión técnica y durabilidad industrial, Todo Huincha se ha consolidado como el aliado estratégico de los sectores más exigentes de la Araucanía, el Maule y Los Lagos. No solo vendemos maquinaria: proveemos la tensión que mantiene la producción en marcha.
+        </p>
+        <div class="emp-metrics">
+          {metrics.map((m) => (
+            <div class="emp-metric">
+              <div class="emp-metric-value">{m.value}</div>
+              <div class="emp-metric-label">{m.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="emp-pillars">
+        {pillars.map((p) => (
+          <article class="emp-pillar">
+            <span class="emp-pillar-icon" set:html={svg(p.icon)}></span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
 
-    <h2>Equipo directivo</h2>
-    <ul>
-      {team.map((member) => (
-        <li><strong>{member.name}</strong> — {member.role}</li>
-      ))}
-    </ul>
+  <!-- MISIÓN Y VISIÓN -->
+  <section class="emp-section emp-section--soft">
+    <div class="emp-wrap emp-wrap--center">
+      <div class="emp-mv-head">
+        <span class="emp-eyebrow">Misión y visión</span>
+        <h2 class="emp-h2">El compromiso que nos mueve</h2>
+      </div>
+      <div class="emp-mv">
+        <article class="emp-mv-card">
+          <span class="emp-mv-eyebrow">Misión</span>
+          <p class="emp-mv-quote">{company.mission}</p>
+        </article>
+        <article class="emp-mv-card">
+          <span class="emp-mv-eyebrow">Visión</span>
+          <p class="emp-mv-quote">{company.vision}</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    <h2>Lineas de servicio</h2>
-    <ul>
-      {services.map((service) => (
-        <li><strong>{service.name}.</strong> {service.description}</li>
-      ))}
-    </ul>
+  <!-- LÍNEAS DE SERVICIO (BENTO) -->
+  <section class="emp-section emp-section--soft">
+    <div class="emp-wrap">
+      <header class="emp-services-head">
+        <div class="emp-services-head-left">
+          <span class="emp-eyebrow">Especialidades</span>
+          <h2 class="emp-h2">Líneas de servicio</h2>
+        </div>
+        <p class="emp-services-intro">
+          Cubrimos todo el ciclo del equipamiento industrial: venta, asesoría, mantención y repuestos. Una sola empresa, una sola llamada.
+        </p>
+      </header>
 
-    <h2>Cobertura geografica</h2>
-    <ul>
-      {branches.map((branch) => (
-        <li>{branch.address.locality}, {branch.address.region} — {branch.phone}</li>
-      ))}
-    </ul>
-  </div>
+      <div class="emp-bento">
+        <article class="emp-bento-card emp-bento-card--lead">
+          <div class="emp-bento-bg" aria-hidden="true"></div>
+          <div class="emp-bento-shade" aria-hidden="true"></div>
+          <div class="emp-bento-body">
+            <span class="emp-bento-eyebrow">Soporte técnico</span>
+            <h3>Servicio técnico en taller y terreno</h3>
+            <p>Diagnóstico, mantención preventiva y correctiva para la maquinaria que comercializamos. Atendemos en nuestras sucursales y nos desplazamos a faena.</p>
+          </div>
+        </article>
+
+        <article class="emp-bento-card emp-bento-card--audit">
+          <span class="emp-bento-icon" set:html={svg('audit')}></span>
+          <h3>Asesoría en compra</h3>
+          <p>Te ayudamos a elegir la máquina o consumible correcto según tu faena, volumen y presupuesto.</p>
+          <a class="emp-bento-link" href="/contacto">Solicitar asesoría <span class="emp-bento-arrow" set:html={svg('arrow')}></span></a>
+        </article>
+
+        <article class="emp-bento-card emp-bento-card--training">
+          <span class="emp-bento-icon" set:html={svg('training')}></span>
+          <h3>Capacitación</h3>
+          <p>Entrenamiento en uso seguro, mantención básica y mejores prácticas para tu equipo en terreno.</p>
+        </article>
+
+        <article class="emp-bento-card emp-bento-card--stock">
+          <span class="emp-bento-icon" set:html={svg('stock')}></span>
+          <h3>Stock y repuestos</h3>
+          <p>Reposición constante de consumibles y repuestos originales para que la operación no se detenga.</p>
+        </article>
+
+        <article class="emp-bento-card emp-bento-card--tools">
+          <span class="emp-bento-icon" set:html={svg('tools')}></span>
+          <h3>Reparación especializada</h3>
+          <p>Taller propio con técnicos certificados para sierras huincha, cepilladoras, partidores, motocultivadores y más.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- EQUIPO DIRECTIVO -->
+  <section class="emp-section">
+    <div class="emp-wrap emp-wrap--center">
+      <header class="emp-team-head">
+        <span class="emp-eyebrow emp-eyebrow--ink">Dirección</span>
+        <h2 class="emp-h2">El equipo directivo</h2>
+        <p class="emp-team-intro">Conduciendo la visión de Todo Huincha hacia un sur de Chile más productivo y conectado.</p>
+      </header>
+
+      <div class="emp-team">
+        {team.map((member) => (
+          <article class="emp-member">
+            <div class="emp-member-photo">
+              {member.photo ? (
+                <img src={member.photo} alt={member.name} loading="lazy" />
+              ) : (
+                <div class="emp-member-initials" aria-hidden="true">
+                  {member.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
+                </div>
+              )}
+            </div>
+            <h3>{member.name}</h3>
+            <p class="emp-member-role">{member.role}</p>
+            {member.bio && (
+              <blockquote class="emp-member-bio">
+                <p>{member.bio}</p>
+              </blockquote>
+            )}
+            {member.responsibilities.length > 0 && (
+              <p class="emp-member-body">{member.responsibilities.join(' · ')}</p>
+            )}
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- COBERTURA -->
+  <section class="emp-section emp-section--soft">
+    <div class="emp-wrap emp-wrap--center">
+      <header class="emp-branches-head">
+        <span class="emp-eyebrow">Cobertura</span>
+        <h2 class="emp-h2">Llegamos a todo el sur</h2>
+        <p>Tres sucursales físicas para que la distancia no sea un problema. Conoce la más cercana a tu faena.</p>
+      </header>
+
+      <div class="emp-branches">
+        {branches.map((branch) => (
+          <article class="emp-branch">
+            <span class="emp-branch-icon" set:html={svg('map')}></span>
+            <h3>{branch.name}</h3>
+            <p class="emp-branch-loc">{branch.address.locality}, {branch.address.region}</p>
+            <p class="emp-branch-addr">{branch.address.street}</p>
+            <p class="emp-branch-hours">{branch.hours}</p>
+            <a class="emp-branch-link" href={`tel:${branch.phone.replace(/\s|\(|\)/g, '')}`} set:html={`${svg('phone')}<span>${branch.phone}</span>`}></a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="emp-cta">
+    <div class="emp-cta-inner">
+      <h2>¿Listo para equipar tu próxima faena?</h2>
+      <p>Cotiza con nosotros. Te respondemos el mismo día con stock real y precios claros.</p>
+      <div class="emp-cta-actions">
+        <a class="emp-cta-btn emp-cta-btn--primary" href="/contacto">Iniciar una cotización</a>
+        <a class="emp-cta-btn emp-cta-btn--ghost" href="/catalogo">Ver catálogo</a>
+      </div>
+    </div>
+  </section>
 </InstitutionalLayout>
+
+<style is:global>
+  /* =========================================================
+     Empresa — sección "Comercializadora Todo Huincha"
+     Reusa variables del Base layout: --orange, --charcoal,
+     --ink, --muted, --canvas, --surface, --soft, --line, --radius.
+     Cada sección maneja su propio grid interno. El grid 2-col
+     padre SOLO se aplica a la sección de narrativa + pilares.
+     ========================================================= */
+
+  .emp-hero{
+    position:relative;
+    height:540px;
+    display:flex;
+    align-items:center;
+    overflow:hidden;
+    background:var(--charcoal);
+  }
+  .emp-hero-bg{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(49,62,72,.45) 0%,rgba(49,62,72,.65) 100%),
+      url('/hero/taller-maquinaria.jpg') center/cover no-repeat;
+    filter:saturate(.85) contrast(1.05);
+  }
+  .emp-hero-shade{
+    position:absolute;inset:0;
+    background:linear-gradient(90deg,rgba(28,32,38,.92) 0%,rgba(28,32,38,.55) 55%,rgba(28,32,38,.15) 100%);
+  }
+  .emp-hero-inner{
+    position:relative;
+    width:100%;
+    max-width:1280px;
+    margin:auto;
+    padding:clamp(80px,10vw,120px) clamp(20px,5vw,40px);
+  }
+  .emp-hero-copy{max-width:780px}
+  .emp-eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    color:var(--orange);
+    font-size:.78rem;font-weight:850;letter-spacing:.18em;text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .emp-eyebrow--ink{color:var(--orange)}
+  .emp-eyebrow-line{
+    display:inline-block;width:36px;height:2px;background:var(--orange);
+  }
+  .emp-hero h1{
+    color:#fff;
+    font-size:clamp(2.4rem,5.4vw,4.6rem);
+    line-height:1.02;letter-spacing:-.035em;
+    text-transform:uppercase;margin:0 0 22px;
+  }
+  .emp-accent{color:var(--orange)}
+  .emp-lede{
+    color:rgba(255,255,255,.82);
+    font-size:clamp(1rem,1.2vw,1.18rem);
+    line-height:1.6;max-width:62ch;margin:0;
+  }
+  .emp-lede strong{color:#fff}
+
+  /* Secciones base */
+  .emp-section{padding:clamp(64px,8vw,112px) 0}
+  .emp-section--soft{background:var(--soft)}
+  .emp-wrap{
+    max-width:1280px;
+    margin:auto;
+    padding:0 clamp(20px,5vw,40px);
+  }
+  .emp-wrap--center{text-align:center}
+  .emp-wrap--center .emp-h2,
+  .emp-wrap--center .emp-team-intro,
+  .emp-wrap--center .emp-branches-head p{margin-left:auto;margin-right:auto}
+  .emp-wrap--narrative{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);
+    gap:clamp(40px,6vw,80px);
+    align-items:start;
+  }
+  .emp-accent-line{
+    display:block;width:60px;height:4px;background:var(--orange);
+    border-radius:2px;margin-bottom:20px;
+  }
+  .emp-h2{
+    color:var(--charcoal);
+    font-size:clamp(1.8rem,3.4vw,2.6rem);
+    line-height:1.08;letter-spacing:-.03em;
+    text-transform:uppercase;margin:0 0 16px;font-weight:800;
+  }
+  .emp-body{color:var(--muted);line-height:1.65;font-size:1.02rem;max-width:60ch}
+
+  /* Narrativa + Pilares */
+  .emp-narrative{display:grid;gap:18px;align-content:start}
+  .emp-metrics{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:24px;margin-top:32px;
+    border-top:1px solid var(--line);
+    padding-top:28px;
+  }
+  .emp-metric-value{
+    color:var(--orange);
+    font-size:clamp(2rem,3vw,2.6rem);
+    font-weight:850;letter-spacing:-.04em;line-height:1;
+  }
+  .emp-metric-label{
+    color:var(--charcoal);
+    font-size:.78rem;font-weight:800;letter-spacing:.12em;
+    text-transform:uppercase;margin-top:8px;
+  }
+
+  .emp-pillars{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;
+  }
+  .emp-pillar{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 26px;
+    transition:border-color .25s, transform .25s, box-shadow .25s;
+  }
+  .emp-pillar:hover{
+    border-color:var(--orange);
+    transform:translateY(-2px);
+    box-shadow:0 16px 32px rgba(251,77,8,.10);
+  }
+  .emp-pillar-icon{
+    display:inline-flex;
+    width:44px;height:44px;
+    color:var(--orange);
+    margin-bottom:14px;
+  }
+  .emp-pillar h3{
+    color:var(--charcoal);
+    font-size:1.12rem;font-weight:700;
+    margin:0 0 8px;letter-spacing:-.01em;
+  }
+  .emp-pillar p{color:var(--muted);font-size:.94rem;line-height:1.55;margin:0}
+
+  /* Misión / Visión */
+  .emp-mv-head{text-align:center;margin-bottom:48px;max-width:720px;margin-inline:auto}
+  .emp-mv-head .emp-h2{margin-top:10px}
+  .emp-mv{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:24px;
+    text-align:left;
+  }
+  .emp-mv-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:4px solid var(--orange);
+    border-radius:var(--radius);
+    padding:32px 30px;
+    box-shadow:0 8px 24px rgba(45,25,13,.04);
+  }
+  .emp-mv-eyebrow{
+    display:inline-block;
+    color:var(--orange);
+    font-size:.78rem;font-weight:850;letter-spacing:.18em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .emp-mv-quote{
+    color:var(--charcoal);
+    font-size:1.08rem;line-height:1.55;margin:0;
+  }
+
+  /* Bento servicios */
+  .emp-services-head{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:clamp(24px,4vw,60px);
+    align-items:end;
+    margin-bottom:48px;
+  }
+  .emp-services-head-left{min-width:0}
+  .emp-services-head .emp-h2{margin-top:10px}
+  .emp-services-intro{
+    color:var(--muted);line-height:1.6;margin:0;
+    text-align:right;
+  }
+  .emp-bento{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+    grid-auto-rows:minmax(180px,auto);
+    gap:18px;
+  }
+  .emp-bento-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    padding:28px 26px;
+    background:var(--surface);
+    display:flex;flex-direction:column;gap:12px;
+    transition:transform .35s, box-shadow .35s;
+  }
+  .emp-bento-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px rgba(45,25,13,.10)}
+  .emp-bento-card--lead{
+    grid-column:1 / span 2;grid-row:1 / span 2;
+    color:#fff;
+    padding:0;
+    border-color:transparent;
+  }
+  .emp-bento-card--audit{grid-column:3;grid-row:1}
+  .emp-bento-card--training{grid-column:3;grid-row:2}
+  .emp-bento-card--stock{grid-column:1 / span 2;grid-row:3}
+  .emp-bento-card--tools{grid-column:3;grid-row:3}
+  .emp-bento-bg{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(28,32,38,.55) 0%,rgba(28,32,38,.85) 100%),
+      url('/hero/taller.jpg') center/cover no-repeat;
+  }
+  .emp-bento-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)}
+  .emp-bento-body{
+    position:relative;z-index:1;
+    margin-top:auto;padding:36px 32px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .emp-bento-eyebrow{
+    color:#ffb18f;
+    font-size:.74rem;font-weight:850;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .emp-bento-card--lead h3{
+    color:#fff;
+    font-size:clamp(1.4rem,2.4vw,1.9rem);
+    text-transform:uppercase;letter-spacing:-.02em;
+    margin:0;line-height:1.1;
+  }
+  .emp-bento-card--lead p{color:rgba(255,255,255,.85);margin:0;line-height:1.55;max-width:38ch}
+  .emp-bento-card--audit{
+    grid-column:span 2;
+    background:var(--charcoal);
+    color:#fff;
+    border-color:transparent;
+  }
+  .emp-bento-card--audit h3{color:#fff;font-size:1.15rem;text-transform:uppercase;margin:0;letter-spacing:-.01em}
+  .emp-bento-card--audit p{color:rgba(255,255,255,.78);margin:0;font-size:.95rem;line-height:1.5}
+  .emp-bento-card--training{background:var(--surface)}
+  .emp-bento-card--training h3,.emp-bento-card--tools h3{color:var(--charcoal);font-size:1.05rem;text-transform:uppercase;margin:0;letter-spacing:-.01em}
+  .emp-bento-card--training p,.emp-bento-card--tools p{color:var(--muted);margin:0;font-size:.92rem;line-height:1.5}
+  .emp-bento-card--stock{
+    background:var(--orange);
+    color:#fff;
+    border-color:transparent;
+  }
+  .emp-bento-card--stock h3{color:#fff;font-size:1.05rem;text-transform:uppercase;margin:0;letter-spacing:-.01em}
+  .emp-bento-card--stock p{color:rgba(255,255,255,.92);margin:0;font-size:.92rem;line-height:1.5}
+  .emp-bento-icon{display:inline-flex;width:36px;height:36px;color:var(--orange)}
+  .emp-bento-card--audit .emp-bento-icon,.emp-bento-card--lead .emp-bento-icon{color:#ffb18f}
+  .emp-bento-card--stock .emp-bento-icon{color:#fff}
+  .emp-bento-link{
+    margin-top:auto;
+    display:inline-flex;align-items:center;gap:8px;
+    color:var(--orange);font-weight:800;font-size:.82rem;
+    letter-spacing:.14em;text-transform:uppercase;
+  }
+  .emp-bento-card--audit .emp-bento-link{color:#ffb18f}
+  .emp-bento-link:hover{text-decoration:underline}
+  .emp-bento-arrow{display:inline-flex;width:14px;height:14px}
+
+  /* Equipo directivo */
+  .emp-team-head{margin-bottom:48px;max-width:760px;margin-inline:auto}
+  .emp-team-head .emp-h2{margin-top:8px}
+  .emp-team-intro{color:var(--muted);margin:12px auto 0;max-width:60ch;line-height:1.6}
+  .emp-team{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:32px;
+    max-width:1080px;margin:auto;
+  }
+  .emp-member{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-top:4px solid var(--orange);
+    border-radius:var(--radius);
+    padding:32px 28px;
+    text-align:center;
+    transition:transform .3s, box-shadow .3s;
+  }
+  .emp-member:hover{transform:translateY(-3px);box-shadow:0 18px 36px rgba(45,25,13,.10)}
+  .emp-member-photo{
+    width:140px;height:140px;
+    border-radius:50%;
+    margin:0 auto 22px;
+    background:linear-gradient(135deg,var(--charcoal) 0%,#1f262e 100%);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    box-shadow:0 10px 26px rgba(45,25,13,.18);
+  }
+  .emp-member-photo img{
+    width:100%;height:100%;
+    object-fit:cover;
+    object-position:center;
+  }
+  .emp-member-initials{
+    color:#fff;
+    font-size:2.2rem;font-weight:850;letter-spacing:.04em;
+  }
+  .emp-member h3{
+    color:var(--charcoal);
+    font-size:1.35rem;font-weight:800;
+    margin:0 0 6px;letter-spacing:-.01em;
+  }
+  .emp-member-role{
+    color:var(--orange);
+    font-size:.82rem;font-weight:800;letter-spacing:.14em;
+    text-transform:uppercase;margin:0 0 18px;
+  }
+  .emp-member-bio{
+    margin:0 0 18px;
+    padding:16px 18px;
+    background:var(--soft);
+    border-left:3px solid var(--orange);
+    border-radius:0 8px 8px 0;
+    text-align:left;
+  }
+  .emp-member-bio p{
+    color:var(--ink);
+    font-size:.92rem;line-height:1.6;
+    margin:0;
+    font-style:italic;
+  }
+  .emp-member-body{
+    color:var(--muted);
+    font-size:.88rem;line-height:1.55;
+    margin:0;
+  }
+
+  /* Cobertura */
+  .emp-branches-head{margin-bottom:48px;max-width:720px;margin-inline:auto}
+  .emp-branches-head p{color:var(--muted);margin-top:12px;line-height:1.6}
+  .emp-branches{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:20px;
+    max-width:1080px;margin:auto;
+  }
+  .emp-branch{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 26px;
+    transition:border-color .25s, transform .25s;
+    text-align:left;
+  }
+  .emp-branch:hover{border-color:var(--orange);transform:translateY(-2px)}
+  .emp-branch-icon{display:inline-flex;width:32px;height:32px;color:var(--orange);margin-bottom:14px}
+  .emp-branch h3{color:var(--charcoal);font-size:1.12rem;margin:0 0 8px;font-weight:800;letter-spacing:-.01em}
+  .emp-branch-loc{color:var(--orange);font-size:.82rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin:0 0 8px}
+  .emp-branch-addr,.emp-branch-hours{color:var(--muted);font-size:.92rem;margin:0 0 6px;line-height:1.5}
+  .emp-branch-link{
+    display:inline-flex;align-items:center;gap:8px;
+    margin-top:14px;
+    color:var(--charcoal);font-weight:700;font-size:.92rem;
+  }
+  .emp-branch-link:hover{color:var(--orange)}
+  .emp-branch-link svg{width:16px;height:16px;flex-shrink:0}
+
+  /* CTA final */
+  .emp-cta{
+    background:
+      radial-gradient(circle at 20% 20%,rgba(251,77,8,.18),transparent 55%),
+      linear-gradient(135deg,#1f262e 0%,var(--charcoal) 100%);
+    color:#fff;
+    padding:clamp(72px,10vw,120px) clamp(20px,5vw,40px);
+    text-align:center;
+  }
+  .emp-cta-inner{max-width:780px;margin:auto}
+  .emp-cta h2{
+    color:#fff;
+    font-size:clamp(1.8rem,3.4vw,2.6rem);
+    text-transform:uppercase;letter-spacing:-.025em;
+    margin:0 0 14px;font-weight:800;
+  }
+  .emp-cta p{color:rgba(255,255,255,.78);margin:0 0 30px;line-height:1.6}
+  .emp-cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .emp-cta-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:14px 26px;
+    font-size:.92rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:8px;
+    transition:transform .2s, background .2s, color .2s;
+  }
+  .emp-cta-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
+  .emp-cta-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}
+  .emp-cta-btn--ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)}
+  .emp-cta-btn--ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.7)}
+
+  /* Responsive */
+  @media (max-width:980px){
+    .emp-wrap--narrative{grid-template-columns:1fr;gap:32px}
+    .emp-pillars{grid-template-columns:1fr 1fr}
+    .emp-mv{grid-template-columns:1fr}
+    .emp-services-head{grid-template-columns:1fr;gap:16px;align-items:start}
+    .emp-services-intro{text-align:left}
+    .emp-bento{grid-template-columns:1fr 1fr;grid-auto-rows:auto}
+    .emp-bento-card--lead{grid-column:1 / span 2;grid-row:auto;min-height:320px}
+    .emp-bento-card--audit{grid-column:1;grid-row:auto}
+    .emp-bento-card--training{grid-column:2;grid-row:auto}
+    .emp-bento-card--stock{grid-column:1;grid-row:auto}
+    .emp-bento-card--tools{grid-column:2;grid-row:auto}
+  }
+  @media (max-width:640px){
+    .emp-hero{height:420px}
+    .emp-pillars{grid-template-columns:1fr}
+    .emp-metrics{grid-template-columns:1fr 1fr;gap:18px}
+    .emp-bento{grid-template-columns:1fr}
+    .emp-bento-card--lead{grid-column:1;grid-row:auto}
+    .emp-bento-card--audit,
+    .emp-bento-card--training,
+    .emp-bento-card--stock,
+    .emp-bento-card--tools{grid-column:1;grid-row:auto}
+    .emp-bento-body{padding:28px 24px}
+  }
+</style>
