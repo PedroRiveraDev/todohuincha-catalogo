@@ -23,6 +23,14 @@ import { categories, products } from '../../data/catalog';
   </div>
 
   <div class="catalog-hero-dark">
+    <div class="catalog-hero-panels" aria-hidden="true">
+      <div class="catalog-panel catalog-panel--1"></div>
+      <div class="catalog-panel catalog-panel--2"></div>
+      <div class="catalog-panel catalog-panel--3"></div>
+      <div class="catalog-panel catalog-panel--4"></div>
+      <div class="catalog-panel catalog-panel--5"></div>
+    </div>
+    <div class="catalog-hero-shade" aria-hidden="true"></div>
     <div class="catalog-hero-inner wrap">
       <div class="hero-left">
         <span class="eyebrow">Catálogo</span>
@@ -876,6 +884,79 @@ render();
   }
   .sticky-search-bar .search-wrapper {
     max-width: 100% !important;
+  }
+}
+
+/* Collage de paneles diagonales en el hero del catálogo */
+.catalog-hero-dark {
+  position: relative;
+  overflow: hidden;
+}
+.catalog-hero-panels {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.catalog-panel {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: -5%;
+  clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+  background-color: #1a1c1c;
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(0.15) saturate(0.85) contrast(1.05) brightness(0.55);
+}
+.catalog-panel:first-child {
+  margin-left: -3%;
+}
+.catalog-panel--1 {
+  background-image: url('/hero/taller-maquinaria.jpg');
+}
+.catalog-panel--2 {
+  background-image: url('/hero/maquinaria-verde.jpg');
+  background-position: 60% center;
+}
+.catalog-panel--3 {
+  background-image: url('/hero/partidor.jpg');
+  background-position: 40% center;
+}
+.catalog-panel--4 {
+  background-image: url('/hero/motocultivador.jpg');
+  background-position: center;
+}
+.catalog-panel--5 {
+  background-image: url('/hero/taller.jpg');
+  background-position: 35% center;
+}
+.catalog-hero-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(90deg,
+    rgba(20, 19, 17, 0.92) 0%,
+    rgba(20, 19, 17, 0.75) 40%,
+    rgba(20, 19, 17, 0.45) 75%,
+    rgba(20, 19, 17, 0.7) 100%);
+  pointer-events: none;
+}
+.catalog-hero-inner {
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 700px) {
+  .catalog-hero-panels {
+    inset: 0 -40px;
+  }
+  .catalog-hero-shade {
+    background: linear-gradient(180deg,
+      rgba(20, 19, 17, 0.65) 0%,
+      rgba(20, 19, 17, 0.85) 100%);
   }
 }
 </style>
