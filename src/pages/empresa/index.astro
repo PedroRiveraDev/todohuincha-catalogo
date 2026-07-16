@@ -71,8 +71,9 @@ const icons: Record<string, string> = {
   arrow: '<path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   map: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white" stroke="none"/>',
   phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  building: '<path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2M9 11h2M9 15h2M13 7h2M13 11h2M13 15h2"/>',
 };
-const svg = (name: string) => `<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] ?? ''}</svg>`;
+const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] ?? ''}</svg>`;
 ---
 <InstitutionalLayout
   title="Empresa | Comercializadora Todo Huincha"
@@ -245,14 +246,17 @@ const svg = (name: string) => `<svg viewBox="0 0 24 24" width="100%" height="100
 
       <div class="emp-branches">
         {branches.map((branch) => (
-          <article class="emp-branch">
-            <span class="emp-branch-icon" set:html={svg('map')}></span>
+          <a class="emp-branch" href={`/sucursales/${branch.slug}/`}>
+            <div class="emp-branch-head">
+              <span class="emp-branch-icon" set:html={svg('building')}></span>
+              <span class="emp-branch-arrow" set:html={svg('arrow', 18)}></span>
+            </div>
             <h3>{branch.name}</h3>
             <p class="emp-branch-loc">{branch.address.locality}, {branch.address.region}</p>
             <p class="emp-branch-addr">{branch.address.street}</p>
             <p class="emp-branch-hours">{branch.hours}</p>
-            <a class="emp-branch-link" href={`tel:${branch.phone.replace(/\s|\(|\)/g, '')}`} set:html={`${svg('phone')}<span>${branch.phone}</span>`}></a>
-          </article>
+            <span class="emp-branch-link" set:html={`${svg('phone')}<span>${branch.phone}</span>`}></span>
+          </a>
         ))}
       </div>
     </div>
@@ -611,25 +615,54 @@ const svg = (name: string) => `<svg viewBox="0 0 24 24" width="100%" height="100
     max-width:1080px;margin:auto;
   }
   .emp-branch{
+    display:flex;flex-direction:column;
     background:var(--surface);
     border:1px solid var(--line);
     border-radius:var(--radius);
     padding:28px 26px;
-    transition:border-color .25s, transform .25s;
-    text-align:left;
+    text-decoration:none;color:inherit;
+    transition:border-color .25s, transform .25s, box-shadow .25s;
+    position:relative;
   }
-  .emp-branch:hover{border-color:var(--orange);transform:translateY(-2px)}
-  .emp-branch-icon{display:inline-flex;width:32px;height:32px;color:var(--orange);margin-bottom:14px}
-  .emp-branch h3{color:var(--charcoal);font-size:1.12rem;margin:0 0 8px;font-weight:800;letter-spacing:-.01em}
-  .emp-branch-loc{color:var(--orange);font-size:.82rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin:0 0 8px}
+  .emp-branch:hover{
+    border-color:var(--orange);
+    transform:translateY(-3px);
+    box-shadow:0 14px 30px rgba(45,25,13,.10);
+  }
+  .emp-branch-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .emp-branch-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:48px;height:48px;
+    background:var(--soft);
+    color:var(--orange);
+    border-radius:12px;
+    transition:background .25s, color .25s;
+  }
+  .emp-branch:hover .emp-branch-icon{background:var(--orange);color:#fff}
+  .emp-branch-arrow{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;
+    color:var(--muted);
+    border-radius:50%;
+    transition:color .25s, transform .25s, background .25s;
+  }
+  .emp-branch:hover .emp-branch-arrow{color:var(--orange);transform:translateX(4px)}
+  .emp-branch h3{color:var(--charcoal);font-size:1.15rem;margin:0 0 8px;font-weight:800;letter-spacing:-.01em}
+  .emp-branch-loc{color:var(--orange);font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 10px}
   .emp-branch-addr,.emp-branch-hours{color:var(--muted);font-size:.92rem;margin:0 0 6px;line-height:1.5}
   .emp-branch-link{
     display:inline-flex;align-items:center;gap:8px;
-    margin-top:14px;
+    margin-top:18px;
     color:var(--charcoal);font-weight:700;font-size:.92rem;
+    pointer-events:none;
   }
-  .emp-branch-link:hover{color:var(--orange)}
+  .emp-branch:hover .emp-branch-link{color:var(--orange)}
   .emp-branch-link svg{width:16px;height:16px;flex-shrink:0}
+  /* Quitar el subrayado del nav global en hover */
+  .emp-branch::after{display:none!important}
 
   /* CTA final */
   .emp-cta{
