@@ -110,6 +110,8 @@ import { machines, machineCategories } from '../data/maquinaria';
     font-size:.82rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     transition:background .2s, border-color .2s, color .2s;
   }
+  /* Quitar el subrayado del nav global en hover */
+  .maq-category::after{display:none!important}
   .maq-category:hover{
     background:var(--orange);
     border-color:var(--orange);
