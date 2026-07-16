@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { machines, machineCategories } from '../data/maquinaria';
+import { svg } from '../lib/icons.ts';
 ---
 <Base title="Maquinaria | Todo Huincha" description="Catálogo de maquinaria Todo Huincha, disponible por cotización.">
   <!-- HERO -->
@@ -39,7 +40,7 @@ import { machines, machineCategories } from '../data/maquinaria';
                 <div class="maq-card-body">
                   <h3>{machine.name}</h3>
                   <p class="muted">{machine.summary}</p>
-                  <a class="maq-card-btn" href={`/maquinaria/${machine.slug}`}>Ver ficha y cotizar</a>
+                  <a class="maq-card-btn" href={`/maquinaria/${machine.slug}`}><span class="maq-card-btn-icon" set:html={svg('arrow', 16)}></span>Ver ficha y cotizar</a>
                 </div>
               </article>
             ))}
@@ -192,6 +193,7 @@ import { machines, machineCategories } from '../data/maquinaria';
   }
   .maq-card-btn{
     display:inline-flex;align-items:center;justify-content:center;
+    gap:10px;
     background:var(--orange);
     color:#fff;
     padding:12px 18px;
@@ -199,6 +201,10 @@ import { machines, machineCategories } from '../data/maquinaria';
     font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
     transition:background .2s, transform .2s;
     margin-top:6px;
+  }
+  .maq-card-btn-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
   }
   .maq-card-btn:hover{
     background:var(--orange-deep);

@@ -6,6 +6,7 @@ import {
   loadTeamJson,
 } from '../../lib/seo/loadCompanyJson.ts';
 import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
+import { svg } from '../../lib/icons.ts';
 
 const company = loadCompanyJson();
 const branches = loadBranchesJson();
@@ -58,22 +59,7 @@ const pillars = [
   },
 ];
 
-// Iconos SVG inline (sin dependencias externas).
-const icons: Record<string, string> = {
-  precision: '<path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>',
-  speed: '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="currentColor" stroke="none"/>',
-  shield: '<path d="M12 2l8 3v6c0 5-3.5 9.4-8 11-4.5-1.6-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  people: '<circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5"/><path d="M14 19c0-2.2 1.8-4 4-4s4 1.8 4 4"/>',
-  tools: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5z"/>',
-  audit: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6M11 8v6" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
-  training: '<path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v4c2 2 8 2 10 0v-4"/><path d="M21 9v6"/>',
-  stock: '<path d="M3 7l9-4 9 4-9 4-9-4z" fill="currentColor" stroke="none"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
-  arrow: '<path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  map: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white" stroke="none"/>',
-  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
-  building: '<path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2M9 11h2M9 15h2M13 7h2M13 11h2M13 15h2"/>',
-};
-const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] ?? ''}</svg>`;
+// Iconos importados desde el módulo compartido.
 ---
 <InstitutionalLayout
   title="Empresa | Comercializadora Todo Huincha"
@@ -174,7 +160,7 @@ const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size
           <span class="emp-bento-icon" set:html={svg('audit')}></span>
           <h3>Asesoría en compra</h3>
           <p>Te ayudamos a elegir la máquina o consumible correcto según tu faena, volumen y presupuesto.</p>
-          <a class="emp-bento-link" href="/contacto">Solicitar asesoría <span class="emp-bento-arrow" set:html={svg('arrow')}></span></a>
+          <a class="emp-bento-link" href="/contacto"><span class="emp-bento-link-icon" set:html={svg('arrow', 16)}></span>Solicitar asesoría</a>
         </article>
 
         <article class="emp-bento-card emp-bento-card--training">
@@ -268,8 +254,8 @@ const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size
       <h2>¿Listo para equipar tu próxima faena?</h2>
       <p>Cotiza con nosotros. Te respondemos el mismo día con stock real y precios claros.</p>
       <div class="emp-cta-actions">
-        <a class="emp-cta-btn emp-cta-btn--primary" href="/contacto">Iniciar una cotización</a>
-        <a class="emp-cta-btn emp-cta-btn--ghost" href="/catalogo">Ver catálogo</a>
+        <a class="emp-cta-btn emp-cta-btn--primary" href="/contacto"><span class="emp-cta-btn-icon" set:html={svg('quote', 16)}></span>Iniciar una cotización</a>
+        <a class="emp-cta-btn emp-cta-btn--ghost" href="/catalogo"><span class="emp-cta-btn-icon" set:html={svg('grid', 16)}></span>Ver catálogo</a>
       </div>
     </div>
   </section>
@@ -529,13 +515,17 @@ const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size
   .emp-bento-card--stock .emp-bento-icon{color:#fff}
   .emp-bento-link{
     margin-top:auto;
-    display:inline-flex;align-items:center;gap:8px;
+    display:inline-flex;align-items:center;gap:10px;
     color:var(--orange);font-weight:800;font-size:.82rem;
     letter-spacing:.14em;text-transform:uppercase;
+    transition:transform .2s;
+  }
+  .emp-bento-link:hover{transform:translateX(3px)}
+  .emp-bento-link-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
   }
   .emp-bento-card--audit .emp-bento-link{color:#ffb18f}
-  .emp-bento-link:hover{text-decoration:underline}
-  .emp-bento-arrow{display:inline-flex;width:14px;height:14px}
 
   /* Equipo directivo */
   .emp-team-head{margin-bottom:48px;max-width:760px;margin-inline:auto}
@@ -684,10 +674,15 @@ const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size
   .emp-cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
   .emp-cta-btn{
     display:inline-flex;align-items:center;justify-content:center;
+    gap:10px;
     padding:14px 26px;
     font-size:.92rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
     border-radius:8px;
     transition:transform .2s, background .2s, color .2s;
+  }
+  .emp-cta-btn-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
   }
   .emp-cta-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
   .emp-cta-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}

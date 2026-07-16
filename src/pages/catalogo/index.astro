@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { categories, products } from '../../data/catalog';
+import { svg } from '../../lib/icons.ts';
 ---
 <Base title="Catálogo | Todo Huincha" description="Catálogo completo de productos Todo Huincha, disponible por cotización.">
   <!-- Buscador Flotante Sticky (se activa al hacer scroll) -->
@@ -43,7 +44,7 @@ import { categories, products } from '../../data/catalog';
           <svg class="search-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </div>
         <button class="pdf-btn-dark" id="cat-pdf-btn" data-title="Catálogo Todo Huincha" data-subtitle={`${products.length} productos en ${categories.length} categorías`} data-rows={JSON.stringify(products.map(p => `${p.internal_reference} | ${p.name} | ${p.category.title}`))}>
-          <svg class="download-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span class="pdf-btn-icon" set:html={svg('download', 14)}></span>
           Descargar PDF
         </button>
       </div>
@@ -101,6 +102,7 @@ import { categories, products } from '../../data/catalog';
             <span class="cat-row-tag">{product.category.title}</span>
             <span class="cat-row-code">Cód. {product.internal_reference}</span>
             <a class="button cat-row-btn" href={`/productos/${product.category.slug}/${encodeURIComponent(product.internal_reference)}`}>
+              <span class="cat-row-btn-icon" set:html={svg('arrow', 14)}></span>
               Ver y cotizar
             </a>
           </div>
@@ -958,5 +960,18 @@ render();
       rgba(20, 19, 17, 0.65) 0%,
       rgba(20, 19, 17, 0.85) 100%);
   }
+}
+
+/* Override: gap para botones con icono */
+.button,
+.pdf-btn-dark {
+  gap: 8px;
+}
+.pdf-btn-icon,
+.cat-row-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 </style>

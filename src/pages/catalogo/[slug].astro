@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { categories } from '../../data/catalog';
+import { svg } from '../../lib/icons.ts';
 export function getStaticPaths(){ return categories.map((category)=>({params:{slug:category.slug},props:{category}})); }
 const { category } = Astro.props;
 ---
@@ -26,6 +27,7 @@ const { category } = Astro.props;
           <span class="cat-row-name">{product.name}</span>
           <span class="cat-row-code">Cód. {product.internal_reference}</span>
           <a class="button cat-row-btn" href={`/productos/${category.slug}/${encodeURIComponent(product.internal_reference)}`}>
+            <span class="cat-row-btn-icon" set:html={svg('arrow', 14)}></span>
             Ver y cotizar
           </a>
         </div>

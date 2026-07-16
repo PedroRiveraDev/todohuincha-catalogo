@@ -5,6 +5,7 @@ import {
   loadCompanyJson,
 } from '../../lib/seo/loadCompanyJson.ts';
 import { buildBreadcrumbList, buildWebPage } from '../../lib/seo/jsonld.ts';
+import { svg } from '../../lib/icons.ts';
 
 const company = loadCompanyJson();
 const branches = loadBranchesJson();
@@ -45,16 +46,6 @@ const zoneDescriptions: Record<string, string> = {
   constitucion: 'Especialistas en faenas forestales del Maule.',
   'puerto-montt': 'Cobertura logística para la región de Los Lagos.',
 };
-
-// SVG inline (sin dependencias externas) — Material Symbols风格的 iconos monocromáticos.
-const iconPath: Record<string, string> = {
-  location: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/>',
-  call: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
-  schedule: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>',
-  arrow: '<path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-};
-const svg = (name: string, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPath[name] ?? ''}</svg>`;
 
 // Iframe de Google Maps sin API key (point por sucursal).
 const mapEmbed = (lat: number, lng: number) =>
@@ -111,7 +102,7 @@ const mapEmbed = (lat: number, lng: number) =>
                 </ul>
               </div>
               <div class="suc-card-actions">
-                <a class="suc-card-btn suc-card-btn--primary" href={branch.mapUrl} target="_blank" rel="noopener noreferrer">Google Maps</a>
+                <a class="suc-card-btn suc-card-btn--primary" href={branch.mapUrl} target="_blank" rel="noopener noreferrer"><span class="suc-card-btn-icon" set:html={svg('map', 16)}></span>Google Maps</a>
                 <a class="suc-card-btn suc-card-btn--icon" href={`/sucursales/${branch.slug}/`} aria-label={`Ver detalles de ${branch.name}`} set:html={svg('info', 18)}></a>
               </div>
             </article>
@@ -160,8 +151,8 @@ const mapEmbed = (lat: number, lng: number) =>
       <h2>¿Necesitas ayuda para elegir tu maquinaria?</h2>
       <p>Nuestros expertos están disponibles en todas las sucursales para ayudarte a elegir la mejor máquina para tu faena.</p>
       <div class="suc-cta-actions">
-        <a class="suc-cta-btn suc-cta-btn--primary" href="/contacto">Contactar sucursal</a>
-        <a class="suc-cta-btn suc-cta-btn--ghost" href="/catalogo">Ver catálogo</a>
+        <a class="suc-cta-btn suc-cta-btn--primary" href="/contacto"><span class="suc-cta-btn-icon" set:html={svg('phone', 16)}></span>Contactar sucursal</a>
+        <a class="suc-cta-btn suc-cta-btn--ghost" href="/catalogo"><span class="suc-cta-btn-icon" set:html={svg('grid', 16)}></span>Ver catálogo</a>
       </div>
     </div>
   </section>
@@ -300,10 +291,15 @@ const mapEmbed = (lat: number, lng: number) =>
   }
   .suc-card-btn{
     display:inline-flex;align-items:center;justify-content:center;
+    gap:8px;
     font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
     border-radius:8px;
     padding:12px 18px;
     transition:background .2s, color .2s, border-color .2s;
+  }
+  .suc-card-btn-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
   }
   .suc-card-btn--primary{
     flex:1 1 auto;
@@ -408,10 +404,15 @@ const mapEmbed = (lat: number, lng: number) =>
   .suc-cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
   .suc-cta-btn{
     display:inline-flex;align-items:center;justify-content:center;
+    gap:10px;
     padding:14px 28px;
     font-size:.92rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
     border-radius:8px;
     transition:transform .2s, background .2s, color .2s, border-color .2s;
+  }
+  .suc-cta-btn-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
   }
   .suc-cta-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
   .suc-cta-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}

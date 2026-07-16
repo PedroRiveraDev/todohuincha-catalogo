@@ -1,0 +1,931 @@
+---
+import Base from '../layouts/Base.astro';
+
+/* =========================================================
+   SETS DE ICONOS
+   - current: los paths que ya están en uso en el sitio
+   - minimal: versiones más finas/limpias estilo Lucide/Feather
+   - geometric: alternativa intermedia, formas más rectas
+   ========================================================= */
+
+const sizes = [16, 20, 24, 32, 48] as const;
+const tones = [
+  { name: 'Naranja (brand)', color: '#FB4D08' },
+  { name: 'Carbón (ink)', color: '#313E48' },
+  { name: 'Gris medio', color: '#6c6b65' },
+] as const;
+
+type IconDef = { name: string; svg: string; use: string };
+
+const currentIcons: IconDef[] = [
+  {
+    name: 'phone',
+    use: 'Contacto, sucursales (datos de contacto)',
+    svg: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  },
+  {
+    name: 'mail',
+    use: 'Contacto (email corporativo)',
+    svg: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  },
+  {
+    name: 'location',
+    use: 'Sucursales, contacto (dirección)',
+    svg: '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/>',
+  },
+  {
+    name: 'schedule',
+    use: 'Contacto, sucursales (horario)',
+    svg: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  },
+  {
+    name: 'building',
+    use: 'Empresa (cards de sucursales)',
+    svg: '<path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2M9 11h2M9 15h2M13 7h2M13 11h2M13 15h2"/>',
+  },
+  {
+    name: 'arrow',
+    use: 'Links con dirección (CTA, ver más)',
+    svg: '<path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
+  {
+    name: 'chevron',
+    use: 'FAQ, detalles (expandir/colapsar)',
+    svg: '<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
+  {
+    name: 'check',
+    use: 'Estados de éxito',
+    svg: '<path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
+  {
+    name: 'send',
+    use: 'Submit de formularios',
+    svg: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
+  },
+  {
+    name: 'info',
+    use: 'Acciones secundarias',
+    svg: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>',
+  },
+  {
+    name: 'tools',
+    use: 'Empresa pilares (servicio técnico)',
+    svg: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5z"/>',
+  },
+  {
+    name: 'machinery',
+    use: 'Servicios en sucursal',
+    svg: '<path d="M3 17h18M5 17V9h4l2-3h2l2 3h4v8"/><circle cx="8" cy="19" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="19" r="1.5" fill="currentColor" stroke="none"/>',
+  },
+  {
+    name: 'precision',
+    use: 'Empresa (pilares)',
+    svg: '<path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>',
+  },
+  {
+    name: 'speed',
+    use: 'Empresa (pilares)',
+    svg: '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="currentColor" stroke="none"/>',
+  },
+  {
+    name: 'shield',
+    use: 'Empresa (pilares)',
+    svg: '<path d="M12 2l8 3v6c0 5-3.5 9.4-8 11-4.5-1.6-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
+  {
+    name: 'audit',
+    use: 'Empresa (asesoría en compra)',
+    svg: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6M11 8v6" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
+  },
+];
+
+/* Iconos NUEVOS para botones y cards (set B minimal) */
+const newIcons: IconDef[] = [
+  {
+    name: 'grid',
+    use: 'Botón "Ver catálogo", "Ver todas las categorías"',
+    svg: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+  },
+  {
+    name: 'download',
+    use: 'Botón "Descargar PDF" (catálogo)',
+    svg: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  },
+  {
+    name: 'quote',
+    use: 'Botón "Iniciar cotización", "Contactar"',
+    svg: '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>',
+  },
+  {
+    name: 'map',
+    use: 'Botón "Google Maps", "Cómo llegar" (distinto del pin de location)',
+    svg: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+  },
+  {
+    name: 'list',
+    use: 'Sidebar categorías, listas de productos',
+    svg: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  },
+];
+
+/* Versiones MINIMALISTAS (estilo Lucide/Feather)
+   stroke-width uniforme 1.5, paths simples, sin detalles innecesarios */
+const minimalIcons: IconDef[] = [
+  {
+    name: 'phone',
+    use: 'Contacto, sucursales',
+    svg: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  },
+  {
+    name: 'mail',
+    use: 'Contacto (email)',
+    svg: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+  },
+  {
+    name: 'location',
+    use: 'Dirección',
+    svg: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  },
+  {
+    name: 'schedule',
+    use: 'Horario',
+    svg: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  },
+  {
+    name: 'building',
+    use: 'Sucursales',
+    svg: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
+  },
+  {
+    name: 'arrow',
+    use: 'Links direccionales',
+    svg: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  },
+  {
+    name: 'chevron',
+    use: 'FAQ',
+    svg: '<polyline points="6 9 12 15 18 9"/>',
+  },
+  {
+    name: 'check',
+    use: 'Éxito',
+    svg: '<polyline points="20 6 9 17 4 12"/>',
+  },
+  {
+    name: 'send',
+    use: 'Submit',
+    svg: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  },
+  {
+    name: 'info',
+    use: 'Detalle',
+    svg: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  },
+  {
+    name: 'tools',
+    use: 'Servicio técnico',
+    svg: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  },
+  {
+    name: 'machinery',
+    use: 'Servicios',
+    svg: '<rect x="3" y="6" width="18" height="14" rx="1"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/><path d="M6 6v-2h12v2"/>',
+  },
+  {
+    name: 'precision',
+    use: 'Pilares',
+    svg: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  },
+  {
+    name: 'speed',
+    use: 'Pilares',
+    svg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  },
+  {
+    name: 'shield',
+    use: 'Calidad',
+    svg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  },
+  {
+    name: 'audit',
+    use: 'Asesoría',
+    svg: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>',
+  },
+];
+
+/* Redes sociales (estilo outline, para alinear con el resto) */
+const socialIcons: IconDef[] = [
+  {
+    name: 'facebook',
+    use: 'Footer social',
+    svg: '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
+  },
+  {
+    name: 'instagram',
+    use: 'Footer social',
+    svg: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
+  },
+  {
+    name: 'linkedin',
+    use: 'Footer social',
+    svg: '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>',
+  },
+  {
+    name: 'whatsapp',
+    use: 'Footer social, contacto',
+    svg: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  },
+];
+
+function svgHtml(raw: string, size: number, color = 'currentColor') {
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${raw}</svg>`;
+}
+---
+<Base title="Sistema de iconografía | Todo Huincha" description="Preview del set de iconos del sitio y propuestas minimalistas alternativas.">
+  <!-- HERO -->
+  <section class="ico-hero">
+    <div class="ico-hero-inner">
+      <span class="ico-eyebrow">Design system</span>
+      <h1>Sistema de iconografía</h1>
+      <p class="ico-lede">
+        Vista previa de todos los iconos en uso en el sitio, con propuestas minimalistas alternativas y guía de tamaños y tonos. Elegí qué versión querés mantener en cada contexto.
+      </p>
+    </div>
+  </section>
+
+  <!-- SET ACTUAL -->
+  <section class="ico-section">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">A — Set actual</span>
+        <h2>Lo que está hoy en producción</h2>
+        <p>Outline con stroke-width 1.6, algunos con detalles internos hardcodeados. Funciona, pero tiene inconsistencias entre archivos.</p>
+      </header>
+      <div class="ico-grid">
+        {currentIcons.map((icon) => (
+          <article class="ico-card">
+            <div class="ico-card-icon" set:html={svgHtml(icon.svg, 32)}></div>
+            <h3>{icon.name}</h3>
+            <p class="ico-card-use">{icon.use}</p>
+            <div class="ico-card-sizes">
+              {sizes.slice(0, 4).map((s) => (
+                <span class="ico-size-chip" set:html={svgHtml(icon.svg, s)} title={`${s}px`}></span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PROPUESTAS MINIMALISTAS -->
+  <section class="ico-section ico-section--soft">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">B — Propuesta minimalista</span>
+        <h2>Versión Lucide/Feather</h2>
+        <p>Mismo set, paths más simples y geométricos. Stroke-width 1.5 uniforme. Líneas rectas en lugar de curvas. Más "limpio" y consistente entre iconos.</p>
+      </header>
+      <div class="ico-grid">
+        {minimalIcons.map((icon) => (
+          <article class="ico-card ico-card--alt">
+            <div class="ico-card-icon" set:html={svgHtml(icon.svg, 32)}></div>
+            <h3>{icon.name}</h3>
+            <p class="ico-card-use">{icon.use}</p>
+            <div class="ico-card-sizes">
+              {sizes.slice(0, 4).map((s) => (
+                <span class="ico-size-chip" set:html={svgHtml(icon.svg, s)} title={`${s}px`}></span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARATIVA LADO A LADO -->
+  <section class="ico-section">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">C — Comparativa</span>
+        <h2>Actual vs propuesta</h2>
+        <p>Cada icono lado a lado. La columna izquierda muestra el path actual; la derecha la versión minimalista. Marcá cuál preferís.</p>
+      </header>
+      <div class="ico-compare">
+        {currentIcons.map((curr, idx) => {
+          const min = minimalIcons[idx];
+          if (!min) return null;
+          return (
+            <article class="ico-compare-row">
+              <div class="ico-compare-cell">
+                <span class="ico-compare-label">A — actual</span>
+                <div class="ico-compare-icon" set:html={svgHtml(curr.svg, 40)}></div>
+                <span class="ico-compare-name">{curr.name}</span>
+              </div>
+              <div class="ico-compare-cell ico-compare-cell--alt">
+                <span class="ico-compare-label">B — minimal</span>
+                <div class="ico-compare-icon" set:html={svgHtml(min.svg, 40)}></div>
+                <span class="ico-compare-name">{min.name}</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- TONOS -->
+  <section class="ico-section ico-section--soft">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">D — Tonos</span>
+        <h2>Pruebas de color</h2>
+        <p>Cómo se ven los iconos minimalistas sobre distintos tonos del sistema.</p>
+      </header>
+      <div class="ico-tones">
+        {tones.map((tone) => (
+          <article class="ico-tone-card" style={`color:${tone.color}`}>
+            <span class="ico-tone-name">{tone.name}</span>
+            <span class="ico-tone-swatch" style={`background:${tone.color}`}></span>
+            <div class="ico-tone-icons">
+              {minimalIcons.slice(0, 8).map((icon) => (
+                <span class="ico-tone-icon" set:html={svgHtml(icon.svg, 28)} title={icon.name}></span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- REDES SOCIALES -->
+  <section class="ico-section">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">E — Redes sociales</span>
+        <h2>Footer social</h2>
+        <p>Hoy son <strong>filled</strong> (sólidos). La propuesta minimal los cambia a <strong>outline</strong> para alinear con el resto del sitio. Tradeoff: pierden un poco de peso visual.</p>
+      </header>
+      <div class="ico-compare ico-compare--socials">
+        <article class="ico-compare-row">
+          <div class="ico-compare-cell">
+            <span class="ico-compare-label">A — filled (actual)</span>
+            <div class="ico-compare-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor" color="#FB4D08"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+            </div>
+            <span class="ico-compare-name">facebook</span>
+          </div>
+          <div class="ico-compare-cell ico-compare-cell--alt">
+            <span class="ico-compare-label">B — outline (propuesta)</span>
+            <div class="ico-compare-icon" set:html={svgHtml(socialIcons[0].svg, 40)}></div>
+            <span class="ico-compare-name">facebook</span>
+          </div>
+        </article>
+        <article class="ico-compare-row">
+          <div class="ico-compare-cell">
+            <span class="ico-compare-label">A — filled (actual)</span>
+            <div class="ico-compare-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor" color="#FB4D08"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+            </div>
+            <span class="ico-compare-name">instagram</span>
+          </div>
+          <div class="ico-compare-cell ico-compare-cell--alt">
+            <span class="ico-compare-label">B — outline (propuesta)</span>
+            <div class="ico-compare-icon" set:html={svgHtml(socialIcons[1].svg, 40)}></div>
+            <span class="ico-compare-name">instagram</span>
+          </div>
+        </article>
+        <article class="ico-compare-row">
+          <div class="ico-compare-cell">
+            <span class="ico-compare-label">A — filled (actual)</span>
+            <div class="ico-compare-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor" color="#FB4D08"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+            </div>
+            <span class="ico-compare-name">linkedin</span>
+          </div>
+          <div class="ico-compare-cell ico-compare-cell--alt">
+            <span class="ico-compare-label">B — outline (propuesta)</span>
+            <div class="ico-compare-icon" set:html={svgHtml(socialIcons[2].svg, 40)}></div>
+            <span class="ico-compare-name">linkedin</span>
+          </div>
+        </article>
+        <article class="ico-compare-row">
+          <div class="ico-compare-cell">
+            <span class="ico-compare-label">A — filled (actual)</span>
+            <div class="ico-compare-icon">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor" color="#FB4D08"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.2-.32a8.188 8.188 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.39 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01z"/></svg>
+            </div>
+            <span class="ico-compare-name">whatsapp</span>
+          </div>
+          <div class="ico-compare-cell ico-compare-cell--alt">
+            <span class="ico-compare-label">B — outline (propuesta)</span>
+            <div class="ico-compare-icon" set:html={svgHtml(socialIcons[3].svg, 40)}></div>
+            <span class="ico-compare-name">whatsapp</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- F — DECISIÓN -->
+  <section class="ico-section ico-section--soft">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">F — Decisión final</span>
+        <h2>Lo que queda definido</h2>
+      </header>
+      <div class="ico-decision">
+        <article class="ico-decision-card ico-decision-card--yes">
+          <span class="ico-decision-tag">Set B — minimal</span>
+          <h3>Iconos de UI</h3>
+          <p>Todos los iconos del sitio (contacto, sucursales, empresa, navegación, acciones). Lucide/Feather outline 1.5px, consistentes entre sí, detalles internos con <code>currentColor</code>.</p>
+          <span class="ico-decision-where">Aplica a: empresa, sucursales index, sucursales/[slug], contacto</span>
+        </article>
+        <article class="ico-decision-card ico-decision-card--yes">
+          <span class="ico-decision-tag">Set A — filled</span>
+          <h3>Redes sociales</h3>
+          <p>Facebook, Instagram, LinkedIn, WhatsApp. Mantienen el estilo filled original del footer porque son marcas reconocidas y se ven mejor sólidas.</p>
+          <span class="ico-decision-where">Aplica a: footer social (Base.astro)</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- G — ICONOS NUEVOS -->
+  <section class="ico-section">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">G — Iconos nuevos</span>
+        <h2>Para botones y CTAs</h2>
+        <p>Estos no existían en el sitio. Los agregamos al módulo compartido para usarlos en los botones.</p>
+      </header>
+      <div class="ico-grid">
+        {newIcons.map((icon) => (
+          <article class="ico-card ico-card--alt">
+            <div class="ico-card-icon" set:html={svgHtml(icon.svg, 32)}></div>
+            <h3>{icon.name}</h3>
+            <p class="ico-card-use">{icon.use}</p>
+            <div class="ico-card-sizes">
+              {sizes.slice(0, 4).map((s) => (
+                <span class="ico-size-chip" set:html={svgHtml(icon.svg, s)} title={`${s}px`}></span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- H — PLAN EN BOTONES Y CARDS -->
+  <section class="ico-section ico-section--soft">
+    <div class="ico-wrap">
+      <header class="ico-head">
+        <span class="ico-eyebrow">H — Plan de uso</span>
+        <h2>Dónde va cada icono</h2>
+        <p>Reglas de diseño: <strong>cards</strong> → icono en esquina superior derecha · <strong>botones</strong> → icono a la izquierda, centrado vertical, margen decente.</p>
+      </header>
+
+      <!-- H1 — Muestra de CARDS con icono top-right -->
+      <h3 class="ico-h-sub">Cards — icono en esquina superior derecha</h3>
+      <div class="ico-demo-grid">
+        <article class="ico-demo-card">
+          <span class="ico-demo-card-icon" set:html={svgHtml('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>', 22)}></span>
+          <h4>Todo Huincha Temuco</h4>
+          <p class="ico-demo-meta">PADRE LAS CASAS, ARAUCANÍA</p>
+          <p>Carr. Longitudinal Sur 4277</p>
+          <p>Lun a Vie 8:30 a 18:30</p>
+        </article>
+        <article class="ico-demo-card">
+          <span class="ico-demo-card-icon" set:html={svgHtml('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>', 22)}></span>
+          <h4>Todo Huincha Constitución</h4>
+          <p class="ico-demo-meta">CONSTITUCIÓN, MAULE</p>
+          <p>Km 7 camino San Javier, sector La Rueda</p>
+          <p>Lun a Vie 8:30 a 18:00</p>
+        </article>
+      </div>
+
+      <!-- H2 — Muestra de BOTONES con icono a la izquierda -->
+      <h3 class="ico-h-sub">Botones — icono a la izquierda, margen decente</h3>
+      <div class="ico-demo-buttons">
+        <a class="ico-demo-btn ico-demo-btn--primary" href="#">
+          <span class="ico-demo-btn-icon" set:html={svgHtml('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>', 16)}></span>
+          Llamar ahora
+        </a>
+        <a class="ico-demo-btn ico-demo-btn--primary" href="#">
+          <span class="ico-demo-btn-icon" set:html={svgHtml('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>', 16)}></span>
+          Descargar PDF
+        </a>
+        <a class="ico-demo-btn ico-demo-btn--primary" href="#">
+          <span class="ico-demo-btn-icon" set:html={svgHtml('<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>', 16)}></span>
+          Iniciar cotización
+        </a>
+        <a class="ico-demo-btn ico-demo-btn--primary" href="#">
+          <span class="ico-demo-btn-icon" set:html={svgHtml('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', 16)}></span>
+          Ver catálogo
+        </a>
+        <a class="ico-demo-btn ico-demo-btn--ghost" href="#">
+          <span class="ico-demo-btn-icon" set:html={svgHtml('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>', 16)}></span>
+          Cómo llegar
+        </a>
+        <a class="ico-demo-btn ico-demo-btn--ghost" href="#">
+          <span class="ico-demo-btn-icon" set:html={svgHtml('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>', 16)}></span>
+          Ver y cotizar
+        </a>
+      </div>
+
+      <!-- H3 — Tabla de mapeo -->
+      <h3 class="ico-h-sub">Mapa completo texto → icono</h3>
+      <div class="ico-map-table">
+        <div class="ico-map-row ico-map-row--head">
+          <div>Contexto</div>
+          <div>Texto del botón / card</div>
+          <div>Icono</div>
+        </div>
+        <div class="ico-map-row"><div>Hero home</div><div>Explorar maquinaria</div><div><code>machinery</code></div></div>
+        <div class="ico-map-row"><div>Hero home</div><div>Explorar catálogo</div><div><code>grid</code></div></div>
+        <div class="ico-map-row"><div>Catálogo / Maquinaria</div><div>Ver y cotizar / Ver ficha</div><div><code>arrow</code></div></div>
+        <div class="ico-map-row"><div>Catálogo</div><div>Descargar PDF</div><div><code>download</code></div></div>
+        <div class="ico-map-row"><div>Empresa CTA</div><div>Iniciar una cotización</div><div><code>quote</code></div></div>
+        <div class="ico-map-row"><div>Empresa CTA</div><div>Ver catálogo</div><div><code>grid</code></div></div>
+        <div class="ico-map-row"><div>Empresa bento</div><div>Solicitar asesoría</div><div><code>arrow</code></div></div>
+        <div class="ico-map-row"><div>Sucursales index card</div><div>Google Maps</div><div><code>map</code></div></div>
+        <div class="ico-map-row"><div>Sucursales CTA</div><div>Contactar sucursal</div><div><code>phone</code></div></div>
+        <div class="ico-map-row"><div>Sucursal detalle</div><div>Cómo llegar</div><div><code>map</code></div></div>
+        <div class="ico-map-row"><div>Sucursal detalle</div><div>Llamar ahora</div><div><code>phone</code></div></div>
+        <div class="ico-map-row"><div>Sucursal CTA</div><div>Coordinar visita</div><div><code>schedule</code></div></div>
+        <div class="ico-map-row"><div>Contacto</div><div>Enviar cotización</div><div><code>send</code></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="ico-cta">
+    <div class="ico-cta-inner">
+      <h2>Plan listo para implementar</h2>
+      <p>Set B minimal para UI · Set A filled para redes sociales · 5 iconos nuevos al módulo · iconos en todos los botones y cards siguiendo las reglas.</p>
+      <div class="ico-cta-actions">
+        <a class="ico-cta-btn ico-cta-btn--primary" href="/">Volver al sitio</a>
+        <a class="ico-cta-btn ico-cta-btn--ghost" href="mailto:info@todohuincha.com">Coordinar migración</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* HERO */
+  .ico-hero{
+    background:var(--charcoal);
+    color:#fff;
+    padding:clamp(72px,10vw,120px) clamp(20px,5vw,40px) clamp(48px,7vw,80px);
+    text-align:center;
+  }
+  .ico-hero-inner{max-width:780px;margin:auto}
+  .ico-eyebrow{
+    display:inline-block;
+    color:#ffb18f;
+    font-size:.78rem;font-weight:850;letter-spacing:.2em;text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .ico-hero h1{
+    color:#fff;
+    font-size:clamp(2.4rem,5.4vw,4rem);
+    line-height:1.05;letter-spacing:-.03em;
+    margin:0 0 16px;font-weight:800;
+  }
+  .ico-lede{
+    color:rgba(255,255,255,.8);
+    font-size:clamp(1rem,1.15vw,1.1rem);
+    line-height:1.6;margin:0;
+  }
+
+  /* SECCIONES */
+  .ico-section{padding:clamp(64px,8vw,104px) 0}
+  .ico-section--soft{background:var(--soft)}
+  .ico-wrap{max-width:1280px;margin:auto;padding:0 clamp(20px,5vw,40px)}
+  .ico-head{text-align:center;margin-bottom:48px;max-width:780px;margin-inline:auto}
+  .ico-head h2{
+    color:var(--charcoal);
+    font-size:clamp(1.6rem,2.8vw,2.2rem);
+    line-height:1.1;letter-spacing:-.025em;
+    margin:10px 0 14px;font-weight:800;
+  }
+  .ico-head p{color:var(--muted);line-height:1.6;margin:0}
+
+  /* GRID DE ICONOS */
+  .ico-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:18px;
+  }
+  .ico-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px 22px;
+    text-align:center;
+    transition:border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .ico-card:hover{
+    border-color:var(--orange);
+    transform:translateY(-2px);
+    box-shadow:0 12px 26px rgba(45,25,13,.08);
+  }
+  .ico-card--alt{
+    background:#fff;
+    border-style:dashed;
+  }
+  .ico-card-icon{
+    display:inline-flex;
+    width:56px;height:56px;
+    color:var(--orange);
+    background:var(--soft);
+    border-radius:14px;
+    align-items:center;justify-content:center;
+    margin-bottom:14px;
+  }
+  .ico-card--alt .ico-card-icon{color:var(--charcoal);background:var(--soft)}
+  .ico-card h3{
+    color:var(--charcoal);
+    font-size:.92rem;font-weight:800;
+    margin:0 0 6px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .ico-card-use{
+    color:var(--muted);
+    font-size:.78rem;line-height:1.4;
+    margin:0 0 14px;min-height:2.4em;
+  }
+  .ico-card-sizes{
+    display:flex;justify-content:center;align-items:center;gap:14px;
+    color:var(--charcoal);
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .ico-size-chip{
+    display:inline-flex;align-items:center;justify-content:center;
+    color:var(--charcoal);
+  }
+
+  /* COMPARATIVA */
+  .ico-compare{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+  .ico-compare-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+  }
+  .ico-compare-cell{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    padding:20px 16px;
+    background:var(--canvas);
+    border-radius:8px;
+  }
+  .ico-compare-cell--alt{
+    background:rgba(251,77,8,.05);
+    border:1px dashed var(--orange);
+  }
+  .ico-compare-label{
+    font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);
+  }
+  .ico-compare-cell--alt .ico-compare-label{color:var(--orange)}
+  .ico-compare-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    color:var(--charcoal);
+    width:64px;height:64px;
+  }
+  .ico-compare-cell--alt .ico-compare-icon{color:var(--orange)}
+  .ico-compare-name{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.82rem;font-weight:700;
+    color:var(--charcoal);
+  }
+
+  /* TONOS */
+  .ico-tones{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:18px;
+  }
+  .ico-tone-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .ico-tone-name{
+    font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .ico-tone-swatch{
+    display:block;
+    width:100%;height:4px;border-radius:2px;
+    margin:6px 0 4px;
+  }
+  .ico-tone-icons{
+    display:flex;flex-wrap:wrap;gap:14px;
+  }
+  .ico-tone-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:40px;height:40px;
+    background:rgba(255,255,255,.5);
+    border-radius:8px;
+  }
+
+  /* CTA */
+  .ico-cta{
+    background:
+      radial-gradient(circle at 80% 20%,rgba(251,77,8,.16),transparent 55%),
+      linear-gradient(135deg,#1f262e 0%,var(--charcoal) 100%);
+    color:#fff;
+    padding:clamp(64px,9vw,112px) clamp(20px,5vw,40px);
+    text-align:center;
+  }
+  .ico-cta-inner{max-width:780px;margin:auto}
+  .ico-cta h2{
+    color:#fff;
+    font-size:clamp(1.8rem,3.4vw,2.6rem);
+    line-height:1.1;letter-spacing:-.025em;
+    margin:0 0 14px;font-weight:800;
+  }
+  .ico-cta p{color:rgba(255,255,255,.78);margin:0 0 30px;line-height:1.6}
+  .ico-cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .ico-cta-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:14px 26px;
+    font-size:.88rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:8px;
+    transition:transform .2s, background .2s, color .2s, border-color .2s;
+  }
+  .ico-cta-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
+  .ico-cta-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}
+  .ico-cta-btn--ghost{background:transparent;color:#fff;border:2px solid var(--orange)}
+  .ico-cta-btn--ghost:hover{background:rgba(251,77,8,.08)}
+
+  @media (max-width:640px){
+    .ico-compare-row{grid-template-columns:1fr}
+  }
+
+  /* F — DECISIÓN */
+  .ico-decision{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:20px;
+    max-width:980px;margin:auto;
+  }
+  .ico-decision-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 26px;
+    position:relative;
+  }
+  .ico-decision-card--yes{border-top:4px solid var(--orange)}
+  .ico-decision-tag{
+    display:inline-block;
+    background:var(--orange);
+    color:#fff;
+    font-size:.72rem;font-weight:850;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 10px;border-radius:6px;
+    margin-bottom:14px;
+  }
+  .ico-decision-card h3{
+    color:var(--charcoal);
+    font-size:1.25rem;font-weight:800;
+    margin:0 0 10px;
+  }
+  .ico-decision-card p{
+    color:var(--muted);
+    font-size:.92rem;line-height:1.55;
+    margin:0 0 14px;
+  }
+  .ico-decision-card p code{
+    background:var(--soft);
+    color:var(--charcoal);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.85em;
+    padding:1px 6px;border-radius:4px;
+  }
+  .ico-decision-where{
+    display:block;
+    color:var(--charcoal);
+    font-size:.78rem;font-weight:700;letter-spacing:.04em;
+    padding-top:12px;border-top:1px solid var(--line);
+  }
+
+  /* H — PLAN EN BOTONES Y CARDS */
+  .ico-h-sub{
+    color:var(--charcoal);
+    font-size:1.05rem;font-weight:800;
+    letter-spacing:-.005em;
+    margin:48px 0 18px;
+  }
+  .ico-h-sub:first-of-type{margin-top:8px}
+
+  /* H1 — Demo cards (icono top-right) */
+  .ico-demo-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:18px;
+  }
+  .ico-demo-card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 26px;
+    transition:border-color .2s, transform .2s;
+  }
+  .ico-demo-card:hover{border-color:var(--orange);transform:translateY(-2px)}
+  .ico-demo-card-icon{
+    position:absolute;
+    top:18px;right:18px;
+    width:38px;height:38px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--soft);
+    color:var(--orange);
+    border-radius:10px;
+  }
+  .ico-demo-card h4{
+    color:var(--charcoal);
+    font-size:1.05rem;font-weight:800;
+    margin:0 0 6px;padding-right:48px;
+  }
+  .ico-demo-meta{
+    color:var(--orange);
+    font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    margin:0 0 10px;padding-right:48px;
+  }
+  .ico-demo-card p:not(.ico-demo-meta){
+    color:var(--muted);
+    font-size:.85rem;line-height:1.45;margin:0 0 4px;
+  }
+
+  /* H2 — Demo buttons (icono a la izquierda) */
+  .ico-demo-buttons{
+    display:flex;flex-wrap:wrap;gap:12px;
+    padding:24px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+  .ico-demo-btn{
+    display:inline-flex;align-items:center;
+    padding:12px 22px;
+    font-size:.85rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    border-radius:8px;
+    transition:transform .2s, background .2s, color .2s, border-color .2s;
+    gap:10px;
+  }
+  .ico-demo-btn--primary{background:var(--orange);color:#fff;border:1px solid var(--orange)}
+  .ico-demo-btn--primary:hover{background:var(--orange-deep);transform:translateY(-1px)}
+  .ico-demo-btn--ghost{background:transparent;color:var(--charcoal);border:1px solid var(--line)}
+  .ico-demo-btn--ghost:hover{border-color:var(--orange);color:var(--orange)}
+  .ico-demo-btn-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+
+  /* H3 — Mapa completo */
+  .ico-map-table{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .ico-map-row{
+    display:grid;
+    grid-template-columns:1fr 1.2fr 1fr;
+    gap:16px;
+    padding:14px 20px;
+    border-bottom:1px solid var(--line);
+    font-size:.88rem;
+  }
+  .ico-map-row:last-child{border-bottom:0}
+  .ico-map-row--head{
+    background:var(--charcoal);
+    color:#fff;
+    font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    font-size:.74rem;
+  }
+  .ico-map-row code{
+    background:var(--soft);
+    color:var(--charcoal);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.85em;
+    padding:2px 8px;border-radius:4px;
+    display:inline-block;
+  }
+
+  @media (max-width:640px){
+    .ico-map-row{grid-template-columns:1fr}
+  }
+</style>
