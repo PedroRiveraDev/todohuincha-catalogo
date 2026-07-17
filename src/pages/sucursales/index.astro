@@ -123,6 +123,7 @@ const mapEmbed = (lat: number, lng: number) =>
           <ul class="suc-zones">
             {branches.map((branch) => (
               <li class={`suc-zone ${branch.isHeadquarters ? 'suc-zone--active' : ''}`}>
+                <span class="suc-zone-icon" set:html={svg('location', 20)}></span>
                 <p class="suc-zone-name">{zoneLabels[branch.slug] ?? branch.name}</p>
                 <p class="suc-zone-desc">{zoneDescriptions[branch.slug] ?? ''}</p>
               </li>
@@ -345,12 +346,22 @@ const mapEmbed = (lat: number, lng: number) =>
     display:flex;flex-direction:column;gap:14px;
   }
   .suc-zone{
+    position:relative;
     background:var(--surface);
     border:1px solid var(--line);
     border-left:4px solid var(--line);
     border-radius:8px;
-    padding:14px 16px;
+    padding:14px 56px 14px 16px;
     transition:border-color .2s, transform .2s;
+  }
+  .suc-zone-icon{
+    position:absolute;
+    top:14px;right:14px;
+    width:32px;height:32px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--soft);
+    color:var(--orange);
+    border-radius:8px;
   }
   .suc-zone:hover{border-left-color:var(--orange);transform:translateX(2px)}
   .suc-zone--active{border-left-color:var(--orange);box-shadow:0 6px 14px rgba(45,25,13,.06)}

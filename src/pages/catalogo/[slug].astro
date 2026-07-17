@@ -304,3 +304,14 @@ document.querySelectorAll<HTMLButtonElement>('.download-cat-slug-pdf').forEach((
   pdf.save(`${title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.pdf`);
 }));
 </script>
+
+<style>
+  .cat-page-btn-icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    margin-right:10px;
+    vertical-align:middle;
+  }
+</style>
