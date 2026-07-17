@@ -92,7 +92,7 @@ const mapEmbed = (lat: number, lng: number) =>
                     <span>{branch.address.street}, {branch.address.locality}, {branch.address.region}</span>
                   </li>
                   <li>
-                    <span class="suc-info-icon" set:html={svg('call')}></span>
+                    <span class="suc-info-icon" set:html={svg('phone')}></span>
                     <a href={`tel:${phoneRaw}`}>{branch.phone}</a>
                   </li>
                   <li>

@@ -98,7 +98,7 @@ const faqs = [
           <!-- Datos de contacto directos -->
           <ul class="cont-direct">
             <li>
-              <span class="cont-direct-icon" set:html={svg('call', 22)}></span>
+              <span class="cont-direct-icon" set:html={svg('phone', 22)}></span>
               <div>
                 <p class="cont-direct-label">Teléfono</p>
                 <a class="cont-direct-value" href={`tel:${company.phones[0].replace(/\s|\(|\)/g, '')}`}>{company.phones[0]}</a>
@@ -133,6 +133,7 @@ const faqs = [
             <div class="cont-branches">
               {branches.map((branch) => (
                 <a class="cont-branch" href={`/sucursales/${branch.slug}/`}>
+                  <span class="cont-branch-icon" set:html={svg('phone', 18)}></span>
                   <span class="cont-branch-loc">{branch.city}</span>
                   <span class="cont-branch-region">{branch.address.region}</span>
                   <span class="cont-branch-addr">{branch.address.street}</span>
@@ -431,17 +432,27 @@ const faqs = [
     gap:14px;
   }
   .cont-branch{
+    position:relative;
     display:flex;flex-direction:column;gap:4px;
     background:var(--surface);
     border:1px solid var(--line);
     border-radius:10px;
-    padding:18px 18px 14px;
+    padding:18px 50px 14px 18px;
     transition:border-color .2s, transform .2s, box-shadow .2s;
   }
   .cont-branch:hover{
     border-color:var(--orange);
     transform:translateY(-2px);
     box-shadow:0 8px 18px rgba(45,25,13,.08);
+  }
+  .cont-branch-icon{
+    position:absolute;
+    top:16px;right:16px;
+    width:32px;height:32px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--soft);
+    color:var(--orange);
+    border-radius:8px;
   }
   .cont-branch-loc{
     color:var(--charcoal);
