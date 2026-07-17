@@ -19,13 +19,6 @@ const machineImages: Record<string, string> = {
   Madera: '/maquinaria/madera.jpg',
   Otros: '/maquinaria/otros.jpg'
 };
-const machineIcons: Record<string, string> = {
-  Jardín: 'arrow',
-  Agrícola: 'machinery',
-  Forestal: 'tools',
-  Madera: 'tools',
-  Otros: 'machinery'
-};
 ---
 <Base title="Todo Huincha | Soluciones de corte y maquinaria">
   <section class="hero hero-panels">
@@ -67,10 +60,11 @@ const machineIcons: Record<string, string> = {
     <!-- Action buttons -->
     <div style="display: flex; gap: 14px; margin-top: 24px; flex-wrap: wrap;">
       <button class="button alt" id="toggle-categories-btn" style="padding: 12px 20px;">
+        <span class="hero-btn-icon" set:html={svg('chevron', 14)} style="margin-right: 8px;"></span>
         <span>Ver más categorías</span>
         <svg class="chevron-icon" style="width: 14px; height: 14px; margin-left: 8px; transition: transform 0.2s; vertical-align: middle; display: inline-block;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
-      <a class="button" href="/catalogo">Ver catálogo completo</a>
+      <a class="button" href="/catalogo"><span class="hero-btn-icon" set:html={svg('grid', 14)}></span>Ver catálogo completo</a>
     </div>
   </section>
 
@@ -93,7 +87,6 @@ const machineIcons: Record<string, string> = {
             <a class="card machinery-card" href={`/maquinaria#${category.toLowerCase()}`}>
               <div class="machinery-card-bg" style={`background-image: url('${bgImg}');`}></div>
               <div class="machinery-card-overlay"></div>
-              <span class="machinery-card-icon" set:html={svg(machineIcons[category] ?? 'arrow', 20)}></span>
               <div class="machinery-card-content">
                 <span class="tag">{count} equipos</span>
                 <h3>{category}</h3>
@@ -206,20 +199,6 @@ const machineIcons: Record<string, string> = {
     transform: translateX(4px);
     color: var(--orange);
   }
-
-  /* Icono top-right para machinery-card */
-  .machinery-card-icon{
-    position:absolute;
-    top:16px;right:16px;
-    width:36px;height:36px;
-    display:inline-flex;align-items:center;justify-content:center;
-    background:rgba(255,255,255,.95);
-    color:var(--charcoal);
-    border-radius:8px;
-    z-index:2;
-    transition:transform .25s;
-  }
-  .machinery-card:hover .machinery-card-icon{transform:scale(1.05)}
 
   /* Machinery Card with Background Image */
   .machinery-card {

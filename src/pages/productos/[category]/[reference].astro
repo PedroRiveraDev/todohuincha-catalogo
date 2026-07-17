@@ -2,6 +2,7 @@
 import Base from '../../../layouts/Base.astro';
 import DownloadPdf from '../../../components/DownloadPdf.astro';
 import { products } from '../../../data/catalog';
+import { svg } from '../../../lib/icons.ts';
 export function getStaticPaths(){return products.map((product)=>({params:{category:product.category.slug,reference:product.internal_reference},props:{product}}));}
 const { product } = Astro.props;
 const message = encodeURIComponent(`Hola, quiero cotizar el producto ${product.name} (código ${product.internal_reference}).`);
@@ -15,7 +16,7 @@ const message = encodeURIComponent(`Hola, quiero cotizar el producto ${product.n
       <p class="product-code">Código interno: {product.internal_reference}</p>
       <p>Solicita una cotización para recibir disponibilidad, especificaciones completas, plazo y condiciones comerciales.</p>
       <div class="product-actions">
-        <a class="button" href={`https://wa.me/?text=${message}`} target="_blank" rel="noreferrer">Solicitar cotización por WhatsApp</a>
+        <a class="button" href={`https://wa.me/?text=${message}`} target="_blank" rel="noreferrer"><span class="prods-btn-icon" set:html={svg('send', 14)}></span>Solicitar cotización por WhatsApp</a>
       </div>
     </div>
     <aside class="card">
@@ -26,3 +27,13 @@ const message = encodeURIComponent(`Hola, quiero cotizar el producto ${product.n
     </aside>
   </section>
 </Base>
+
+<style>
+  .product-actions{gap:10px;flex-wrap:wrap}
+  .button .prods-btn-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    margin-right:8px;
+    vertical-align:middle;
+  }
+</style>

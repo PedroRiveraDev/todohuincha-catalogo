@@ -16,6 +16,7 @@ const { category } = Astro.props;
       </div>
       <div class="cat-page-actions">
         <button class="button alt download-cat-slug-pdf" id="cat-slug-pdf-btn" data-title={`Todo Huincha — ${category.title}`} data-subtitle={`${category.products_count} productos en esta categoría`} data-rows={JSON.stringify(category.products.map((p) => `${p.internal_reference} | ${p.name} | ${category.title}`))}>
+          <span class="cat-page-btn-icon" set:html={svg('download', 14)}></span>
           Descargar PDF
         </button>
       </div>
